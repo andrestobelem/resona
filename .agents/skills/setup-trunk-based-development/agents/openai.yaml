@@ -1,0 +1,6 @@
+interface:
+  display_name: "Setup Trunk-Based Development"
+  short_description: "Configure a repo for safe trunk-based delivery"
+  default_prompt: "Use $setup-trunk-based-development to configure or refresh this repository for safe trunk-based delivery."
+policy:
+  allow_implicit_invocation: false

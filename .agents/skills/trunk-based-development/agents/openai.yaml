@@ -1,0 +1,4 @@
+interface:
+  display_name: "Trunk-Based Development"
+  short_description: "Deliver changes in safe, trunk-sized batches"
+  default_prompt: "Use $trunk-based-development to split this change into safe, continuously integrated batches."
