@@ -1,0 +1,51 @@
+# Remotion v4.0.506: Agent Skills
+
+## Resumen
+
+En Remotion v4.0.506, los *Agent Skills* son documentación operativa versionada para
+agentes de programación externos. No incorporan un modelo de IA dentro de Remotion ni
+forman parte de la ejecución de un video: orientan a herramientas como Codex y Claude para
+que usen correctamente los archivos, la CLI, Studio y las API normales del producto.
+
+## Evidencia en la fuente primaria
+
+- [`packages/skills/skills`][skills-tree] contiene 12 archivos `SKILL.md` especializados y
+  versionados mediante *frontmatter*. El skill de [buenas prácticas][best-practices]
+  funciona como punto de entrada: deriva el trabajo a instrucciones especializadas y las
+  incorpora según el tema, en vez de concentrar todo en un único prompt.
+- La [documentación de Agent Skills][agent-skills-doc] indica instalarlos con
+  `npx skills add remotion-dev/skills`. La implementación de la
+  [CLI de skills][skills-cli-source] delega las operaciones `add` y `update` en la CLI
+  `skills`.
+- La [referencia del comando][skills-cli-doc] especifica instalación en `.agents/skills`
+  y compatibilidad con Claude mediante un enlace `.claude/skills`. El flujo de
+  [`create-video`][create-video-skills] ofrece instalar las skills al crear un proyecto.
+- El [`studio-server`][outdated-skills] lee las versiones del *frontmatter* y las compara
+  con la versión actual de Remotion para detectar skills desactualizadas. A su vez, el
+  [flujo de upgrade][update-skills] actualiza las skills locales del proyecto.
+- Remotion ofrece distribuciones separadas para [Codex][codex-plugin] y
+  [Claude Code][claude-plugin] que incluyen estas skills; no son carpetas internas de
+  `packages/skills` en este snapshot. Además, [`@remotion/skills` está marcado como
+  privado][skills-package], por lo que no es una dependencia de ejecución que una
+  aplicación deba integrar.
+
+## Aplicación a Resona
+
+Para Resona, el patrón útil es separar producto y asistencia: el producto sigue exponiendo
+archivos, comandos, Studio y API deterministas; los agentes externos reciben skills
+oficiales, versionadas junto con Resona, que explican cómo operar esas superficies. Por
+tanto, adoptar estas skills puede mejorar la calidad del código generado y advertir
+desalineaciones de versión, pero no equivale a añadir «IA embebida» a Resona ni cambia su
+arquitectura de ejecución.
+
+[skills-tree]: https://github.com/remotion-dev/remotion/tree/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/skills/skills
+[best-practices]: https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/skills/skills/remotion-best-practices/SKILL.md
+[agent-skills-doc]: https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/docs/docs/ai/skills.mdx
+[skills-cli-source]: https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/cli/src/skills.ts
+[skills-cli-doc]: https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/docs/docs/cli/skills.mdx
+[create-video-skills]: https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/create-video/src/install-skills.ts
+[outdated-skills]: https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/studio-server/src/detect-outdated-remotion-skills.ts
+[update-skills]: https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/cli/src/update-remotion-skills.ts
+[codex-plugin]: https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/docs/docs/ai/codex-plugin.mdx
+[claude-plugin]: https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/docs/docs/ai/claude-code-plugin.mdx
+[skills-package]: https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/skills/package.json
