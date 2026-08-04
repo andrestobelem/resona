@@ -1,0 +1,35 @@
+{
+  "name": "resona",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Code-first music composition and production.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=24.18.0 <25"
+  },
+  "packageManager": "pnpm@11.20.0",
+  "scripts": {
+    "build": "pnpm --recursive --if-present run build",
+    "check:fast": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:unit",
+    "check:full": "pnpm check:fast && pnpm build && pnpm test:integration",
+    "format": "prettier --write . --ignore-unknown",
+    "format:check": "prettier --check . --ignore-unknown",
+    "lint": "pnpm lint:code && pnpm lint:docs",
+    "lint:code": "eslint .",
+    "lint:docs": "markdownlint-cli2",
+    "test:integration": "vitest run --config vitest.integration.config.ts --passWithNoTests",
+    "test:unit": "vitest run --config vitest.config.ts --passWithNoTests",
+    "typecheck": "pnpm --recursive --if-present run typecheck"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.13.3",
+    "eslint": "10.8.0",
+    "markdownlint-cli2": "0.23.2",
+    "prettier": "3.9.6",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.65.0",
+    "vitest": "4.1.10"
+  }
+}
