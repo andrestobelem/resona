@@ -7,6 +7,7 @@ import {
   resolveCompositionInputs,
   type DeepReadonly,
   type InputSchema,
+  type InputSchemaIR,
 } from "./input-schema.js";
 import type {
   AbsoluteDurationIR,
@@ -607,6 +608,27 @@ const discoverCompositions = (): readonly CompositionDescriptor[] => {
 
   return compositions;
 };
+
+export type CompositionSummary = Readonly<{
+  id: string;
+  defaultInputs: JsonObject;
+  inputSchema: InputSchemaIR;
+  duration: DurationIR;
+  bpm: RationalIR;
+  timeSignature: Readonly<{ beatsPerBar: number; beatUnit: number }>;
+  metadata: JsonObject;
+}>;
+
+export const listRegisteredCompositions = (): readonly CompositionSummary[] =>
+  discoverCompositions().map((composition) => ({
+    id: composition.id,
+    defaultInputs: cloneJsonObject(composition.defaultInputs),
+    inputSchema: composition.schema.ir,
+    duration: structuredClone(composition.duration),
+    bpm: structuredClone(composition.bpm),
+    timeSignature: { ...composition.timeSignature },
+    metadata: cloneJsonObject(composition.metadata),
+  }));
 
 type ResolvedRegisteredComposition = Readonly<{
   composition: CompositionIR;

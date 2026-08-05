@@ -1,12 +1,13 @@
 import { build } from "esbuild";
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { mkdtemp, readFile, realpath, rm } from "node:fs/promises";
+import { isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { Worker } from "node:worker_threads";
 
 import type { CompositionIR, Diagnostic, ExecutionPlan, JsonObject } from "./model.js";
+import type { CompositionSummary } from "./authoring.js";
 import type { PreparedAudioRuntimeResource, ResolvedVariant } from "./preparation.js";
 import {
   resolveProjectConfiguration,
@@ -25,6 +26,11 @@ type VariantCompilation = Readonly<{
 
 type ProjectCompilation = VariantCompilation & Readonly<{ project: ResolvedProject }>;
 
+export type ProjectCompositions = Readonly<{
+  project: ResolvedProject;
+  compositions: readonly CompositionSummary[];
+}>;
+
 const engineModulePath = (name: string, sourceExtension: string): string => {
   const runtimeDirectory = fileURLToPath(new URL(".", import.meta.url));
   const compiledPath = join(runtimeDirectory, `${name}.js`);
@@ -40,6 +46,7 @@ const compileProjectEntry = (entryPoint: string): string => {
   return [
     `import ${JSON.stringify(entryPoint)};`,
     `import {resolveRegisteredComposition} from ${JSON.stringify(authoringPath)};`,
+    `import {listRegisteredCompositions} from ${JSON.stringify(authoringPath)};`,
     `import {compileExecutionPlan} from ${JSON.stringify(planningPath)};`,
     `import {createStaticAudioPreparationResolver} from ${JSON.stringify(resourceResolverPath)};`,
     "export const compileVariant = async (compositionId, providedInputs, signal, seed, staticDirectory) => {",
@@ -54,6 +61,7 @@ const compileProjectEntry = (entryPoint: string): string => {
     "    runtimeResources: resolved.runtimeResources,",
     "  };",
     "};",
+    "export const listCompositions = () => listRegisteredCompositions();",
   ].join("\n");
 };
 
@@ -80,6 +88,46 @@ const workerSource = [
   "  } });",
   "}",
 ].join("\n");
+
+const discoveryWorkerSource = [
+  'import { parentPort, workerData } from "node:worker_threads";',
+  "try {",
+  "  const project = await import(workerData.moduleUrl);",
+  '  parentPort.postMessage({ type: "success", compositions: project.listCompositions() });',
+  "} catch (error) {",
+  '  parentPort.postMessage({ type: "failure", message: error instanceof Error ? error.message : "The project could not be inspected." });',
+  "}",
+].join("\n");
+
+const runCompositionDiscovery = (moduleUrl: string): Promise<unknown> =>
+  new Promise((resolve, reject) => {
+    const worker = new Worker(
+      new URL(`data:text/javascript,${encodeURIComponent(discoveryWorkerSource)}`),
+      { workerData: { moduleUrl } },
+    );
+    worker.once("message", (message: unknown) => {
+      void worker.terminate();
+      if (
+        message !== null &&
+        typeof message === "object" &&
+        "type" in message &&
+        message.type === "success" &&
+        "compositions" in message
+      ) {
+        resolve(message.compositions);
+      } else {
+        reject(
+          new Error(
+            (message as { message?: string }).message ?? "The project could not be inspected.",
+          ),
+        );
+      }
+    });
+    worker.once("error", (error) => {
+      void worker.terminate();
+      reject(error);
+    });
+  });
 
 const engineNodePath = resolve(fileURLToPath(new URL(".", import.meta.url)), "../node_modules");
 
@@ -331,6 +379,57 @@ export const loadProjectCompilation = async (
         buildId,
         configuration: effectiveConfiguration,
       },
+    };
+  } finally {
+    await rm(directory, { force: true, recursive: true });
+  }
+};
+
+export const loadProjectCompositions = async (
+  projectRoot: string,
+): Promise<ProjectCompositions> => {
+  if (!isAbsolute(projectRoot)) {
+    throw new Error("projectRoot must be an absolute path.");
+  }
+
+  const canonicalProjectRoot = await realpath(projectRoot);
+  const directory = await mkdtemp(join(canonicalProjectRoot, ".resona-project-"));
+  const outputFile = join(directory, "project.mjs");
+
+  try {
+    const resolvedProject = await loadProjectConfiguration(canonicalProjectRoot, directory);
+    await build({
+      banner: {
+        js: 'import { createRequire as __resonaCreateRequire } from "node:module"; const require = __resonaCreateRequire(import.meta.url);',
+      },
+      bundle: true,
+      format: "esm",
+      jsx: "automatic",
+      outfile: outputFile,
+      nodePaths: [engineNodePath],
+      platform: "node",
+      stdin: {
+        contents: compileProjectEntry(resolvedProject.entryPoint),
+        resolveDir: canonicalProjectRoot,
+        sourcefile: "resona-project-entry.ts",
+      },
+      target: "node24",
+    });
+    const buildId = `sha256:${createHash("sha256")
+      .update(await readFile(outputFile))
+      .digest("hex")}`;
+    const compositions = await runCompositionDiscovery(pathToFileURL(outputFile).href);
+    if (!Array.isArray(compositions)) {
+      throw new Error("The project discovery result was invalid.");
+    }
+
+    return {
+      project: {
+        root: canonicalProjectRoot,
+        buildId,
+        configuration: resolvedProject.configuration,
+      },
+      compositions: compositions as readonly CompositionSummary[],
     };
   } finally {
     await rm(directory, { force: true, recursive: true });
