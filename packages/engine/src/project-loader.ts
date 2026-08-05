@@ -6,6 +6,7 @@ import { isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { Worker } from "node:worker_threads";
 
+import type { RenderJobProgress } from "./create-render-job.js";
 import type { CompositionIR, Diagnostic, ExecutionPlan, JsonObject } from "./model.js";
 import type { CompositionSummary } from "./authoring.js";
 import { deepFreeze } from "./deep-freeze.js";
@@ -55,10 +56,14 @@ const compileProjectEntry = (entryPoint: string): string => {
     `import {listRegisteredCompositions} from ${JSON.stringify(authoringPath)};`,
     `import {compileExecutionPlan} from ${JSON.stringify(planningPath)};`,
     `import {createStaticAudioPreparationResolver} from ${JSON.stringify(resourceResolverPath)};`,
-    "export const compileVariant = async (compositionId, providedInputs, signal, seed, staticDirectory) => {",
+    "export const compileVariant = async (compositionId, providedInputs, signal, seed, staticDirectory, reportProgress = () => {}) => {",
     "  const resources = createStaticAudioPreparationResolver(staticDirectory, signal);",
+    "  reportProgress({ phase: 'preparation', status: 'started' });",
     "  const resolved = await resolveRegisteredComposition(compositionId, providedInputs, signal, seed, resources);",
+    "  reportProgress({ phase: 'preparation', status: 'completed' });",
+    "  reportProgress({ phase: 'planning', status: 'started' });",
     "  const compilation = compileExecutionPlan(resolved.composition, resolved.runtimeResources);",
+    "  reportProgress({ phase: 'planning', status: 'completed' });",
     "  return {",
     "    composition: resolved.composition,",
     "    variant: resolved.variant,",
@@ -82,7 +87,7 @@ const workerSource = [
   "  const project = await import(workerData.moduleUrl);",
   "  const controller = new AbortController();",
   '  parentPort.on("message", (message) => { if (message?.type === "abort") controller.abort(); });',
-  "  const compilation = await project.compileVariant(workerData.compositionId, workerData.inputs, controller.signal, workerData.seed, workerData.staticDirectory);",
+  '  const compilation = await project.compileVariant(workerData.compositionId, workerData.inputs, controller.signal, workerData.seed, workerData.staticDirectory, (progress) => parentPort.postMessage({ type: "progress", ...progress }));',
   '  parentPort.postMessage({ type: "success", compilation: {',
   "    composition: compilation.composition,",
   "    variant: compilation.variant,",
@@ -179,6 +184,7 @@ const runInFreshWorker = (
   inputs?: JsonObject,
   seed = "resona-default",
   signal?: AbortSignal,
+  onProgress?: (progress: RenderJobProgress) => void,
 ): Promise<VariantCompilation> =>
   new Promise((resolve, reject) => {
     const worker = new Worker(new URL(`data:text/javascript,${encodeURIComponent(workerSource)}`), {
@@ -228,6 +234,25 @@ const runInFreshWorker = (
         "message" in message
       ) {
         process.stderr.write(`[resona] ${String(message.message)}\n`);
+        return;
+      }
+      if (
+        message !== null &&
+        typeof message === "object" &&
+        "type" in message &&
+        message.type === "progress" &&
+        "phase" in message &&
+        "status" in message
+      ) {
+        try {
+          onProgress?.({
+            phase: message.phase as RenderJobProgress["phase"],
+            status: message.status as RenderJobProgress["status"],
+            compositionId,
+          });
+        } catch (error) {
+          finish(() => reject(error instanceof Error ? error : new Error(String(error))));
+        }
         return;
       }
       if (
@@ -382,12 +407,14 @@ export const loadProjectCompilation = async (
   invocationSeed?: string,
   signal?: AbortSignal,
   sourceOptions: ProjectSourceOptions = {},
+  onProgress?: (progress: RenderJobProgress) => void,
 ): Promise<ProjectCompilation> => {
   const directory = await mkdtemp(join(projectRoot, ".resona-project-"));
   const outputFile = join(directory, "project.mjs");
+  const isAborted = (): boolean => signal?.aborted === true;
 
   try {
-    if (signal?.aborted === true) {
+    if (isAborted()) {
       throw new ResonaError("Composition preparation was cancelled.", [
         {
           code: "preparation.cancelled",
@@ -399,6 +426,7 @@ export const loadProjectCompilation = async (
       ]);
     }
     let resolvedProject: Awaited<ReturnType<typeof loadProjectConfiguration>>;
+    onProgress?.({ phase: "configuration", status: "started", compositionId });
     try {
       resolvedProject = await loadProjectConfiguration(projectRoot, directory, sourceOptions);
     } catch (error) {
@@ -413,6 +441,7 @@ export const loadProjectCompilation = async (
         },
       ]);
     }
+    onProgress?.({ phase: "configuration", status: "completed", compositionId });
     if (invocationSeed !== undefined && invocationSeed.length === 0) {
       throw new ResonaError("Render seed must be a non-empty string.", [
         {
@@ -431,6 +460,7 @@ export const loadProjectCompilation = async (
           ? resolvedProject.configuration.seed
           : { value: invocationSeed, source: "invocation" as const },
     };
+    onProgress?.({ phase: "compilation", status: "started", compositionId });
     await build({
       banner: {
         js: 'import { createRequire as __resonaCreateRequire } from "node:module"; const require = __resonaCreateRequire(import.meta.url);',
@@ -448,6 +478,18 @@ export const loadProjectCompilation = async (
       },
       target: "node24",
     });
+    onProgress?.({ phase: "compilation", status: "completed", compositionId });
+    if (isAborted()) {
+      throw new ResonaError("Composition preparation was cancelled.", [
+        {
+          code: "preparation.cancelled",
+          phase: "preparation",
+          severity: "error",
+          message: "Composition preparation was cancelled.",
+          compositionId,
+        },
+      ]);
+    }
     const buildId = `sha256:${createHash("sha256")
       .update(await readFile(outputFile))
       .digest("hex")}`;
@@ -458,6 +500,7 @@ export const loadProjectCompilation = async (
       inputs,
       effectiveConfiguration.seed.value,
       signal,
+      onProgress,
     );
     return {
       ...compilation,
