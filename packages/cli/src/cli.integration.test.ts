@@ -139,6 +139,51 @@ describe("resona CLI", () => {
     expect(result.stdout).toContain("- Smoke");
   });
 
+  it("starts the protected Studio service until cancellation", async () => {
+    const controller = new AbortController();
+    const pending = invoke(["studio", "--json"], projectRoot, controller.signal);
+    await new Promise<void>((resolve) => setTimeout(resolve, 25));
+    controller.abort();
+    const result = await pending;
+
+    expect(result.exitCode).toBe(130);
+    const documents = result.stdout
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line) as Record<string, unknown>);
+    expect(documents[0]).toMatchObject({
+      format: "resona/studio",
+      schemaVersion: 1,
+      host: "127.0.0.1",
+      url: expect.stringMatching(/^http:\/\/127\.0\.0\.1:\d+$/),
+      token: expect.any(String),
+    });
+    expect(documents.at(-1)).toMatchObject({
+      format: "resona/cli-error",
+      schemaVersion: 1,
+      exitCode: 130,
+    });
+  }, 15_000);
+
+  it("flushes Studio startup metadata before waiting for SIGINT", async () => {
+    const controller = new AbortController();
+    const output: CliOutput = { stdout: "", stderr: "" };
+    let flushed = "";
+    const pending = runCli(["studio", "--json"], {
+      cwd: projectRoot,
+      output,
+      signal: controller.signal,
+      flush: () => {
+        flushed += output.stdout;
+        output.stdout = "";
+      },
+    });
+    await new Promise<void>((resolve) => setTimeout(resolve, 25));
+    expect(flushed).toContain('"format":"resona/studio"');
+    controller.abort();
+    await expect(pending).resolves.toBe(130);
+  }, 15_000);
+
   it("uses the stable usage exit code for an invalid invocation", async () => {
     const result = await invoke(["validate", "--json"]);
 

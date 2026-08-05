@@ -21,7 +21,9 @@ HTTP para contenido inmutable y controlar carreras durante rebuilds y cambios de
 ## Consecuencias
 
 - HTTP enumera composiciones, crea variantes y entrega planes y assets por hash.
-- WebSocket notifica invalidaciones, progreso y diagnósticos.
+- WebSocket queda reservado para invalidaciones, progreso y diagnósticos; el primer corte de
+  T13 implementa las operaciones finitas mediante HTTP y deja ese stream para una story de
+  transporte posterior.
 - Los envelopes incluyen protocolo, `sessionId`, `requestId` y `variantId`.
 - Una solicitud nueva cancela la anterior y las respuestas obsoletas se descartan.
 - Paths físicos no forman parte de URLs de assets.
@@ -29,4 +31,8 @@ HTTP para contenido inmutable y controlar carreras durante rebuilds y cambios de
 - El callback del worklet no realiza red ni I/O.
 - La protección de la sesión se define en el
   [ADR 0051](0051-loopback-token-protected-studio.md).
-- Endpoints concretos y compatibilidad del protocolo todavía deben diseñarse.
+- El primer corte usa `resona/studio-envelope` v1 en `/api/v1/session`,
+  `/api/v1/compositions`, `/api/v1/variants`, `/api/v1/variants/:variantId/plan` y
+  `/api/v1/variants/:variantId/resources/:sha256-hash`.
+- Los payloads de variante omiten paths físicos y el acceso a recursos exige hashes ya
+  resueltos para esa variante.
