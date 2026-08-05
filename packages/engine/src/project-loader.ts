@@ -77,6 +77,7 @@ const workerSource = [
   '  const forwardLog = (...args) => parentPort.postMessage({ type: "log", message: args.map(String).join(" ") });',
   "  console.log = forwardLog;",
   "  console.info = forwardLog;",
+  "  console.debug = forwardLog;",
   "  const project = await import(workerData.moduleUrl);",
   "  const controller = new AbortController();",
   '  parentPort.on("message", (message) => { if (message?.type === "abort") controller.abort(); });',
@@ -104,6 +105,7 @@ const discoveryWorkerSource = [
   '  const forwardLog = (...args) => parentPort.postMessage({ type: "log", message: args.map(String).join(" ") });',
   "  console.log = forwardLog;",
   "  console.info = forwardLog;",
+  "  console.debug = forwardLog;",
   "  const project = await import(workerData.moduleUrl);",
   '  parentPort.postMessage({ type: "success", compositions: project.listCompositions() });',
   "} catch (error) {",
@@ -159,6 +161,7 @@ const configWorkerSource = [
   '  const forwardLog = (...args) => parentPort.postMessage({ type: "log", message: args.map(String).join(" ") });',
   "  console.log = forwardLog;",
   "  console.info = forwardLog;",
+  "  console.debug = forwardLog;",
   "  const configuration = await import(workerData.moduleUrl);",
   '  parentPort.postMessage({ type: "success", config: configuration.default });',
   "} catch (error) {",
@@ -307,7 +310,18 @@ const loadProjectConfiguration = async (
     configuration: ResolvedProjectConfiguration;
   }>
 > => {
-  const configPath = sourceOptions.configPath ?? join(projectRoot, "resona.config.ts");
+  const configPath = resolve(
+    projectRoot,
+    sourceOptions.configPath ?? join(projectRoot, "resona.config.ts"),
+  );
+  const configFromRoot = relative(projectRoot, configPath);
+  if (
+    configFromRoot === ".." ||
+    configFromRoot.startsWith("../") ||
+    configFromRoot.startsWith("..\\")
+  ) {
+    throw new Error("Project config must remain inside the project root.");
+  }
   const configValue = existsSync(configPath)
     ? await (async () => {
         try {
