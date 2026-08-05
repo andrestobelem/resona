@@ -147,9 +147,9 @@ const validatePlan = (plan: ExecutionPlan): void => {
     throw new RangeError("The renderer only supports the fixed 48 kHz stereo profile.");
   }
   if (
-    plan.processors.some((processor) => processor.type !== "poly-synth" && processor.type !== "sum")
+    plan.processors.some((processor) => !["poly-synth", "sum", "gain"].includes(processor.type))
   ) {
-    throw new RangeError("The renderer only supports PolySynth and sum processors.");
+    throw new RangeError("The renderer only supports PolySynth, Gain, and sum processors.");
   }
   if (
     plan.processors.some(
@@ -248,6 +248,41 @@ export const renderAudio = (
   const instrumentsByProcessor = new Map(
     instruments.map((instrument) => [instrument.processorIndex, instrument]),
   );
+  const gainByInstrument = new Map<number, number>();
+  for (const route of plan.routes) {
+    if (
+      plan.processors[route.from]?.type === "poly-synth" &&
+      plan.processors[route.to]?.type === "gain"
+    ) {
+      gainByInstrument.set(route.from, route.to);
+    }
+  }
+  const gainAt = (instrument: number, frame: number): number => {
+    const target = gainByInstrument.get(instrument);
+    if (target === undefined) return 1;
+    const processor = plan.processors[target];
+    if (processor?.type !== "gain") return 1;
+    const lane = plan.automation.find((candidate) => candidate.target === target);
+    if (lane === undefined || lane.points.length === 0) return processor.gain;
+    let previous: { frame: number; value: number; interpolation: "hold" | "linear" } = {
+      frame: 0,
+      value: processor.gain,
+      interpolation: "hold",
+    };
+    for (const point of lane.points) {
+      if (frame < point.frame) {
+        if (previous.interpolation === "linear") {
+          const span = point.frame - previous.frame;
+          return span <= 0
+            ? point.value
+            : previous.value + (point.value - previous.value) * ((frame - previous.frame) / span);
+        }
+        return previous.value;
+      }
+      previous = point;
+    }
+    return previous.value;
+  };
   const samples = new Float32Array(plan.nominalDurationFrames * plan.channels);
 
   for (let blockStart = 0; blockStart < plan.nominalDurationFrames; blockStart += blockFrames) {
@@ -324,7 +359,7 @@ export const renderAudio = (
           voice.phase += phaseDelta;
           voice.phase -= Math.floor(voice.phase);
         }
-        mono = canonicalF32(mono + instrumentSample);
+        mono = canonicalF32(mono + instrumentSample * gainAt(instrument.processorIndex, frame));
       }
       const sample = canonicalF32(mono);
       samples[frame * plan.channels] = sample;

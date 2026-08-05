@@ -350,6 +350,7 @@ export const compileExecutionPlan = (composition: CompositionIR): PlanCompilatio
   const processors: ProcessorPlan[] = [];
   const routes: SignalRoute[] = [];
   const candidates: NoteCandidate[] = [];
+  const gainByTrack = new Map<string, number>();
 
   for (const placement of placements) {
     const instrumentIndex = processors.length;
@@ -363,6 +364,24 @@ export const compileExecutionPlan = (composition: CompositionIR): PlanCompilatio
       sustain: canonicalF32(instrument.envelope.sustain),
       releaseFrames: frameFromSeconds(durationToSeconds(instrument.envelope.release, bpm)),
     });
+
+    const gainEffect = placement.track.effects.find((effect) => effect.type === "gain");
+    if (gainEffect !== undefined && (!Number.isFinite(gainEffect.gain) || gainEffect.gain < 0)) {
+      throw new ResonaError("Gain must be a finite non-negative multiplier.", [
+        diagnosticFor(
+          composition,
+          "plan.gain-invalid",
+          "Gain must be finite and non-negative.",
+          gainEffect,
+        ),
+      ]);
+    }
+    const gainIndex =
+      gainEffect === undefined
+        ? undefined
+        : processors.push({ type: "gain", gain: canonicalF32(gainEffect.gain) }) - 1;
+    if (gainIndex !== undefined) routes.push({ from: instrumentIndex, to: gainIndex });
+    if (gainIndex !== undefined) gainByTrack.set(JSON.stringify(placement.track.path), gainIndex);
 
     for (const clip of placement.track.clips) {
       const clipStart = addFractions(placement.start, positionToSeconds(clip.from, bpm));
@@ -387,7 +406,12 @@ export const compileExecutionPlan = (composition: CompositionIR): PlanCompilatio
   const masterProcessor = processors.length;
   processors.push({ type: "sum" });
   for (let processorIndex = 0; processorIndex < masterProcessor; processorIndex += 1) {
-    routes.push({ from: processorIndex, to: masterProcessor });
+    if (!routes.some((route) => route.from === processorIndex))
+      routes.push({ from: processorIndex, to: masterProcessor });
+    else {
+      const destination = routes.find((route) => route.from === processorIndex)?.to;
+      if (destination !== undefined) routes.push({ from: destination, to: masterProcessor });
+    }
   }
 
   candidates.sort((left, right) => {
@@ -459,7 +483,60 @@ export const compileExecutionPlan = (composition: CompositionIR): PlanCompilatio
     resources: [],
     audioRegions: [],
     events,
-    automation: [],
+    automation: placements.flatMap((placement) =>
+      placement.track.automation.map((lane) => {
+        if (lane.points.length === 0) {
+          throw new ResonaError("Automation lanes require at least one point.", [
+            diagnosticFor(
+              composition,
+              "plan.automation-empty",
+              "Automation lane must contain a point.",
+              lane,
+            ),
+          ]);
+        }
+        const target = gainByTrack.get(JSON.stringify(placement.track.path));
+        if (target === undefined) {
+          throw new ResonaError("Automation target has no Gain processor.", [
+            diagnosticFor(
+              composition,
+              "plan.automation-target-missing",
+              "Gain automation requires a Gain effect.",
+              placement.track,
+            ),
+          ]);
+        }
+        const points = lane.points.map((point) => ({
+          frame: frameFromSeconds(addFractions(placement.start, positionToSeconds(point.at, bpm))),
+          value: canonicalF32(point.value),
+          interpolation: point.interpolation,
+        }));
+        if (points.some((point) => !Number.isFinite(point.value) || point.value < 0)) {
+          throw new ResonaError("Automation values must be finite non-negative multipliers.", [
+            diagnosticFor(
+              composition,
+              "plan.automation-value-invalid",
+              "Automation values must be finite and non-negative.",
+              lane,
+            ),
+          ]);
+        }
+        const sorted = [...points].sort((a, b) => a.frame - b.frame);
+        const collision = sorted.some(
+          (point, index) => index > 0 && point.frame === sorted[index - 1]!.frame,
+        );
+        if (collision)
+          throw new ResonaError("Automation points collide after frame conversion.", [
+            diagnosticFor(
+              composition,
+              "plan.automation-frame-collision",
+              "Automation points must occupy distinct frames.",
+              placement.track,
+            ),
+          ]);
+        return { type: "gain" as const, target, points: sorted };
+      }),
+    ),
   };
   const diagnostics = [...roundedAwayByClip.values()].map(({ path, count }) => ({
     code: "plan.note-rounded-to-zero-frames",

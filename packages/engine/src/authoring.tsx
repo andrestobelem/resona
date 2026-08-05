@@ -14,6 +14,7 @@ import type {
   DurationIR,
   EventClipIR,
   InstrumentTrackIR,
+  AutomationLaneIR,
   JsonObject,
   NodePath,
   NoteIR,
@@ -59,8 +60,8 @@ type MutableInstrumentTrack = {
   path: NodePath;
   clips: EventClipIR[];
   instrument?: PolySynthIR;
-  effects: [];
-  automation: [];
+  effects: InstrumentTrackIR["effects"];
+  automation: AutomationLaneIR[];
 };
 
 type EvaluationSession = {
@@ -215,9 +216,17 @@ type TrackProps = Readonly<{
   id: string;
   source: ReactElement;
   instrument: ReactElement;
+  gain?: number;
+  automation?: readonly AutomationLaneIR[];
 }>;
 
-export const Track = ({ id, source, instrument }: TrackProps): ReactElement => {
+export const Track = ({
+  id,
+  source,
+  instrument,
+  gain = 1,
+  automation = [],
+}: TrackProps): ReactElement => {
   const context = useContext(EvaluationContext);
   if (context?.parent === undefined) {
     throw new Error("Track must be a child of Sequence.");
@@ -229,8 +238,18 @@ export const Track = ({ id, source, instrument }: TrackProps): ReactElement => {
     id,
     path: [...context.parent.path, id] as NodePath,
     clips: [],
-    effects: [],
-    automation: [],
+    effects: [
+      {
+        type: "gain",
+        id: `${id}-gain`,
+        path: [...context.parent.path, id, `${id}-gain`] as NodePath,
+        gain,
+      },
+    ],
+    automation: automation.map((lane) => ({
+      ...lane,
+      points: lane.points.map((point) => ({ ...point })),
+    })),
   };
   context.parent.children.push(track);
 
