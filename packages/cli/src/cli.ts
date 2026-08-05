@@ -37,6 +37,12 @@ type ParsedArgs = Readonly<{
   help: boolean;
 }>;
 
+type ProjectLocation = Readonly<{
+  root: string;
+  configPath?: string;
+  entryPoint?: string;
+}>;
+
 class CliUsageError extends Error {}
 
 class CliCancellationError extends Error {}
@@ -167,7 +173,7 @@ const resolveProjectRoot = async (
   cwd: string,
   entry: string | undefined,
   config: string | undefined,
-): Promise<string> => {
+): Promise<ProjectLocation> => {
   if (config !== undefined) {
     const configPath = resolve(cwd, config);
     let details;
@@ -177,22 +183,62 @@ const resolveProjectRoot = async (
       throw new CliUsageError(`Config file not found: ${configPath}.`);
     }
     if (!details.isFile()) throw new CliUsageError(`Config path is not a file: ${configPath}.`);
-    return realpath(dirname(configPath));
+    const root = await realpath(dirname(configPath));
+    return {
+      root,
+      configPath: await realpath(configPath),
+      ...(entry === undefined ? {} : { entryPoint: await resolveEntryPoint(cwd, entry, root) }),
+    };
   }
 
-  let start = resolve(cwd);
+  const workingDirectory = resolve(cwd);
+  const configPath = await nearestConfig(workingDirectory);
+  let root = await realpath(configPath === undefined ? workingDirectory : dirname(configPath));
   if (entry !== undefined) {
     const entryPath = resolve(cwd, entry);
-    let details;
-    try {
-      details = await stat(entryPath);
-    } catch {
-      throw new CliUsageError(`Project entry not found: ${entryPath}.`);
+    const details = await entryDetails(entryPath);
+    if (details.isDirectory() && configPath === undefined) root = await realpath(entryPath);
+    else if (details.isDirectory()) {
+      throw new CliUsageError("A directory entry cannot be combined with a discovered config.");
+    } else {
+      return {
+        root,
+        ...(configPath === undefined ? {} : { configPath: await realpath(configPath) }),
+        entryPoint: await resolveEntryPoint(cwd, entry, root),
+      };
     }
-    start = details.isDirectory() ? entryPath : dirname(entryPath);
   }
-  const configPath = await nearestConfig(start);
-  return realpath(configPath === undefined ? start : dirname(configPath));
+  return {
+    root,
+    ...(configPath === undefined ? {} : { configPath: await realpath(configPath) }),
+  };
+};
+
+const entryDetails = async (entryPath: string) => {
+  try {
+    return await stat(entryPath);
+  } catch {
+    throw new CliUsageError(`Project entry not found: ${entryPath}.`);
+  }
+};
+
+const resolveEntryPoint = async (
+  cwd: string,
+  entry: string,
+  projectRoot: string,
+): Promise<string> => {
+  const entryPath = resolve(cwd, entry);
+  const details = await entryDetails(entryPath);
+  if (!details.isFile()) throw new CliUsageError(`Project entry is not a file: ${entryPath}.`);
+  const canonicalEntry = await realpath(entryPath);
+  if (
+    canonicalEntry !== projectRoot &&
+    !canonicalEntry.startsWith(`${projectRoot}/`) &&
+    !canonicalEntry.startsWith(`${projectRoot}\\`)
+  ) {
+    throw new CliUsageError("Project entry must remain inside the project root.");
+  }
+  return canonicalEntry;
 };
 
 const writeJson = (output: CliContext["output"], document: unknown): void => {
@@ -203,6 +249,15 @@ const diagnosticSummary = (diagnostics: readonly Diagnostic[]): string => {
   const errors = diagnostics.filter(({ severity }) => severity === "error").length;
   const warnings = diagnostics.filter(({ severity }) => severity === "warning").length;
   return `${errors} error${errors === 1 ? "" : "s"}, ${warnings} warning${warnings === 1 ? "" : "s"}`;
+};
+
+const humanDiagnostics = (
+  output: CliContext["output"],
+  diagnostics: readonly Diagnostic[],
+): void => {
+  for (const diagnostic of diagnostics) {
+    output.stderr += `[${diagnostic.severity}] ${diagnostic.code}: ${diagnostic.message}\n`;
+  }
 };
 
 const isCancellation = (error: unknown, signal: AbortSignal | undefined): boolean => {
@@ -257,8 +312,11 @@ const runCompositions = async (args: ParsedArgs, context: CliContext): Promise<v
   ) {
     throw new CliUsageError("compositions does not accept validation options.");
   }
-  const projectRoot = await resolveProjectRoot(context.cwd, args.entry, args.config);
-  const catalog = await loadProjectCompositions(projectRoot);
+  const location = await resolveProjectRoot(context.cwd, args.entry, args.config);
+  const catalog = await loadProjectCompositions(location.root, {
+    ...(location.configPath === undefined ? {} : { configPath: location.configPath }),
+    ...(location.entryPoint === undefined ? {} : { entryPoint: location.entryPoint }),
+  });
   const document = {
     format: "resona/compositions",
     schemaVersion: 1,
@@ -273,7 +331,7 @@ const runValidate = async (args: ParsedArgs, context: CliContext): Promise<void>
   if (args.composition === undefined || args.composition.length === 0) {
     throw new CliUsageError("validate requires --composition <id>.");
   }
-  const projectRoot = await resolveProjectRoot(context.cwd, args.entry, args.config);
+  const location = await resolveProjectRoot(context.cwd, args.entry, args.config);
   let inputs = args.input;
   if (args.inputFile !== undefined) {
     let source: string;
@@ -286,11 +344,13 @@ const runValidate = async (args: ParsedArgs, context: CliContext): Promise<void>
   }
   if (context.signal?.aborted === true) throw new CliCancellationError("Operation cancelled.");
   const options = {
-    projectRoot,
+    projectRoot: location.root,
     compositionId: args.composition,
     ...(inputs === undefined ? {} : { inputs }),
     ...(args.seed === undefined ? {} : { seed: args.seed }),
     ...(context.signal === undefined ? {} : { signal: context.signal }),
+    ...(location.configPath === undefined ? {} : { configPath: location.configPath }),
+    ...(location.entryPoint === undefined ? {} : { entryPoint: location.entryPoint }),
   };
   const job = await createRenderJob(options);
   const document = {
@@ -307,6 +367,7 @@ const runValidate = async (args: ParsedArgs, context: CliContext): Promise<void>
   if (args.json) writeJson(context.output, document);
   else {
     context.output.stdout += `Validated ${job.variant.compositionId} (${diagnosticSummary(job.diagnostics)}).\n`;
+    humanDiagnostics(context.output, job.diagnostics);
   }
 };
 
@@ -323,6 +384,7 @@ export const runCli = async (
   }>,
 ): Promise<0 | 1 | 2 | 130> => {
   const context: CliContext = options;
+  const jsonRequested = argv.some((argument) => argument === "--json");
   let args: ParsedArgs | undefined;
   try {
     args = parseArgs(argv);
@@ -346,7 +408,7 @@ export const runCli = async (
       message: errorMessage(error),
       ...(diagnostics === undefined ? {} : { diagnostics }),
     };
-    if (args?.json === true) writeJson(context.output, document);
+    if (args?.json === true || jsonRequested) writeJson(context.output, document);
     else {
       context.output.stderr += `resona: ${document.message}\n`;
       if (diagnostics !== undefined) {

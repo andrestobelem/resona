@@ -2,7 +2,7 @@ import { build } from "esbuild";
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { mkdtemp, readFile, realpath, rm } from "node:fs/promises";
-import { isAbsolute, join, resolve } from "node:path";
+import { isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { Worker } from "node:worker_threads";
 
@@ -30,6 +30,11 @@ type ProjectCompilation = VariantCompilation & Readonly<{ project: ResolvedProje
 export type ProjectCompositions = Readonly<{
   project: ResolvedProject;
   compositions: readonly CompositionSummary[];
+}>;
+
+export type ProjectSourceOptions = Readonly<{
+  configPath?: string;
+  entryPoint?: string;
 }>;
 
 const engineModulePath = (name: string, sourceExtension: string): string => {
@@ -69,6 +74,9 @@ const compileProjectEntry = (entryPoint: string): string => {
 const workerSource = [
   'import { parentPort, workerData } from "node:worker_threads";',
   "try {",
+  '  const forwardLog = (...args) => parentPort.postMessage({ type: "log", message: args.map(String).join(" ") });',
+  "  console.log = forwardLog;",
+  "  console.info = forwardLog;",
   "  const project = await import(workerData.moduleUrl);",
   "  const controller = new AbortController();",
   '  parentPort.on("message", (message) => { if (message?.type === "abort") controller.abort(); });',
@@ -93,6 +101,9 @@ const workerSource = [
 const discoveryWorkerSource = [
   'import { parentPort, workerData } from "node:worker_threads";',
   "try {",
+  '  const forwardLog = (...args) => parentPort.postMessage({ type: "log", message: args.map(String).join(" ") });',
+  "  console.log = forwardLog;",
+  "  console.info = forwardLog;",
   "  const project = await import(workerData.moduleUrl);",
   '  parentPort.postMessage({ type: "success", compositions: project.listCompositions() });',
   "} catch (error) {",
@@ -106,7 +117,17 @@ const runCompositionDiscovery = (moduleUrl: string): Promise<unknown> =>
       new URL(`data:text/javascript,${encodeURIComponent(discoveryWorkerSource)}`),
       { workerData: { moduleUrl } },
     );
-    worker.once("message", (message: unknown) => {
+    worker.on("message", (message: unknown) => {
+      if (
+        message !== null &&
+        typeof message === "object" &&
+        "type" in message &&
+        message.type === "log" &&
+        "message" in message
+      ) {
+        process.stderr.write(`[resona] ${String(message.message)}\n`);
+        return;
+      }
       void worker.terminate();
       if (
         message !== null &&
@@ -189,7 +210,17 @@ const runInFreshWorker = (
     }
     signal?.addEventListener("abort", abort, { once: true });
 
-    worker.once("message", (message: unknown) => {
+    worker.on("message", (message: unknown) => {
+      if (
+        message !== null &&
+        typeof message === "object" &&
+        "type" in message &&
+        message.type === "log" &&
+        "message" in message
+      ) {
+        process.stderr.write(`[resona] ${String(message.message)}\n`);
+        return;
+      }
       if (
         message !== null &&
         typeof message === "object" &&
@@ -228,7 +259,17 @@ const loadConfigValue = (moduleUrl: string): Promise<unknown> =>
       new URL(`data:text/javascript,${encodeURIComponent(configWorkerSource)}`),
       { workerData: { moduleUrl } },
     );
-    worker.once("message", (message: unknown) => {
+    worker.on("message", (message: unknown) => {
+      if (
+        message !== null &&
+        typeof message === "object" &&
+        "type" in message &&
+        message.type === "log" &&
+        "message" in message
+      ) {
+        process.stderr.write(`[resona] ${String(message.message)}\n`);
+        return;
+      }
       void worker.terminate();
       if (message !== null && typeof message === "object" && "type" in message) {
         if (message.type === "success" && "config" in message) {
@@ -255,6 +296,7 @@ const assertEntryPoint = (entryPoint: string): string => {
 const loadProjectConfiguration = async (
   projectRoot: string,
   directory: string,
+  sourceOptions: ProjectSourceOptions = {},
 ): Promise<
   Readonly<{
     entryPoint: string;
@@ -262,31 +304,54 @@ const loadProjectConfiguration = async (
     configuration: ResolvedProjectConfiguration;
   }>
 > => {
-  const configPath = join(projectRoot, "resona.config.ts");
+  const configPath = sourceOptions.configPath ?? join(projectRoot, "resona.config.ts");
   const configValue = existsSync(configPath)
     ? await (async () => {
-        const outputFile = join(directory, "config.mjs");
-        await build({
-          banner: {
-            js: 'import { createRequire as __resonaCreateRequire } from "node:module"; const require = __resonaCreateRequire(import.meta.url);',
-          },
-          bundle: true,
-          entryPoints: [configPath],
-          format: "esm",
-          outfile: outputFile,
-          nodePaths: [engineNodePath],
-          platform: "node",
-          supported: { "top-level-await": false },
-          target: "node24",
-        });
-        return loadConfigValue(pathToFileURL(outputFile).href);
+        try {
+          const outputFile = join(directory, "config.mjs");
+          await build({
+            banner: {
+              js: 'import { createRequire as __resonaCreateRequire } from "node:module"; const require = __resonaCreateRequire(import.meta.url);',
+            },
+            bundle: true,
+            entryPoints: [configPath],
+            format: "esm",
+            outfile: outputFile,
+            nodePaths: [engineNodePath],
+            platform: "node",
+            supported: { "top-level-await": false },
+            target: "node24",
+          });
+          return await loadConfigValue(pathToFileURL(outputFile).href);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "Project config failed.";
+          throw new Error(`Project config could not be loaded: ${message}`);
+        }
       })()
     : {};
   const resolved = resolveProjectConfiguration(projectRoot, configValue);
+  const entryPoint =
+    sourceOptions.entryPoint === undefined
+      ? resolved.entryPoint
+      : resolve(projectRoot, sourceOptions.entryPoint);
+  const entryFromRoot = relative(projectRoot, entryPoint);
+  if (
+    entryFromRoot === ".." ||
+    entryFromRoot.startsWith("../") ||
+    entryFromRoot.startsWith("..\\")
+  ) {
+    throw new Error("Project entry must remain inside the project root.");
+  }
   return {
-    entryPoint: assertEntryPoint(resolved.entryPoint),
+    entryPoint: assertEntryPoint(entryPoint),
     staticDirectory: resolved.staticDirectory,
-    configuration: resolved.configuration,
+    configuration:
+      sourceOptions.entryPoint === undefined
+        ? resolved.configuration
+        : deepFreeze({
+            ...resolved.configuration,
+            entry: { value: entryFromRoot, source: "invocation" as const },
+          }),
   };
 };
 
@@ -296,6 +361,7 @@ export const loadProjectCompilation = async (
   inputs?: JsonObject,
   invocationSeed?: string,
   signal?: AbortSignal,
+  sourceOptions: ProjectSourceOptions = {},
 ): Promise<ProjectCompilation> => {
   const directory = await mkdtemp(join(projectRoot, ".resona-project-"));
   const outputFile = join(directory, "project.mjs");
@@ -314,7 +380,7 @@ export const loadProjectCompilation = async (
     }
     let resolvedProject: Awaited<ReturnType<typeof loadProjectConfiguration>>;
     try {
-      resolvedProject = await loadProjectConfiguration(projectRoot, directory);
+      resolvedProject = await loadProjectConfiguration(projectRoot, directory, sourceOptions);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Project configuration failed.";
       throw new ResonaError(message, [
@@ -388,6 +454,7 @@ export const loadProjectCompilation = async (
 
 export const loadProjectCompositions = async (
   projectRoot: string,
+  sourceOptions: ProjectSourceOptions = {},
 ): Promise<ProjectCompositions> => {
   if (!isAbsolute(projectRoot)) {
     throw new Error("projectRoot must be an absolute path.");
@@ -398,7 +465,11 @@ export const loadProjectCompositions = async (
   const outputFile = join(directory, "project.mjs");
 
   try {
-    const resolvedProject = await loadProjectConfiguration(canonicalProjectRoot, directory);
+    const resolvedProject = await loadProjectConfiguration(
+      canonicalProjectRoot,
+      directory,
+      sourceOptions,
+    );
     await build({
       banner: {
         js: 'import { createRequire as __resonaCreateRequire } from "node:module"; const require = __resonaCreateRequire(import.meta.url);',
