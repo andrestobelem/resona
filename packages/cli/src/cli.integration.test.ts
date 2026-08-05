@@ -21,6 +21,7 @@ beforeAll(async () => {
     join(projectRoot, "src", "index.tsx"),
     `import { Composition, Sequence, duration, position, rational, registerRoot } from ${JSON.stringify(engineModulePath)};
 console.log("project-log");
+process.stdout.write("project-write\\n");
 const Song = () => <Sequence id="root" from={position.seconds(0n)} />;
 const Root = () => <Composition id="Smoke" component={Song} duration={duration.seconds(1n)} bpm={rational(120n)} timeSignature={{ beatsPerBar: 4, beatUnit: 4 }} />;
 registerRoot(Root);`,
