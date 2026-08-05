@@ -296,6 +296,7 @@ export type Diagnostic = Readonly<{
     | "input-validation"
     | "planning"
     | "preparation"
+    | "render"
     | "registration"
     | "tsx-evaluation";
   severity: "error" | "warning";
