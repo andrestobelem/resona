@@ -129,10 +129,10 @@ export const renderAudioToFile = async (
   const shouldOverwrite = overwrite === true;
   const isAborted = (): boolean => signal?.aborted === true;
   if (isAborted()) throw cancellationError(compositionId);
-  if (!shouldOverwrite && (await exists(outputPath))) throw outputExistsError(compositionId);
 
   const temporaryPath = `${joinTempPath(outputPath)}.${randomUUID()}.tmp`;
   try {
+    if (!shouldOverwrite && (await exists(outputPath))) throw outputExistsError(compositionId);
     const rendered = renderAudio(job, {
       ...renderOptions,
       ...(signal === undefined ? {} : { signal }),
@@ -161,7 +161,7 @@ export const renderAudioToFile = async (
         }
         throw error;
       }
-      await unlink(temporaryPath);
+      await unlink(temporaryPath).catch(() => undefined);
     }
     return Object.freeze({
       outputPath,
