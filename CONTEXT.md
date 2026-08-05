@@ -444,7 +444,12 @@ Paso final que valida y renombra un temporal al destino autorizado. Un trabajo n
 
 **Fingerprint de render**:
 Identificador derivado de una `RenderSpec`. No incluye ruta de salida, callbacks, progreso
-ni cancelación.
+ni cancelación. La versión inicial usa SHA-256 sobre JSON sin espacios, con claves de objeto
+ordenadas lexicográficamente y arrays en orden semántico.
+
+**Dirección aleatoria**:
+Tupla versionada de seed, path estable de nodo y clave explícita. Produce un valor puro en
+`[0, 1)` sin avanzar estado global ni depender del orden de otras consultas.
 
 **Evento de CLI**:
 Envelope JSON versionado y discriminado por `type` que comunica progreso, diagnóstico o
