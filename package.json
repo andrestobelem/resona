@@ -10,7 +10,7 @@
   },
   "packageManager": "pnpm@11.20.0",
   "scripts": {
-    "build": "pnpm --recursive --if-present run build",
+    "build": "pnpm --recursive --fail-if-no-match run build",
     "check:fast": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:unit",
     "check:full": "pnpm check:fast && pnpm build && pnpm test:integration",
     "format": "prettier --write . --ignore-unknown",
@@ -18,9 +18,9 @@
     "lint": "pnpm lint:code && pnpm lint:docs",
     "lint:code": "eslint .",
     "lint:docs": "markdownlint-cli2",
-    "test:integration": "vitest run --config vitest.integration.config.ts --passWithNoTests",
-    "test:unit": "vitest run --config vitest.config.ts --passWithNoTests",
-    "typecheck": "pnpm --recursive --if-present run typecheck"
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:unit": "vitest run --config vitest.config.ts",
+    "typecheck": "pnpm --recursive --fail-if-no-match run typecheck"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
