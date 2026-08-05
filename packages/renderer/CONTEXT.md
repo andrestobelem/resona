@@ -17,5 +17,7 @@ per instrument and render execution.
 Sine, saw and square reset phase at attack. Saw and square use the same deterministic
 PolyBLEP correction around their discontinuities.
 
-Future tickets add audio resources, effects, automation and filesystem publication without
-introducing a second interpretation of the execution plan.
+`renderAudioToFile()` is the filesystem adapter over the same renderer. It writes a validated
+float32 WAV to a same-directory temporary, publishes it atomically, refuses existing outputs
+unless `overwrite: true`, and removes temporary state on cancellation or failure. It never
+introduces a second interpretation of the execution plan.
