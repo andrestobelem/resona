@@ -13,6 +13,15 @@ type Voice = {
   releaseLevel?: number;
 };
 
+type PolySynthProcessor = Extract<ExecutionPlan["processors"][number], { type: "poly-synth" }>;
+
+type InstrumentState = {
+  processorIndex: number;
+  processor: PolySynthProcessor;
+  voices: Voice[];
+  voiceSteals: number;
+};
+
 export type RenderAudioOptions = Readonly<{
   blockFrames?: number;
 }>;
@@ -23,6 +32,19 @@ export type RenderedAudio = Readonly<{
   frames: number;
   sampleRate: number;
   channels: number;
+  diagnostics: readonly RenderDiagnostic[];
+}>;
+
+export type RenderDiagnostic = Readonly<{
+  code: "render.poly-synth-voice-stealing";
+  phase: "render";
+  severity: "warning";
+  message: string;
+  compositionId: string;
+  cause: Readonly<{
+    instrument: number;
+    voiceSteals: number;
+  }>;
 }>;
 
 const canonicalF32 = (value: number): number => {
@@ -35,6 +57,34 @@ const canonicalF32 = (value: number): number => {
 
 const frequencyFromSemitones = (semitonesFromA4: number): number =>
   440 * 2 ** (semitonesFromA4 / 12);
+
+const polyBlep = (phase: number, phaseDelta: number): number => {
+  if (phase < phaseDelta) {
+    const normalized = phase / phaseDelta;
+    return normalized + normalized - normalized * normalized - 1;
+  }
+  if (phase > 1 - phaseDelta) {
+    const normalized = (phase - 1) / phaseDelta;
+    return normalized * normalized + normalized + normalized + 1;
+  }
+  return 0;
+};
+
+const oscillatorAt = (
+  oscillator: PolySynthProcessor["oscillator"],
+  phase: number,
+  phaseDelta: number,
+): number => {
+  if (oscillator === "sine") {
+    return Math.sin(TAU * phase);
+  }
+  if (oscillator === "saw") {
+    return 2 * phase - 1 - polyBlep(phase, phaseDelta);
+  }
+
+  const shiftedPhase = (phase + 0.5) % 1;
+  return (phase < 0.5 ? 1 : -1) + polyBlep(phase, phaseDelta) - polyBlep(shiftedPhase, phaseDelta);
+};
 
 const envelopeAt = (
   voice: Voice,
@@ -94,20 +144,77 @@ const encodeWav = (samples: Float32Array, sampleRate: number, channels: number):
 
 const validatePlan = (plan: ExecutionPlan): void => {
   if (plan.sampleRate !== 48_000 || plan.channels !== 2) {
-    throw new RangeError("The T02 renderer only supports the fixed 48 kHz stereo profile.");
+    throw new RangeError("The renderer only supports the fixed 48 kHz stereo profile.");
   }
   if (
     plan.processors.some((processor) => processor.type !== "poly-synth" && processor.type !== "sum")
   ) {
-    throw new RangeError("The T02 renderer only supports PolySynth and sum processors.");
+    throw new RangeError("The renderer only supports PolySynth and sum processors.");
   }
   if (
     plan.processors.some(
-      (processor) => processor.type === "poly-synth" && processor.oscillator !== "sine",
+      (processor) =>
+        processor.type === "poly-synth" &&
+        !["sine", "saw", "square"].includes(processor.oscillator),
     )
   ) {
-    throw new RangeError("The T02 renderer only supports the sine oscillator.");
+    throw new RangeError("PolySynth oscillator must be sine, saw, or square.");
   }
+};
+
+const createVoice = (): Voice => ({
+  active: false,
+  occurrence: -1,
+  phase: 0,
+  frequencyHz: 0,
+  velocity: 0,
+  attackFrame: 0,
+});
+
+const instantaneousAmplitude = (
+  voice: Voice,
+  frame: number,
+  processor: PolySynthProcessor,
+): number =>
+  envelopeAt(
+    voice,
+    frame,
+    processor.attackFrames,
+    processor.decayFrames,
+    processor.sustain,
+    processor.releaseFrames,
+  ) * voice.velocity;
+
+const selectVoice = (
+  instrument: InstrumentState,
+  frame: number,
+): Readonly<{ voice: Voice; stolen: boolean }> => {
+  const free = instrument.voices.find((voice) => !voice.active);
+  if (free !== undefined) {
+    return { voice: free, stolen: false };
+  }
+
+  const releasing = instrument.voices
+    .map((voice, index) => ({
+      voice,
+      index,
+      amplitude: instantaneousAmplitude(voice, frame, instrument.processor),
+    }))
+    .filter(({ voice }) => voice.releaseFrame !== undefined)
+    .sort((left, right) => left.amplitude - right.amplitude || left.index - right.index)[0];
+  if (releasing !== undefined) {
+    return { voice: releasing.voice, stolen: true };
+  }
+
+  const oldest = instrument.voices
+    .map((voice, index) => ({ voice, index }))
+    .sort(
+      (left, right) => left.voice.attackFrame - right.voice.attackFrame || left.index - right.index,
+    )[0];
+  if (oldest === undefined) {
+    throw new RangeError("PolySynth must contain at least one voice.");
+  }
+  return { voice: oldest.voice, stolen: true };
 };
 
 export const renderAudio = (
@@ -120,7 +227,7 @@ export const renderAudio = (
   const { plan } = job;
   validatePlan(plan);
 
-  const instruments = plan.processors
+  const instruments: InstrumentState[] = plan.processors
     .map((processor, index) => ({ processor, index }))
     .filter(
       (
@@ -129,25 +236,37 @@ export const renderAudio = (
         processor: Extract<ExecutionPlan["processors"][number], { type: "poly-synth" }>;
         index: number;
       }> => entry.processor.type === "poly-synth",
-    );
-  const voices: Voice[] = instruments.map(() => ({
-    active: false,
-    occurrence: -1,
-    phase: 0,
-    frequencyHz: 0,
-    velocity: 0,
-    attackFrame: 0,
-  }));
+    )
+    .map(({ processor, index }) => ({
+      processorIndex: index,
+      processor,
+      voices: Array.from({ length: processor.maxVoices }, createVoice),
+      voiceSteals: 0,
+    }));
+  const instrumentsByProcessor = new Map(
+    instruments.map((instrument) => [instrument.processorIndex, instrument]),
+  );
   const samples = new Float32Array(plan.nominalDurationFrames * plan.channels);
 
   for (let blockStart = 0; blockStart < plan.nominalDurationFrames; blockStart += blockFrames) {
     const blockEnd = Math.min(plan.nominalDurationFrames, blockStart + blockFrames);
     for (let frame = blockStart; frame < blockEnd; frame += 1) {
+      for (const instrument of instruments) {
+        for (const voice of instrument.voices) {
+          if (
+            voice.active &&
+            voice.releaseFrame !== undefined &&
+            instantaneousAmplitude(voice, frame, instrument.processor) === 0
+          ) {
+            voice.active = false;
+          }
+        }
+      }
+
       for (const event of plan.events) {
         if (event.frame !== frame) continue;
-        const voice = voices[event.instrument];
-        const instrument = instruments[event.instrument]?.processor;
-        if (voice === undefined || instrument === undefined) {
+        const instrument = instrumentsByProcessor.get(event.instrument);
+        if (instrument === undefined) {
           throw new RangeError("The plan references an unknown instrument.");
         }
         if (event.type === "note-attack") {
@@ -159,6 +278,10 @@ export const renderAudio = (
           ) {
             throw new RangeError("A note frequency is outside the executable range.");
           }
+          const { voice, stolen } = selectVoice(instrument, frame);
+          if (stolen) {
+            instrument.voiceSteals += 1;
+          }
           Object.assign(voice, {
             active: true,
             occurrence: event.occurrence,
@@ -169,40 +292,51 @@ export const renderAudio = (
             releaseFrame: undefined,
             releaseLevel: undefined,
           });
-        } else if (voice.active && voice.occurrence === event.occurrence) {
-          voice.releaseFrame = frame;
-          voice.releaseLevel = envelopeAt(
-            voice,
-            frame,
-            instrument.attackFrames,
-            instrument.decayFrames,
-            instrument.sustain,
-            instrument.releaseFrames,
+        } else {
+          const voice = instrument.voices.find(
+            (candidate) => candidate.active && candidate.occurrence === event.occurrence,
           );
+          if (voice !== undefined) {
+            voice.releaseFrame = frame;
+            voice.releaseLevel = envelopeAt(
+              voice,
+              frame,
+              instrument.processor.attackFrames,
+              instrument.processor.decayFrames,
+              instrument.processor.sustain,
+              instrument.processor.releaseFrames,
+            );
+            if (instrument.processor.releaseFrames === 0) {
+              voice.active = false;
+            }
+          }
         }
       }
 
       let mono = 0;
-      for (const [instrumentIndex, { processor }] of instruments.entries()) {
-        const voice = voices[instrumentIndex]!;
-        if (!voice.active) continue;
-        const envelope = envelopeAt(
-          voice,
-          frame,
-          processor.attackFrames,
-          processor.decayFrames,
-          processor.sustain,
-          processor.releaseFrames,
-        );
-        if (voice.releaseFrame !== undefined && envelope === 0) {
-          voice.active = false;
-          continue;
+      for (const instrument of instruments) {
+        let instrumentSample = 0;
+        for (const voice of instrument.voices) {
+          if (!voice.active) continue;
+          const envelope = envelopeAt(
+            voice,
+            frame,
+            instrument.processor.attackFrames,
+            instrument.processor.decayFrames,
+            instrument.processor.sustain,
+            instrument.processor.releaseFrames,
+          );
+          const phaseDelta = voice.frequencyHz / plan.sampleRate;
+          const contribution = canonicalF32(
+            oscillatorAt(instrument.processor.oscillator, voice.phase, phaseDelta) *
+              envelope *
+              voice.velocity,
+          );
+          instrumentSample = canonicalF32(instrumentSample + contribution);
+          voice.phase += phaseDelta;
+          voice.phase -= Math.floor(voice.phase);
         }
-        mono = canonicalF32(
-          mono + canonicalF32(Math.sin(TAU * voice.phase) * envelope * voice.velocity),
-        );
-        voice.phase += voice.frequencyHz / plan.sampleRate;
-        voice.phase -= Math.floor(voice.phase);
+        mono = canonicalF32(mono + instrumentSample);
       }
       const sample = canonicalF32(mono);
       samples[frame * plan.channels] = sample;
@@ -210,11 +344,26 @@ export const renderAudio = (
     }
   }
 
+  const diagnostics: RenderDiagnostic[] = instruments
+    .filter((instrument) => instrument.voiceSteals > 0)
+    .map((instrument) => ({
+      code: "render.poly-synth-voice-stealing",
+      phase: "render",
+      severity: "warning",
+      message: `PolySynth stole ${instrument.voiceSteals === 1 ? "one voice" : `${instrument.voiceSteals} voices`} while rendering.`,
+      compositionId: plan.compositionId,
+      cause: Object.freeze({
+        instrument: instrument.processorIndex,
+        voiceSteals: instrument.voiceSteals,
+      }),
+    }));
+
   return Object.freeze({
     wav: encodeWav(samples, plan.sampleRate, plan.channels),
     samples,
     frames: plan.nominalDurationFrames,
     sampleRate: plan.sampleRate,
     channels: plan.channels,
+    diagnostics: Object.freeze(diagnostics),
   });
 };
