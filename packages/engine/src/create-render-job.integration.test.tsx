@@ -15,6 +15,8 @@ const configuredProjectRoot = fileURLToPath(
 const invalidConfigProjectRoot = fileURLToPath(
   new URL("./fixtures/invalid-config-project/", import.meta.url),
 );
+const canonicalExactProjectRoot = exactProjectRoot.replace(/\/$/, "");
+const canonicalConfiguredProjectRoot = configuredProjectRoot.replace(/\/$/, "");
 const configuredAudioPath = fileURLToPath(
   new URL("./fixtures/configured-project/assets/tone.wav", import.meta.url),
 );
@@ -72,7 +74,7 @@ describe("createRenderJob", () => {
     });
 
     expect(job.project).toEqual({
-      root: configuredProjectRoot,
+      root: canonicalConfiguredProjectRoot,
       buildId: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
       configuration: {
         entry: { value: "music.tsx", source: "project-config" },
@@ -122,6 +124,22 @@ describe("createRenderJob", () => {
       compositionId: "Configured",
     });
     expect(repeated.project).toEqual(job.project);
+  });
+
+  it("canonicalizes equivalent project roots before identifying a variant", async () => {
+    const equivalentProjectRoot = `${exactProjectRoot}../exact-project`;
+    const direct = await createRenderJob({
+      projectRoot: exactProjectRoot,
+      compositionId: "ExactNote",
+    });
+    const aliased = await createRenderJob({
+      projectRoot: equivalentProjectRoot,
+      compositionId: "ExactNote",
+    });
+
+    expect(aliased.project.root).toBe(direct.project.root);
+    expect(aliased.project.buildId).toBe(direct.project.buildId);
+    expect(aliased.fingerprint).toBe(direct.fingerprint);
   });
 
   it("changes build identity when a bundled project dependency changes", async () => {
@@ -253,7 +271,7 @@ registerRoot(Root);`,
 
     expect(job).toEqual({
       project: {
-        root: exactProjectRoot,
+        root: canonicalExactProjectRoot,
         buildId: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
         configuration: {
           entry: { value: "src/index.tsx", source: "resona-default" },

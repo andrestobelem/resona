@@ -1,4 +1,5 @@
 import { isAbsolute } from "node:path";
+import { realpath } from "node:fs/promises";
 
 import { deepFreeze } from "./deep-freeze.js";
 import type { CreateRenderJobResult, Diagnostic, JsonObject } from "./model.js";
@@ -34,8 +35,9 @@ export const createRenderJob = async ({
   }
 
   try {
+    const canonicalProjectRoot = await realpath(projectRoot);
     const compilation = await loadProjectCompilation(
-      projectRoot,
+      canonicalProjectRoot,
       compositionId,
       inputs,
       seed,
