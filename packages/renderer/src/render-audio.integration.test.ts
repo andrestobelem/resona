@@ -97,6 +97,42 @@ describe("renderAudio", () => {
     expect(byOne.wav).toEqual(byLargeBlocks.wav);
   });
 
+  it("renders an audible variant from validated composition inputs", async () => {
+    const defaultJob = await createRenderJob({
+      projectRoot: exactProjectRoot,
+      compositionId: "InputVariant",
+    });
+    const louderJob = await createRenderJob({
+      projectRoot: exactProjectRoot,
+      compositionId: "InputVariant",
+      inputs: { intensity: 0.75 },
+    });
+    const repeatedLouderJob = await createRenderJob({
+      projectRoot: exactProjectRoot,
+      compositionId: "InputVariant",
+      inputs: { intensity: 0.75 },
+    });
+
+    expect(defaultJob.inputs).toEqual({ intensity: 0.25, voice: { semitonesFromA4: 0 } });
+    expect(louderJob.inputs).toEqual({ intensity: 0.75, voice: { semitonesFromA4: 0 } });
+    expect(Object.isFrozen(louderJob.inputs)).toBe(true);
+    expect(Object.isFrozen(louderJob.inputs.voice)).toBe(true);
+    expect(repeatedLouderJob).toEqual(louderJob);
+
+    const defaultAudio = renderAudio(defaultJob);
+    const louderAudio = renderAudio(louderJob);
+    const repeatedLouderAudio = renderAudio(repeatedLouderJob);
+    const defaultAttack = defaultJob.plan.events.find((event) => event.type === "note-attack");
+    const louderAttack = louderJob.plan.events.find((event) => event.type === "note-attack");
+
+    expect(defaultAttack?.velocity).toBe(0.25);
+    expect(louderAttack?.velocity).toBe(0.75);
+    expect(defaultAudio.samples[2]).toBeGreaterThan(0);
+    expect(louderAudio.samples[2]).toBeGreaterThan(defaultAudio.samples[2]! * 2.9);
+    expect(louderAudio.samples[2]).toBeLessThan(defaultAudio.samples[2]! * 3.1);
+    expect(repeatedLouderAudio.samples).toEqual(louderAudio.samples);
+  });
+
   it("renders overlapping occurrences deterministically and ignores a stolen release", async () => {
     const base = await createRenderJob({
       projectRoot: exactProjectRoot,

@@ -9,6 +9,14 @@ export {
   registerRoot,
 } from "./authoring.js";
 export { createRenderJob, type CreateRenderJobOptions } from "./create-render-job.js";
+export {
+  type DeepReadonly,
+  type InferInputs,
+  type InputSchema,
+  type InputSchemaIR,
+  type InputValidationIssue,
+  type InputValidationResult,
+} from "./input-schema.js";
 export { ResonaError } from "./resona-error.js";
 export type {
   CompositionIR,
@@ -16,6 +24,7 @@ export type {
   Diagnostic,
   DurationIR,
   ExecutionPlan,
+  JsonObject,
   NoteIR,
   PositionIR,
   RationalIR,
