@@ -73,6 +73,12 @@ describe("fromZod", () => {
     ).toThrowError(UnsupportedZodInputSchemaError);
   });
 
+  it("rejects a declared async superRefine when the adapter is created", () => {
+    expect(() =>
+      fromZod(z.strictObject({ value: z.string() }).superRefine(async () => {})),
+    ).toThrowError(UnsupportedZodInputSchemaError);
+  });
+
   it("turns a latent refinement promise into a synchronous validation failure", () => {
     const schema = fromZod(
       z.strictObject({

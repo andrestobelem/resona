@@ -14,6 +14,7 @@ export type UnsupportedZodInputSchemaIssue = Readonly<{
     | "coercion"
     | "default"
     | "overwrite"
+    | "opaque-refinement"
     | "preprocess"
     | "stripping"
     | "transform";
@@ -75,6 +76,9 @@ const findUnsupportedFeatures = (
     }
     if (def.coerce === true) return [unsupportedIssue(path, "coercion")];
     if (def.check === "overwrite") return [unsupportedIssue(path, "overwrite")];
+    if (def.check === "custom" && typeof def.fn !== "function") {
+      return [unsupportedIssue(path, "opaque-refinement")];
+    }
     if (def.type === "catch") return [unsupportedIssue(path, "catch")];
     if (def.type === "default" || def.type === "prefault") {
       return [unsupportedIssue(path, "default")];
@@ -94,7 +98,11 @@ const findUnsupportedFeatures = (
               findUnsupportedFeatures(child, [...path, key], visited),
             )
           : [];
-      return [...shapeIssues, ...findUnsupportedFeatures(def.catchall, [...path, "*"], visited)];
+      return [
+        ...shapeIssues,
+        ...findUnsupportedFeatures(def.catchall, [...path, "*"], visited),
+        ...findUnsupportedFeatures(def.checks, path, visited),
+      ];
     }
     return Object.values(def).flatMap((child) => findUnsupportedFeatures(child, path, visited));
   }
