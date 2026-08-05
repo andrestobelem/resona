@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { readFile, realpath } from "node:fs/promises";
 import { isAbsolute, relative, resolve } from "node:path";
 
 import { deepFreeze } from "./deep-freeze.js";
@@ -120,7 +120,17 @@ export const createStaticAudioPreparationResolver = (
   Object.freeze({
     audio: async (reference): Promise<PreparedAudioMetadata & { samples: readonly number[] }> => {
       if (signal.aborted) throw new Error("Composition preparation was cancelled.");
-      const bytes = await readFile(resolveReferencePath(staticDirectory, reference), { signal });
+      const staticRoot = await realpath(staticDirectory);
+      const candidatePath = await realpath(resolveReferencePath(staticRoot, reference));
+      const candidateRelative = relative(staticRoot, candidatePath);
+      if (
+        candidateRelative === ".." ||
+        candidateRelative.startsWith("../") ||
+        candidateRelative.startsWith("..\\")
+      ) {
+        throw new Error("Static audio paths must remain inside the configured static directory.");
+      }
+      const bytes = await readFile(candidatePath, { signal });
       const metadata = parseWavMetadata(bytes);
       if (signal.aborted) throw new Error("Composition preparation was cancelled.");
       return deepFreeze({

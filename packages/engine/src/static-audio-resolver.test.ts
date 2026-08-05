@@ -44,6 +44,15 @@ describe("static audio resolver", () => {
       await expect(
         resolver.audio({ type: "resona/static-audio", version: 1, path: "../bad.wav" }),
       ).rejects.toThrow();
+      await expect(
+        resolver.audio({ type: "resona/static-audio", version: 1, path: "/tmp/bad.wav" }),
+      ).rejects.toThrow();
+      await expect(
+        resolver.audio({ type: "resona/static-audio", version: 1, path: "\\tmp\\bad.wav" }),
+      ).rejects.toThrow();
+      await expect(
+        resolver.audio({ type: "resona/static-audio", version: 1, path: "" }),
+      ).rejects.toThrow();
     } finally {
       await rm(root, { recursive: true, force: true });
     }

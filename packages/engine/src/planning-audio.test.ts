@@ -86,5 +86,29 @@ describe("AudioClip planning", () => {
         loop: true,
       },
     ]);
+
+    const duplicateComposition = {
+      ...composition,
+      root: {
+        ...composition.root,
+        children: [
+          {
+            ...composition.root.children[0]!,
+            clips: [
+              ...composition.root.children[0]!.clips,
+              {
+                ...composition.root.children[0]!.clips[0]!,
+                id: "clip-2",
+                path: ["audio", "root", "track", "clip-2"],
+                from: position.seconds(3n),
+              },
+            ],
+          },
+        ],
+      },
+    } as typeof composition;
+    const duplicatePlan = compileExecutionPlan(duplicateComposition, [resource]).plan;
+    expect(duplicatePlan.resources).toHaveLength(1);
+    expect(duplicatePlan.audioRegions).toHaveLength(2);
   });
 });
