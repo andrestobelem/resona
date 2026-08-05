@@ -278,11 +278,10 @@ registerRoot(Root);`,
       },
     ]);
     expect(Object.isFrozen(job.runtimeResources[0]?.samples)).toBe(true);
-    const changedBytes = wavBytes();
-    changedBytes.writeFloatLE(0.75, 44);
-    await writeFile(configuredAudioPath, changedBytes);
+    expect(() => {
+      (job.runtimeResources[0]?.samples as number[])[0] = 0.75;
+    }).toThrow();
     expect(job.runtimeResources[0]?.samples).toEqual([0.25]);
-    await writeFile(configuredAudioPath, bytes);
     expect(job.spec.resourceHashes).toEqual([hash]);
   });
 
