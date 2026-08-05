@@ -81,7 +81,7 @@ const cloneJson = (value: unknown, ancestors: Set<object>): JsonValue => {
   throw new InvalidJsonInputError("Inputs must be finite JSON values without undefined.");
 };
 
-const cloneJsonObject = (value: unknown): JsonObject => {
+export const cloneJsonObject = (value: unknown): JsonObject => {
   const clone = cloneJson(value, new Set());
   if (clone === null || Array.isArray(clone) || typeof clone !== "object") {
     throw new InvalidJsonInputError("Composition inputs must be a JSON object.");

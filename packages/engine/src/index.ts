@@ -7,8 +7,27 @@ export {
   note,
   pitch,
   registerRoot,
+  useRandom,
 } from "./authoring.js";
 export { createRenderJob, type CreateRenderJobOptions } from "./create-render-job.js";
+export {
+  defineConfig,
+  type ProjectConfig,
+  type ResolvedProject,
+  type ResolvedProjectConfiguration,
+} from "./project-config.js";
+export {
+  type ConstantTempo,
+  type MaybePromise,
+  type PreparationResourceResolver,
+  type PrepareComposition,
+  type PrepareCompositionResult,
+  type PreparedAudioMetadata,
+  type ResolvedPreparation,
+  type ResolvedVariant,
+  type StaticAudioReference,
+} from "./preparation.js";
+export { type RenderSpec } from "./render-spec.js";
 export {
   type DeepReadonly,
   type InferInputs,

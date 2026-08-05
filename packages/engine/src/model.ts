@@ -1,4 +1,6 @@
-import type { InputSchemaIR } from "./input-schema.js";
+import type { ResolvedProject } from "./project-config.js";
+import type { ResolvedVariant } from "./preparation.js";
+import type { RenderSpec } from "./render-spec.js";
 
 export type JsonPrimitive = boolean | number | string | null;
 
@@ -289,7 +291,13 @@ export type ExecutionPlan = Readonly<{
 
 export type Diagnostic = Readonly<{
   code: string;
-  phase: "input-validation" | "planning" | "registration" | "tsx-evaluation";
+  phase:
+    | "configuration"
+    | "input-validation"
+    | "planning"
+    | "preparation"
+    | "registration"
+    | "tsx-evaluation";
   severity: "error" | "warning";
   message: string;
   compositionId: string;
@@ -300,9 +308,11 @@ export type Diagnostic = Readonly<{
 }>;
 
 export type CreateRenderJobResult = Readonly<{
+  project: ResolvedProject;
+  variant: ResolvedVariant;
+  spec: RenderSpec;
+  fingerprint: string;
   composition: CompositionIR;
-  inputs: JsonObject;
-  inputSchema: InputSchemaIR;
   plan: ExecutionPlan;
   diagnostics: readonly Diagnostic[];
 }>;

@@ -1,21 +1,28 @@
 import { build } from "esbuild";
+import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
-import { mkdtemp, rm } from "node:fs/promises";
-import { join } from "node:path";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { Worker } from "node:worker_threads";
 
-import type { InputSchemaIR } from "./input-schema.js";
 import type { CompositionIR, Diagnostic, ExecutionPlan, JsonObject } from "./model.js";
+import type { ResolvedVariant } from "./preparation.js";
+import {
+  resolveProjectConfiguration,
+  type ResolvedProject,
+  type ResolvedProjectConfiguration,
+} from "./project-config.js";
 import { ResonaError } from "./resona-error.js";
 
-type ProjectCompilation = Readonly<{
+type VariantCompilation = Readonly<{
   composition: CompositionIR;
-  inputs: JsonObject;
-  inputSchema: InputSchemaIR;
+  variant: ResolvedVariant;
   plan: ExecutionPlan;
   diagnostics: readonly Diagnostic[];
 }>;
+
+type ProjectCompilation = VariantCompilation & Readonly<{ project: ResolvedProject }>;
 
 const engineModulePath = (name: string, sourceExtension: string): string => {
   const runtimeDirectory = fileURLToPath(new URL(".", import.meta.url));
@@ -25,36 +32,39 @@ const engineModulePath = (name: string, sourceExtension: string): string => {
     : join(runtimeDirectory, `${name}.${sourceExtension}`);
 };
 
-const compileProjectEntry = (
-  entryPoint: string,
-  compositionId: string,
-  inputs?: JsonObject,
-): string => {
+const compileProjectEntry = (entryPoint: string): string => {
   const authoringPath = engineModulePath("authoring", "tsx");
   const planningPath = engineModulePath("planning", "ts");
+  const resourceResolverPath = engineModulePath("static-audio-resolver", "ts");
   return [
     `import ${JSON.stringify(entryPoint)};`,
     `import {resolveRegisteredComposition} from ${JSON.stringify(authoringPath)};`,
     `import {compileExecutionPlan} from ${JSON.stringify(planningPath)};`,
-    `const providedInputs = JSON.parse(${JSON.stringify(JSON.stringify(inputs ?? {}))});`,
-    `const resolved = resolveRegisteredComposition(${JSON.stringify(compositionId)}, providedInputs);`,
-    "export const composition = resolved.composition;",
-    "export const inputs = resolved.inputs;",
-    "export const inputSchema = resolved.inputSchema;",
-    "const compilation = compileExecutionPlan(composition);",
-    "export const plan = compilation.plan;",
-    "export const diagnostics = compilation.diagnostics;",
+    `import {createStaticAudioPreparationResolver} from ${JSON.stringify(resourceResolverPath)};`,
+    "export const compileVariant = async (compositionId, providedInputs, signal, seed, staticDirectory) => {",
+    "  const resources = createStaticAudioPreparationResolver(staticDirectory, signal);",
+    "  const resolved = await resolveRegisteredComposition(compositionId, providedInputs, signal, seed, resources);",
+    "  const compilation = compileExecutionPlan(resolved.composition);",
+    "  return {",
+    "    composition: resolved.composition,",
+    "    variant: resolved.variant,",
+    "    plan: compilation.plan,",
+    "    diagnostics: compilation.diagnostics,",
+    "  };",
+    "};",
   ].join("\n");
 };
 
 const workerSource = [
   'import { parentPort, workerData } from "node:worker_threads";',
   "try {",
-  "  const compilation = await import(workerData.moduleUrl);",
+  "  const project = await import(workerData.moduleUrl);",
+  "  const controller = new AbortController();",
+  '  parentPort.on("message", (message) => { if (message?.type === "abort") controller.abort(); });',
+  "  const compilation = await project.compileVariant(workerData.compositionId, workerData.inputs, controller.signal, workerData.seed, workerData.staticDirectory);",
   '  parentPort.postMessage({ type: "success", compilation: {',
   "    composition: compilation.composition,",
-  "    inputs: compilation.inputs,",
-  "    inputSchema: compilation.inputSchema,",
+  "    variant: compilation.variant,",
   "    plan: compilation.plan,",
   "    diagnostics: compilation.diagnostics,",
   "  } });",
@@ -68,14 +78,66 @@ const workerSource = [
   "}",
 ].join("\n");
 
-const runInFreshWorker = (moduleUrl: string): Promise<ProjectCompilation> =>
+const engineNodePath = resolve(fileURLToPath(new URL(".", import.meta.url)), "../node_modules");
+
+const configWorkerSource = [
+  'import { parentPort, workerData } from "node:worker_threads";',
+  "try {",
+  "  const configuration = await import(workerData.moduleUrl);",
+  '  parentPort.postMessage({ type: "success", config: configuration.default });',
+  "} catch (error) {",
+  '  parentPort.postMessage({ type: "failure", message: error instanceof Error ? error.message : "Project config failed." });',
+  "}",
+].join("\n");
+
+const runInFreshWorker = (
+  moduleUrl: string,
+  compositionId: string,
+  staticDirectory: string,
+  inputs?: JsonObject,
+  seed = "resona-default",
+  signal?: AbortSignal,
+): Promise<VariantCompilation> =>
   new Promise((resolve, reject) => {
     const worker = new Worker(new URL(`data:text/javascript,${encodeURIComponent(workerSource)}`), {
-      workerData: { moduleUrl },
+      workerData: { moduleUrl, compositionId, staticDirectory, inputs: inputs ?? {}, seed },
     });
 
-    worker.once("message", (message: unknown) => {
+    let settled = false;
+    let terminationTimer: ReturnType<typeof setTimeout> | undefined;
+    const cancellationError = (): ResonaError =>
+      new ResonaError("Composition preparation was cancelled.", [
+        {
+          code: "preparation.cancelled",
+          phase: "preparation",
+          severity: "error",
+          message: "Composition preparation was cancelled.",
+          compositionId,
+        },
+      ]);
+    const cleanup = (): void => {
+      if (terminationTimer !== undefined) clearTimeout(terminationTimer);
+      signal?.removeEventListener("abort", abort);
+    };
+    const finish = (callback: () => void): void => {
+      if (settled) return;
+      settled = true;
+      cleanup();
       void worker.terminate();
+      callback();
+    };
+    const abort = (): void => {
+      if (settled) return;
+      worker.postMessage({ type: "abort" });
+      terminationTimer = setTimeout(() => finish(() => reject(cancellationError())), 100);
+    };
+    if (signal?.aborted === true) {
+      finish(() => reject(cancellationError()));
+      return;
+    }
+    signal?.addEventListener("abort", abort, { once: true });
+
+    worker.once("message", (message: unknown) => {
       if (
         message !== null &&
         typeof message === "object" &&
@@ -83,60 +145,190 @@ const runInFreshWorker = (moduleUrl: string): Promise<ProjectCompilation> =>
         message.type === "success" &&
         "compilation" in message
       ) {
-        resolve(message.compilation as ProjectCompilation);
+        finish(() => resolve(message.compilation as VariantCompilation));
         return;
       }
 
       const failure = message as Readonly<{
         error?: Readonly<{ name?: string; message?: string; diagnostics?: Diagnostic[] }>;
       }>;
-      if (failure.error?.name === "ResonaError" && failure.error.diagnostics !== undefined) {
-        reject(
-          new ResonaError(
-            failure.error.message ?? "Project evaluation failed.",
-            failure.error.diagnostics,
+      const failureError = failure.error;
+      const failureDiagnostics = failureError?.diagnostics;
+      if (failureError?.name === "ResonaError" && failureDiagnostics !== undefined) {
+        finish(() =>
+          reject(
+            new ResonaError(
+              failureError.message ?? "Project evaluation failed.",
+              failureDiagnostics,
+            ),
           ),
         );
         return;
       }
-      reject(new Error(failure.error?.message ?? "The project worker failed."));
+      finish(() => reject(new Error(failure.error?.message ?? "The project worker failed.")));
+    });
+    worker.once("error", (error) => finish(() => reject(error)));
+  });
+
+const loadConfigValue = (moduleUrl: string): Promise<unknown> =>
+  new Promise((resolve, reject) => {
+    const worker = new Worker(
+      new URL(`data:text/javascript,${encodeURIComponent(configWorkerSource)}`),
+      { workerData: { moduleUrl } },
+    );
+    worker.once("message", (message: unknown) => {
+      void worker.terminate();
+      if (message !== null && typeof message === "object" && "type" in message) {
+        if (message.type === "success" && "config" in message) {
+          resolve(message.config);
+          return;
+        }
+        if (message.type === "failure" && "message" in message) {
+          reject(new Error(String(message.message)));
+          return;
+        }
+      }
+      reject(new Error("Project config worker returned an invalid result."));
     });
     worker.once("error", reject);
   });
 
-const resolveEntryPoint = (projectRoot: string): string => {
-  const entryPoint = join(projectRoot, "src", "index.tsx");
+const assertEntryPoint = (entryPoint: string): string => {
   if (!existsSync(entryPoint)) {
     throw new Error(`No Resona entry point found at ${entryPoint}.`);
   }
   return entryPoint;
 };
 
+const loadProjectConfiguration = async (
+  projectRoot: string,
+  directory: string,
+): Promise<
+  Readonly<{
+    entryPoint: string;
+    staticDirectory: string;
+    configuration: ResolvedProjectConfiguration;
+  }>
+> => {
+  const configPath = join(projectRoot, "resona.config.ts");
+  const configValue = existsSync(configPath)
+    ? await (async () => {
+        const outputFile = join(directory, "config.mjs");
+        await build({
+          banner: {
+            js: 'import { createRequire as __resonaCreateRequire } from "node:module"; const require = __resonaCreateRequire(import.meta.url);',
+          },
+          bundle: true,
+          entryPoints: [configPath],
+          format: "esm",
+          outfile: outputFile,
+          nodePaths: [engineNodePath],
+          platform: "node",
+          supported: { "top-level-await": false },
+          target: "node24",
+        });
+        return loadConfigValue(pathToFileURL(outputFile).href);
+      })()
+    : {};
+  const resolved = resolveProjectConfiguration(projectRoot, configValue);
+  return {
+    entryPoint: assertEntryPoint(resolved.entryPoint),
+    staticDirectory: resolved.staticDirectory,
+    configuration: resolved.configuration,
+  };
+};
+
 export const loadProjectCompilation = async (
   projectRoot: string,
   compositionId: string,
   inputs?: JsonObject,
+  invocationSeed?: string,
+  signal?: AbortSignal,
 ): Promise<ProjectCompilation> => {
   const directory = await mkdtemp(join(projectRoot, ".resona-project-"));
   const outputFile = join(directory, "project.mjs");
 
   try {
+    if (signal?.aborted === true) {
+      throw new ResonaError("Composition preparation was cancelled.", [
+        {
+          code: "preparation.cancelled",
+          phase: "preparation",
+          severity: "error",
+          message: "Composition preparation was cancelled.",
+          compositionId,
+        },
+      ]);
+    }
+    let resolvedProject: Awaited<ReturnType<typeof loadProjectConfiguration>>;
+    try {
+      resolvedProject = await loadProjectConfiguration(projectRoot, directory);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Project configuration failed.";
+      throw new ResonaError(message, [
+        {
+          code: "configuration.invalid",
+          phase: "configuration",
+          severity: "error",
+          message,
+          compositionId,
+        },
+      ]);
+    }
+    if (invocationSeed !== undefined && invocationSeed.length === 0) {
+      throw new ResonaError("Render seed must be a non-empty string.", [
+        {
+          code: "configuration.seed-invalid",
+          phase: "configuration",
+          severity: "error",
+          message: "Render seed must be a non-empty string.",
+          compositionId,
+        },
+      ]);
+    }
+    const effectiveConfiguration = {
+      ...resolvedProject.configuration,
+      seed:
+        invocationSeed === undefined
+          ? resolvedProject.configuration.seed
+          : { value: invocationSeed, source: "invocation" as const },
+    };
     await build({
+      banner: {
+        js: 'import { createRequire as __resonaCreateRequire } from "node:module"; const require = __resonaCreateRequire(import.meta.url);',
+      },
       bundle: true,
       format: "esm",
       jsx: "automatic",
       outfile: outputFile,
-      packages: "external",
+      nodePaths: [engineNodePath],
       platform: "node",
       stdin: {
-        contents: compileProjectEntry(resolveEntryPoint(projectRoot), compositionId, inputs),
+        contents: compileProjectEntry(resolvedProject.entryPoint),
         resolveDir: projectRoot,
         sourcefile: "resona-project-entry.ts",
       },
       target: "node24",
     });
-
-    return await runInFreshWorker(pathToFileURL(outputFile).href);
+    const buildId = `sha256:${createHash("sha256")
+      .update(await readFile(outputFile))
+      .digest("hex")}`;
+    const compilation = await runInFreshWorker(
+      pathToFileURL(outputFile).href,
+      compositionId,
+      resolvedProject.staticDirectory,
+      inputs,
+      effectiveConfiguration.seed.value,
+      signal,
+    );
+    return {
+      ...compilation,
+      project: {
+        root: projectRoot,
+        buildId,
+        configuration: effectiveConfiguration,
+      },
+    };
   } finally {
     await rm(directory, { force: true, recursive: true });
   }

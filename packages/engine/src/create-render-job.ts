@@ -1,20 +1,26 @@
 import { isAbsolute } from "node:path";
+import { realpath } from "node:fs/promises";
 
 import { deepFreeze } from "./deep-freeze.js";
 import type { CreateRenderJobResult, Diagnostic, JsonObject } from "./model.js";
 import { loadProjectCompilation } from "./project-loader.js";
+import { createRenderIdentity } from "./render-spec.js";
 import { ResonaError } from "./resona-error.js";
 
 export type CreateRenderJobOptions = Readonly<{
   projectRoot: string;
   compositionId: string;
   inputs?: JsonObject;
+  seed?: string;
+  signal?: AbortSignal;
 }>;
 
 export const createRenderJob = async ({
   projectRoot,
   compositionId,
   inputs,
+  seed,
+  signal,
 }: CreateRenderJobOptions): Promise<CreateRenderJobResult> => {
   if (!isAbsolute(projectRoot)) {
     throw new ResonaError("projectRoot must be an absolute path.", [
@@ -29,17 +35,27 @@ export const createRenderJob = async ({
   }
 
   try {
-    const {
+    const canonicalProjectRoot = await realpath(projectRoot);
+    const compilation = await loadProjectCompilation(
+      canonicalProjectRoot,
+      compositionId,
+      inputs,
+      seed,
+      signal,
+    );
+    const { composition, variant, plan, diagnostics } = compilation;
+    const identity = createRenderIdentity({
+      project: compilation.project,
+      variant,
       composition,
-      inputs: resolvedInputs,
-      inputSchema,
       plan,
-      diagnostics,
-    } = await loadProjectCompilation(projectRoot, compositionId, inputs);
+    });
     return deepFreeze({
+      project: compilation.project,
+      variant,
+      spec: identity.spec,
+      fingerprint: identity.fingerprint,
       composition,
-      inputs: resolvedInputs,
-      inputSchema,
       plan,
       diagnostics,
     });

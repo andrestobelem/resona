@@ -8,6 +8,9 @@ import { renderAudio } from "./index.js";
 const exactProjectRoot = fileURLToPath(
   new URL("../../engine/src/fixtures/exact-project/", import.meta.url),
 );
+const configuredProjectRoot = fileURLToPath(
+  new URL("../../engine/src/fixtures/configured-project/", import.meta.url),
+);
 
 const withSynthPlan = (
   job: CreateRenderJobResult,
@@ -95,6 +98,7 @@ describe("renderAudio", () => {
 
     expect(byOne.samples).toEqual(byLargeBlocks.samples);
     expect(byOne.wav).toEqual(byLargeBlocks.wav);
+    expect(job.fingerprint).toMatch(/^sha256:[a-f0-9]{64}$/);
   });
 
   it("renders an audible variant from validated composition inputs", async () => {
@@ -113,11 +117,17 @@ describe("renderAudio", () => {
       inputs: { intensity: 0.75 },
     });
 
-    expect(defaultJob.inputs).toEqual({ intensity: 0.25, voice: { semitonesFromA4: 0 } });
-    expect(louderJob.inputs).toEqual({ intensity: 0.75, voice: { semitonesFromA4: 0 } });
-    expect(Object.isFrozen(louderJob.inputs)).toBe(true);
-    expect(Object.isFrozen(louderJob.inputs.voice)).toBe(true);
+    expect(defaultJob.variant.inputs).toEqual({
+      intensity: 0.25,
+      voice: { semitonesFromA4: 0 },
+    });
+    expect(louderJob.variant.inputs).toEqual({ intensity: 0.75, voice: { semitonesFromA4: 0 } });
+    expect(Object.isFrozen(louderJob.variant.inputs)).toBe(true);
+    expect(Object.isFrozen(louderJob.variant.inputs.voice)).toBe(true);
+    expect(louderJob.project).toEqual(defaultJob.project);
     expect(repeatedLouderJob).toEqual(louderJob);
+    expect(louderJob.fingerprint).not.toBe(defaultJob.fingerprint);
+    expect(repeatedLouderJob.fingerprint).toBe(louderJob.fingerprint);
 
     const defaultAudio = renderAudio(defaultJob);
     const louderAudio = renderAudio(louderJob);
@@ -131,6 +141,31 @@ describe("renderAudio", () => {
     expect(louderAudio.samples[2]).toBeGreaterThan(defaultAudio.samples[2]! * 2.9);
     expect(louderAudio.samples[2]).toBeLessThan(defaultAudio.samples[2]! * 3.1);
     expect(repeatedLouderAudio.samples).toEqual(louderAudio.samples);
+  });
+
+  it("derives reproducible audio and fingerprints from an explicit seed", async () => {
+    const first = await createRenderJob({
+      projectRoot: configuredProjectRoot,
+      compositionId: "Seeded",
+      seed: "alpha",
+    });
+    const repeated = await createRenderJob({
+      projectRoot: configuredProjectRoot,
+      compositionId: "Seeded",
+      seed: "alpha",
+    });
+    const changed = await createRenderJob({
+      projectRoot: configuredProjectRoot,
+      compositionId: "Seeded",
+      seed: "beta",
+    });
+
+    expect(repeated.spec).toEqual(first.spec);
+    expect(repeated.fingerprint).toBe(first.fingerprint);
+    expect(renderAudio(repeated).samples).toEqual(renderAudio(first).samples);
+    expect(changed.spec.seed).toEqual({ value: "beta", source: "invocation" });
+    expect(changed.fingerprint).not.toBe(first.fingerprint);
+    expect(renderAudio(changed).samples).not.toEqual(renderAudio(first).samples);
   });
 
   it("renders overlapping occurrences deterministically and ignores a stolen release", async () => {

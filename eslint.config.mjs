@@ -6,4 +6,17 @@ export default defineConfig(
   globalIgnores([".agents/**", "coverage/**", "dist/**", "**/dist/**", "node_modules/**"]),
   js.configs.recommended,
   tseslint.configs.recommended,
+  {
+    files: ["packages/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-properties": [
+        "error",
+        {
+          object: "Math",
+          property: "random",
+          message: "Use Resona keyed randomness so musical output remains reproducible.",
+        },
+      ],
+    },
+  },
 );
