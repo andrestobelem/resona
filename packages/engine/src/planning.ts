@@ -356,7 +356,7 @@ export const compileExecutionPlan = (
   const processors: ProcessorPlan[] = [];
   const routes: SignalRoute[] = [];
   const candidates: NoteCandidate[] = [];
-  const gainByTrack = new Map<string, number>();
+  const gainByNodePath = new Map<string, number>();
   const resources: ResolvedResourcePlan[] = [];
   const resourceIndices = new Map<string, number>();
   const audioRegions: AudioRegionPlan[] = [];
@@ -395,7 +395,9 @@ export const compileExecutionPlan = (
         ? undefined
         : processors.push({ type: "gain", gain: canonicalF32(gainEffect.gain) }) - 1;
     if (gainIndex !== undefined) routes.push({ from: instrumentIndex, to: gainIndex });
-    if (gainIndex !== undefined) gainByTrack.set(JSON.stringify(placement.track.path), gainIndex);
+    if (gainIndex !== undefined && gainEffect !== undefined) {
+      gainByNodePath.set(JSON.stringify(gainEffect.path), gainIndex);
+    }
 
     for (const clip of placement.track.clips) {
       const clipStart = addFractions(placement.start, positionToSeconds(clip.from, bpm));
@@ -640,7 +642,10 @@ export const compileExecutionPlan = (
             ),
           ]);
         }
-        const target = gainByTrack.get(JSON.stringify(placement.track.path));
+        const target =
+          lane.target.parameterId === "gain"
+            ? gainByNodePath.get(JSON.stringify(lane.target.nodePath))
+            : undefined;
         if (target === undefined) {
           throw new ResonaError("Automation target has no Gain processor.", [
             diagnosticFor(
