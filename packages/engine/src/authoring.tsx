@@ -10,6 +10,8 @@ import {
 } from "./input-schema.js";
 import type {
   AbsoluteDurationIR,
+  AudioClipIR,
+  AudioTrackIR,
   CompositionIR,
   DurationIR,
   EventClipIR,
@@ -29,6 +31,8 @@ import {
   type PreparationResourceResolver,
   type PrepareComposition,
   type ResolvedVariant,
+  type PreparedAudioRuntimeResource,
+  type StaticAudioReference,
 } from "./preparation.js";
 import { deterministicRandom } from "./random.js";
 import { duration } from "./time/rational.js";
@@ -51,7 +55,7 @@ type MutableSequence = {
   path: NodePath;
   from: PositionIR;
   duration?: DurationIR;
-  children: (MutableSequence | MutableInstrumentTrack)[];
+  children: (MutableSequence | MutableInstrumentTrack | MutableAudioTrack)[];
 };
 
 type MutableInstrumentTrack = {
@@ -61,6 +65,15 @@ type MutableInstrumentTrack = {
   clips: EventClipIR[];
   instrument?: PolySynthIR;
   effects: InstrumentTrackIR["effects"];
+  automation: AutomationLaneIR[];
+};
+
+type MutableAudioTrack = {
+  type: "audio-track";
+  id: string;
+  path: NodePath;
+  clips: AudioClipIR[];
+  effects: AudioTrackIR["effects"];
   automation: AutomationLaneIR[];
 };
 
@@ -78,7 +91,7 @@ type EvaluationContextValue = Readonly<{
 
 const RegistrationContext = createContext<CompositionDescriptor[] | null>(null);
 const EvaluationContext = createContext<EvaluationContextValue | null>(null);
-const TrackContext = createContext<MutableInstrumentTrack | null>(null);
+const TrackContext = createContext<(MutableInstrumentTrack | MutableAudioTrack) | null>(null);
 
 let registeredRoot: ComponentType | undefined;
 
@@ -212,21 +225,34 @@ export const Sequence = ({
   );
 };
 
-type TrackProps = Readonly<{
+type TrackBaseProps = Readonly<{
   id: string;
   source: ReactElement;
-  instrument: ReactElement;
   gain?: number;
   automation?: readonly AutomationLaneIR[];
 }>;
+
+type TrackProps =
+  | (TrackBaseProps & Readonly<{ instrument: ReactElement }>)
+  | (TrackBaseProps & Readonly<{ instrument?: never }>);
 
 export const Track = ({
   id,
   source,
   instrument,
-  gain = 1,
+  gain,
   automation = [],
 }: TrackProps): ReactElement => {
+  if (instrument === undefined) {
+    return (
+      <AudioTrack
+        id={id}
+        source={source}
+        {...(gain === undefined ? {} : { gain })}
+        {...(automation.length === 0 ? {} : { automation })}
+      />
+    );
+  }
   const context = useContext(EvaluationContext);
   if (context?.parent === undefined) {
     throw new Error("Track must be a child of Sequence.");
@@ -238,14 +264,17 @@ export const Track = ({
     id,
     path: [...context.parent.path, id] as NodePath,
     clips: [],
-    effects: [
-      {
-        type: "gain",
-        id: `${id}-gain`,
-        path: [...context.parent.path, id, `${id}-gain`] as NodePath,
-        gain,
-      },
-    ],
+    effects:
+      gain === undefined && automation.length === 0
+        ? []
+        : [
+            {
+              type: "gain",
+              id: `${id}-gain`,
+              path: [...context.parent.path, id, `${id}-gain`] as NodePath,
+              gain: gain ?? 1,
+            },
+          ],
     automation: automation.map((lane) => ({
       ...lane,
       points: lane.points.map((point) => ({ ...point })),
@@ -263,6 +292,49 @@ export const Track = ({
   );
 };
 
+type AudioTrackProps = Readonly<{
+  id: string;
+  source: ReactElement;
+  gain?: number;
+  automation?: readonly AutomationLaneIR[];
+}>;
+
+export const AudioTrack = ({
+  id,
+  source,
+  gain,
+  automation = [],
+}: AudioTrackProps): ReactElement => {
+  const context = useContext(EvaluationContext);
+  if (context?.parent === undefined) {
+    throw new Error("AudioTrack must be a child of Sequence.");
+  }
+  assertPublicId(id);
+  const track: MutableAudioTrack = {
+    type: "audio-track",
+    id,
+    path: [...context.parent.path, id] as NodePath,
+    clips: [],
+    effects:
+      gain === undefined && automation.length === 0
+        ? []
+        : [
+            {
+              type: "gain",
+              id: `${id}-gain`,
+              path: [...context.parent.path, id, `${id}-gain`] as NodePath,
+              gain: gain ?? 1,
+            },
+          ],
+    automation: automation.map((lane) => ({
+      ...lane,
+      points: lane.points.map((point) => ({ ...point })),
+    })),
+  };
+  context.parent.children.push(track);
+  return <TrackContext.Provider value={track}>{source}</TrackContext.Provider>;
+};
+
 type EventClipProps = Readonly<{
   id: string;
   from: PositionIR;
@@ -271,7 +343,7 @@ type EventClipProps = Readonly<{
 
 export const EventClip = ({ id, from, events }: EventClipProps): null => {
   const track = useContext(TrackContext);
-  if (track === null) {
+  if (track === null || track.type !== "instrument-track") {
     throw new Error("EventClip must be rendered in a Track source slot.");
   }
 
@@ -284,6 +356,74 @@ export const EventClip = ({ id, from, events }: EventClipProps): null => {
     events: events.map(cloneNote),
   });
   return null;
+};
+
+type AudioClipProps = Readonly<{
+  id: string;
+  src: StaticAudioReference;
+  from: PositionIR;
+  offset?: AbsoluteDurationIR;
+  duration?: DurationIR;
+  loop?: boolean;
+}>;
+
+export const AudioClip = ({
+  id,
+  src,
+  from,
+  offset = duration.seconds(0n),
+  duration: clipDuration,
+  loop = false,
+}: AudioClipProps): null => {
+  const track = useContext(TrackContext);
+  if (track === null || track.type !== "audio-track") {
+    throw new Error("AudioClip must be rendered in an AudioTrack source slot.");
+  }
+  assertPublicId(id);
+  track.clips.push({
+    type: "audio-clip",
+    id,
+    path: [...track.path, id] as NodePath,
+    from,
+    resource:
+      src !== null &&
+      typeof src === "object" &&
+      src.type === "resona/static-audio" &&
+      src.version === 1
+        ? staticAudio(src.path)
+        : (() => {
+            throw new Error("AudioClip src must be a versioned static audio reference.");
+          })(),
+    offset,
+    ...(clipDuration === undefined ? {} : { duration: clipDuration }),
+    loop,
+  });
+  return null;
+};
+
+export const staticAudio = (path: string): StaticAudioReference => {
+  const normalizedPath = typeof path === "string" ? path.replaceAll("\\", "/") : path;
+  if (
+    typeof normalizedPath !== "string" ||
+    normalizedPath.length === 0 ||
+    normalizedPath.startsWith("/") ||
+    /^[A-Za-z]:/.test(normalizedPath) ||
+    (() => {
+      let depth = 0;
+      for (const segment of normalizedPath.split(/[\\/]+/)) {
+        if (segment === "..") {
+          depth -= 1;
+          if (depth < 0) return true;
+        } else if (segment !== "" && segment !== ".") {
+          depth += 1;
+        }
+      }
+      return false;
+    })()
+  ) {
+    throw new Error("Static audio paths must be non-empty relative paths.");
+  }
+  return Object.freeze({ type: "resona/static-audio", version: 1, path: normalizedPath });
 };
 
 type PolySynthProps = Readonly<{
@@ -306,7 +446,7 @@ export const PolySynth = ({
   release = duration.seconds(1n, 5n),
 }: PolySynthProps): null => {
   const track = useContext(TrackContext);
-  if (track === null) {
+  if (track === null || track.type !== "instrument-track") {
     throw new Error("PolySynth must be rendered in a Track instrument slot.");
   }
 
@@ -371,8 +511,26 @@ const finalizeTrack = (track: MutableInstrumentTrack): InstrumentTrackIR => {
     path: track.path,
     clips: track.clips,
     instrument: track.instrument,
-    effects: [],
-    automation: [],
+    effects: track.effects,
+    automation: track.automation,
+  };
+};
+
+const finalizeAudioTrack = (track: MutableAudioTrack): AudioTrackIR => {
+  const childIds = new Set<string>();
+  for (const child of track.clips) {
+    if (childIds.has(child.id)) {
+      throw new Error(`Duplicate child ID ${child.id} in Track ${track.id}.`);
+    }
+    childIds.add(child.id);
+  }
+  return {
+    type: "audio-track",
+    id: track.id,
+    path: track.path,
+    clips: track.clips,
+    effects: track.effects,
+    automation: track.automation,
   };
 };
 
@@ -392,7 +550,11 @@ const finalizeSequence = (sequence: MutableSequence): SequenceIR => {
     from: sequence.from,
     ...(sequence.duration === undefined ? {} : { duration: sequence.duration }),
     children: sequence.children.map((child) =>
-      child.type === "sequence" ? finalizeSequence(child) : finalizeTrack(child),
+      child.type === "sequence"
+        ? finalizeSequence(child)
+        : child.type === "instrument-track"
+          ? finalizeTrack(child)
+          : finalizeAudioTrack(child),
     ),
   };
 };
@@ -426,6 +588,7 @@ const discoverCompositions = (): readonly CompositionDescriptor[] => {
 type ResolvedRegisteredComposition = Readonly<{
   composition: CompositionIR;
   variant: ResolvedVariant;
+  runtimeResources: readonly PreparedAudioRuntimeResource[];
 }>;
 
 export const resolveRegisteredComposition = async (
@@ -505,6 +668,7 @@ export const resolveRegisteredComposition = async (
       root: finalizeSequence(session.root),
     },
     variant,
+    runtimeResources: preparation.runtimeResources,
   };
 };
 
