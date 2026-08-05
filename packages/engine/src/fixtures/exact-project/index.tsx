@@ -10,6 +10,7 @@ import {
   position,
   rational,
   registerRoot,
+  type InputSchema,
 } from "../../index.js";
 
 const beyondSafeInteger = 9_007_199_254_740_993n;
@@ -138,6 +139,171 @@ const RoundedAwayNote = () => (
   </Sequence>
 );
 
+type VariantInputs = {
+  intensity: number;
+  voice: { semitonesFromA4: number };
+};
+
+const inputVariantSchema: InputSchema<VariantInputs> = {
+  ir: {
+    format: "resona/input-schema",
+    schemaVersion: 1,
+    jsonSchema: {
+      $schema: "https://json-schema.org/draft/2020-12/schema",
+      type: "object",
+      properties: {
+        intensity: { type: "number", minimum: 0, maximum: 1 },
+        voice: {
+          type: "object",
+          properties: { semitonesFromA4: { type: "integer" } },
+          required: ["semitonesFromA4"],
+          additionalProperties: false,
+        },
+      },
+      required: ["intensity", "voice"],
+      additionalProperties: false,
+    },
+  },
+  validate: (value) => {
+    if (
+      value !== null &&
+      typeof value === "object" &&
+      "intensity" in value &&
+      typeof value.intensity === "number" &&
+      value.intensity >= 0 &&
+      value.intensity <= 1 &&
+      "voice" in value &&
+      value.voice !== null &&
+      typeof value.voice === "object" &&
+      "semitonesFromA4" in value.voice &&
+      Number.isSafeInteger(value.voice.semitonesFromA4)
+    ) {
+      return { success: true };
+    }
+    return {
+      success: false,
+      issues: [{ code: "invalid-input", path: [], message: "Invalid variant inputs." }],
+    };
+  },
+};
+
+const remoteInputVariantSchema: InputSchema<VariantInputs> = {
+  ...inputVariantSchema,
+  ir: {
+    format: "resona/input-schema",
+    schemaVersion: 1,
+    jsonSchema: {
+      $schema: "https://json-schema.org/draft/2020-12/schema",
+      type: "object",
+      properties: {
+        intensity: { $ref: "https://schemas.example.com/intensity.json" },
+      },
+    },
+  },
+};
+
+const remoteDynamicInputVariantSchema: InputSchema<VariantInputs> = {
+  ...remoteInputVariantSchema,
+  ir: {
+    ...remoteInputVariantSchema.ir,
+    jsonSchema: {
+      $schema: "https://json-schema.org/draft/2020-12/schema",
+      type: "object",
+      properties: {
+        intensity: { $dynamicRef: "https://schemas.example.com/intensity.json" },
+      },
+    },
+  },
+};
+
+type KeyInputs = { key: string };
+
+const keyInputSchema: InputSchema<KeyInputs> = {
+  ir: {
+    format: "resona/input-schema",
+    schemaVersion: 1,
+    jsonSchema: {
+      $schema: "https://json-schema.org/draft/2020-12/schema",
+      type: "object",
+      properties: { key: { type: "string" } },
+      required: ["key"],
+      additionalProperties: false,
+    },
+  },
+  validate: (value) =>
+    value !== null && typeof value === "object" && "key" in value && typeof value.key === "string"
+      ? { success: true }
+      : { success: false, issues: [] },
+};
+
+const KeyInputVariant = ({ key }: KeyInputs) => {
+  if (key !== "canonical") throw new Error("The canonical key input did not reach authoring.");
+  return <Sequence id="root" from={position.seconds(0n)} />;
+};
+
+const mutatingInputSchema: InputSchema<{ intensity: number }> = {
+  ir: {
+    format: "resona/input-schema",
+    schemaVersion: 1,
+    jsonSchema: {
+      $schema: "https://json-schema.org/draft/2020-12/schema",
+      type: "object",
+      properties: { intensity: { type: "number" } },
+      required: ["intensity"],
+      additionalProperties: false,
+    },
+  },
+  validate: (value) => {
+    if (value !== null && typeof value === "object" && "intensity" in value) {
+      Reflect.set(value, "intensity", 1);
+      return { success: true };
+    }
+    return { success: false, issues: [] };
+  },
+};
+
+const MutatingInputVariant = ({ intensity }: { intensity: number }) => {
+  if (intensity !== 0.25) throw new Error("Input validation changed the canonical candidate.");
+  return <Sequence id="root" from={position.seconds(0n)} />;
+};
+
+const InputVariant = ({ intensity, voice }: VariantInputs) => {
+  if (!Object.isFrozen(voice)) {
+    throw new Error("Composition inputs must be deeply frozen before authoring evaluation.");
+  }
+  return (
+    <Sequence id="root" from={position.seconds(0n)}>
+      <Track
+        id="lead"
+        source={
+          <EventClip
+            id="notes"
+            from={position.seconds(0n)}
+            events={[
+              note({
+                at: position.seconds(0n),
+                duration: duration.seconds(1n),
+                pitch: pitch.semitonesFromA4(voice.semitonesFromA4),
+                velocity: intensity,
+              }),
+            ]}
+          />
+        }
+        instrument={
+          <PolySynth
+            id="synth"
+            oscillator="sine"
+            attack={duration.seconds(0n)}
+            decay={duration.seconds(0n)}
+            sustain={1}
+            release={duration.seconds(0n)}
+          />
+        }
+      />
+    </Sequence>
+  );
+};
+
 export const ExactProjectRoot = () => (
   <>
     <Composition
@@ -172,6 +338,51 @@ export const ExactProjectRoot = () => (
     <Composition
       id="RoundedAwayNote"
       component={RoundedAwayNote}
+      duration={duration.seconds(1n)}
+      bpm={rational(120n)}
+      timeSignature={{ beatsPerBar: 4, beatUnit: 4 }}
+    />
+    <Composition
+      id="InputVariant"
+      component={InputVariant}
+      schema={inputVariantSchema}
+      defaultInputs={{ intensity: 0.25, voice: { semitonesFromA4: 0 } }}
+      duration={duration.seconds(1n)}
+      bpm={rational(120n)}
+      timeSignature={{ beatsPerBar: 4, beatUnit: 4 }}
+    />
+    <Composition
+      id="RemoteSchemaVariant"
+      component={InputVariant}
+      schema={remoteInputVariantSchema}
+      defaultInputs={{ intensity: 0.25, voice: { semitonesFromA4: 0 } }}
+      duration={duration.seconds(1n)}
+      bpm={rational(120n)}
+      timeSignature={{ beatsPerBar: 4, beatUnit: 4 }}
+    />
+    <Composition
+      id="KeyInputVariant"
+      component={KeyInputVariant}
+      schema={keyInputSchema}
+      defaultInputs={{ key: "canonical" }}
+      duration={duration.seconds(1n)}
+      bpm={rational(120n)}
+      timeSignature={{ beatsPerBar: 4, beatUnit: 4 }}
+    />
+    <Composition
+      id="RemoteDynamicSchemaVariant"
+      component={InputVariant}
+      schema={remoteDynamicInputVariantSchema}
+      defaultInputs={{ intensity: 0.25, voice: { semitonesFromA4: 0 } }}
+      duration={duration.seconds(1n)}
+      bpm={rational(120n)}
+      timeSignature={{ beatsPerBar: 4, beatUnit: 4 }}
+    />
+    <Composition
+      id="MutatingInputVariant"
+      component={MutatingInputVariant}
+      schema={mutatingInputSchema}
+      defaultInputs={{ intensity: 0.25 }}
       duration={duration.seconds(1n)}
       bpm={rational(120n)}
       timeSignature={{ beatsPerBar: 4, beatUnit: 4 }}

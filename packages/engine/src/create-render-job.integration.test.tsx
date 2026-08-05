@@ -142,6 +142,16 @@ describe("createRenderJob", () => {
           ],
         },
       },
+      inputs: {},
+      inputSchema: {
+        format: "resona/input-schema",
+        schemaVersion: 1,
+        jsonSchema: {
+          $schema: "https://json-schema.org/draft/2020-12/schema",
+          type: "object",
+          additionalProperties: false,
+        },
+      },
       plan: {
         format: "resona/execution-plan",
         schemaVersion: 1,
@@ -197,6 +207,93 @@ describe("createRenderJob", () => {
     expect(repeatedJob).toEqual(job);
     // The fixture changes its pitch on a second evaluation in the same JS realm.
     // Equality proves that each variant was evaluated in a fresh Worker.
+  });
+
+  it("rejects invalid effective inputs before authoring evaluation", async () => {
+    await expect(
+      createRenderJob({
+        projectRoot: exactProjectRoot,
+        compositionId: "InputVariant",
+        inputs: { intensity: 2 },
+      }),
+    ).rejects.toMatchObject({
+      name: "ResonaError",
+      diagnostics: [
+        {
+          code: "inputs.validation-failed",
+          phase: "input-validation",
+          severity: "error",
+          compositionId: "InputVariant",
+          cause: {
+            issues: [
+              {
+                code: "invalid-input",
+                path: [],
+                message: "Invalid variant inputs.",
+              },
+            ],
+          },
+        },
+      ],
+    });
+  });
+
+  it("replaces nested input values instead of merging them recursively", async () => {
+    await expect(
+      createRenderJob({
+        projectRoot: exactProjectRoot,
+        compositionId: "InputVariant",
+        inputs: { voice: {} },
+      }),
+    ).rejects.toMatchObject({
+      diagnostics: [
+        {
+          code: "inputs.validation-failed",
+          phase: "input-validation",
+          compositionId: "InputVariant",
+        },
+      ],
+    });
+  });
+
+  it.each(["RemoteSchemaVariant", "RemoteDynamicSchemaVariant"])(
+    "rejects remote references in the serializable input schema for %s",
+    async (compositionId) => {
+      await expect(
+        createRenderJob({
+          projectRoot: exactProjectRoot,
+          compositionId,
+        }),
+      ).rejects.toMatchObject({
+        diagnostics: [
+          {
+            code: "inputs.schema-description-invalid",
+            phase: "input-validation",
+            compositionId,
+          },
+        ],
+      });
+    },
+  );
+
+  it("passes a canonical input named key through React authoring", async () => {
+    const job = await createRenderJob({
+      projectRoot: exactProjectRoot,
+      compositionId: "KeyInputVariant",
+    });
+
+    expect(job.inputs).toEqual({ key: "canonical" });
+    expect(job.diagnostics).toEqual([]);
+  });
+
+  it("protects the canonical candidate from a mutating input validator", async () => {
+    const job = await createRenderJob({
+      projectRoot: exactProjectRoot,
+      compositionId: "MutatingInputVariant",
+    });
+
+    expect(job.inputs).toEqual({ intensity: 0.25 });
+    expect(job.diagnostics).toEqual([]);
   });
 
   it("validates an invalid note before pruning its offscreen clip", async () => {

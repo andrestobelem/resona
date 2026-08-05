@@ -1,0 +1,27 @@
+{
+  "name": "@resona/zod",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "pnpm --filter @resona/engine build && tsc --project tsconfig.build.json",
+    "typecheck": "pnpm --filter @resona/engine build && tsc --project tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@resona/engine": "workspace:*"
+  },
+  "peerDependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3",
+    "vitest": "4.1.10",
+    "zod": "4.4.3"
+  }
+}

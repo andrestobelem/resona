@@ -1,3 +1,5 @@
+import type { InputSchemaIR } from "./input-schema.js";
+
 export type JsonPrimitive = boolean | number | string | null;
 
 export type JsonValue = JsonPrimitive | JsonObject | readonly JsonValue[];
@@ -287,7 +289,7 @@ export type ExecutionPlan = Readonly<{
 
 export type Diagnostic = Readonly<{
   code: string;
-  phase: "planning" | "registration" | "tsx-evaluation";
+  phase: "input-validation" | "planning" | "registration" | "tsx-evaluation";
   severity: "error" | "warning";
   message: string;
   compositionId: string;
@@ -299,6 +301,8 @@ export type Diagnostic = Readonly<{
 
 export type CreateRenderJobResult = Readonly<{
   composition: CompositionIR;
+  inputs: JsonObject;
+  inputSchema: InputSchemaIR;
   plan: ExecutionPlan;
   diagnostics: readonly Diagnostic[];
 }>;

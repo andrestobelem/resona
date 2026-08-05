@@ -1,6 +1,13 @@
 import { createContext, Fragment, useContext, type ComponentType, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 
+import {
+  emptyInputSchema,
+  resolveCompositionInputs,
+  type DeepReadonly,
+  type InputSchema,
+  type InputSchemaIR,
+} from "./input-schema.js";
 import type {
   AbsoluteDurationIR,
   CompositionIR,
@@ -21,7 +28,9 @@ import { duration } from "./time/rational.js";
 
 type CompositionDescriptor = Readonly<{
   id: string;
-  component: ComponentType;
+  component: (inputs: JsonObject) => ReactElement | null;
+  schema: InputSchema;
+  defaultInputs: JsonObject;
   duration: DurationIR;
   bpm: RationalIR;
   timeSignature: Readonly<{ beatsPerBar: number; beatUnit: number }>;
@@ -102,32 +111,41 @@ export const registerRoot = (root: ComponentType): void => {
   registeredRoot = root;
 };
 
-type CompositionProps = Readonly<{
+type CompositionProps<TInputs extends JsonObject> = Readonly<{
   id: string;
-  component: ComponentType;
+  component: (inputs: DeepReadonly<TInputs>) => ReactElement | null;
+  schema?: InputSchema<TInputs>;
+  defaultInputs?: TInputs;
   duration: DurationIR;
   bpm: RationalIR;
   timeSignature: Readonly<{ beatsPerBar: number; beatUnit: number }>;
   metadata?: JsonObject;
 }>;
 
-export const Composition = ({
+export const Composition = <TInputs extends JsonObject = JsonObject>({
   id,
   component,
+  schema,
+  defaultInputs,
   duration: compositionDuration,
   bpm,
   timeSignature,
   metadata = {},
-}: CompositionProps): null => {
+}: CompositionProps<TInputs>): null => {
   const registry = useContext(RegistrationContext);
   if (registry === null) {
     throw new Error("Composition must be rendered by a registered Resona project root.");
   }
 
   assertPublicId(id);
+  if ((schema === undefined) !== (defaultInputs === undefined)) {
+    throw new Error("Composition schema and defaultInputs must be declared together.");
+  }
   registry.push({
     id,
-    component,
+    component: component as (inputs: JsonObject) => ReactElement | null,
+    schema: schema ?? emptyInputSchema,
+    defaultInputs: defaultInputs === undefined ? {} : cloneJsonObject(defaultInputs),
     duration: compositionDuration,
     bpm,
     timeSignature: { ...timeSignature },
@@ -381,21 +399,38 @@ const discoverCompositions = (): readonly CompositionDescriptor[] => {
   return compositions;
 };
 
-export const evaluateRegisteredComposition = (compositionId: string): CompositionIR => {
+type ResolvedRegisteredComposition = Readonly<{
+  composition: CompositionIR;
+  inputs: JsonObject;
+  inputSchema: InputSchemaIR;
+}>;
+
+export const resolveRegisteredComposition = (
+  compositionId: string,
+  overrides?: JsonObject,
+): ResolvedRegisteredComposition => {
   const descriptions = discoverCompositions();
   const descriptor = descriptions.find((candidate) => candidate.id === compositionId);
   if (descriptor === undefined) {
     throw new Error(`Unknown composition: ${compositionId}`);
   }
 
+  const resolved = resolveCompositionInputs({
+    compositionId,
+    schema: descriptor.schema,
+    defaultInputs: descriptor.defaultInputs,
+    ...(overrides === undefined ? {} : { overrides }),
+  });
+
   const session: EvaluationSession = {
     compositionId: descriptor.id,
     compositionDuration: descriptor.duration,
   };
   const Component = descriptor.component;
+  const EvaluateComponent = (): ReactElement | null => Component(resolved.inputs);
   renderToStaticMarkup(
     <EvaluationContext.Provider value={{ session }}>
-      <Component />
+      <EvaluateComponent />
     </EvaluationContext.Provider>,
   );
 
@@ -404,16 +439,25 @@ export const evaluateRegisteredComposition = (compositionId: string): Compositio
   }
 
   return {
-    format: "resona/composition-ir",
-    schemaVersion: 1,
-    compositionId: descriptor.id,
-    duration: descriptor.duration,
-    tempo: {
-      type: "constant-tempo",
-      bpm: descriptor.bpm,
-      timeSignature: descriptor.timeSignature,
+    composition: {
+      format: "resona/composition-ir",
+      schemaVersion: 1,
+      compositionId: descriptor.id,
+      duration: descriptor.duration,
+      tempo: {
+        type: "constant-tempo",
+        bpm: descriptor.bpm,
+        timeSignature: descriptor.timeSignature,
+      },
+      metadata: descriptor.metadata,
+      root: finalizeSequence(session.root),
     },
-    metadata: descriptor.metadata,
-    root: finalizeSequence(session.root),
+    inputs: resolved.inputs,
+    inputSchema: resolved.inputSchema,
   };
 };
+
+export const evaluateRegisteredComposition = (
+  compositionId: string,
+  inputs?: JsonObject,
+): CompositionIR => resolveRegisteredComposition(compositionId, inputs).composition;

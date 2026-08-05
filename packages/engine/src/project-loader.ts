@@ -5,11 +5,14 @@ import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { Worker } from "node:worker_threads";
 
-import type { CompositionIR, Diagnostic, ExecutionPlan } from "./model.js";
+import type { InputSchemaIR } from "./input-schema.js";
+import type { CompositionIR, Diagnostic, ExecutionPlan, JsonObject } from "./model.js";
 import { ResonaError } from "./resona-error.js";
 
 type ProjectCompilation = Readonly<{
   composition: CompositionIR;
+  inputs: JsonObject;
+  inputSchema: InputSchemaIR;
   plan: ExecutionPlan;
   diagnostics: readonly Diagnostic[];
 }>;
@@ -22,14 +25,22 @@ const engineModulePath = (name: string, sourceExtension: string): string => {
     : join(runtimeDirectory, `${name}.${sourceExtension}`);
 };
 
-const compileProjectEntry = (entryPoint: string, compositionId: string): string => {
+const compileProjectEntry = (
+  entryPoint: string,
+  compositionId: string,
+  inputs?: JsonObject,
+): string => {
   const authoringPath = engineModulePath("authoring", "tsx");
   const planningPath = engineModulePath("planning", "ts");
   return [
     `import ${JSON.stringify(entryPoint)};`,
-    `import {evaluateRegisteredComposition} from ${JSON.stringify(authoringPath)};`,
+    `import {resolveRegisteredComposition} from ${JSON.stringify(authoringPath)};`,
     `import {compileExecutionPlan} from ${JSON.stringify(planningPath)};`,
-    `export const composition = evaluateRegisteredComposition(${JSON.stringify(compositionId)});`,
+    `const providedInputs = JSON.parse(${JSON.stringify(JSON.stringify(inputs ?? {}))});`,
+    `const resolved = resolveRegisteredComposition(${JSON.stringify(compositionId)}, providedInputs);`,
+    "export const composition = resolved.composition;",
+    "export const inputs = resolved.inputs;",
+    "export const inputSchema = resolved.inputSchema;",
     "const compilation = compileExecutionPlan(composition);",
     "export const plan = compilation.plan;",
     "export const diagnostics = compilation.diagnostics;",
@@ -42,6 +53,8 @@ const workerSource = [
   "  const compilation = await import(workerData.moduleUrl);",
   '  parentPort.postMessage({ type: "success", compilation: {',
   "    composition: compilation.composition,",
+  "    inputs: compilation.inputs,",
+  "    inputSchema: compilation.inputSchema,",
   "    plan: compilation.plan,",
   "    diagnostics: compilation.diagnostics,",
   "  } });",
@@ -102,6 +115,7 @@ const resolveEntryPoint = (projectRoot: string): string => {
 export const loadProjectCompilation = async (
   projectRoot: string,
   compositionId: string,
+  inputs?: JsonObject,
 ): Promise<ProjectCompilation> => {
   const directory = await mkdtemp(join(projectRoot, ".resona-project-"));
   const outputFile = join(directory, "project.mjs");
@@ -115,7 +129,7 @@ export const loadProjectCompilation = async (
       packages: "external",
       platform: "node",
       stdin: {
-        contents: compileProjectEntry(resolveEntryPoint(projectRoot), compositionId),
+        contents: compileProjectEntry(resolveEntryPoint(projectRoot), compositionId, inputs),
         resolveDir: projectRoot,
         sourcefile: "resona-project-entry.ts",
       },
