@@ -357,10 +357,12 @@ export const compileExecutionPlan = (
   const routes: SignalRoute[] = [];
   const candidates: NoteCandidate[] = [];
   const gainByNodePath = new Map<string, number>();
+  const gainOwnerByNodePath = new Map<string, string>();
   const resources: ResolvedResourcePlan[] = [];
   const resourceIndices = new Map<string, number>();
   const audioRegions: AudioRegionPlan[] = [];
   const audioDiagnostics: Diagnostic[] = [];
+  const automationKeys = new Set<string>();
 
   for (const placement of placements) {
     const instrumentIndex = processors.length;
@@ -396,6 +398,7 @@ export const compileExecutionPlan = (
         }
         processors.push({ type: "gain", gain: canonicalGain });
         gainByNodePath.set(JSON.stringify(effect.path), effectIndex);
+        gainOwnerByNodePath.set(JSON.stringify(effect.path), JSON.stringify(placement.track.path));
       } else {
         const delayFrames = frameFromSeconds(fractionFromIR(effect.time.seconds));
         if (delayFrames <= 0 || !Number.isSafeInteger(delayFrames)) {
@@ -685,6 +688,18 @@ export const compileExecutionPlan = (
     events,
     automation: placements.flatMap((placement) =>
       placement.track.automation.map((lane) => {
+        const automationKey = `${JSON.stringify(lane.target.nodePath)}:${lane.target.parameterId}`;
+        if (automationKeys.has(automationKey)) {
+          throw new ResonaError("Duplicate automation lanes target the same parameter.", [
+            diagnosticFor(
+              composition,
+              "plan.automation-target-duplicate",
+              "Only one automation lane may target a parameter.",
+              lane,
+            ),
+          ]);
+        }
+        automationKeys.add(automationKey);
         if (lane.points.length === 0) {
           throw new ResonaError("Automation lanes require at least one point.", [
             diagnosticFor(
@@ -695,9 +710,11 @@ export const compileExecutionPlan = (
             ),
           ]);
         }
+        const targetPath = JSON.stringify(lane.target.nodePath);
         const target =
-          lane.target.parameterId === "gain"
-            ? gainByNodePath.get(JSON.stringify(lane.target.nodePath))
+          lane.target.parameterId === "gain" &&
+          gainOwnerByNodePath.get(targetPath) === JSON.stringify(placement.track.path)
+            ? gainByNodePath.get(targetPath)
             : undefined;
         if (target === undefined) {
           throw new ResonaError("Automation target has no Gain processor.", [

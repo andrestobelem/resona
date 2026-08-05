@@ -275,7 +275,9 @@ export const renderAudio = (
     startFrame < 0 ||
     endFrame <= startFrame ||
     endFrame > plan.nominalDurationFrames ||
-    tailFrames < 0
+    tailFrames < 0 ||
+    !Number.isSafeInteger(endFrame + tailFrames) ||
+    !Number.isSafeInteger(endFrame - startFrame + tailFrames)
   ) {
     throw new RangeError(
       "Render range must be a finite half-open interval with a non-negative tail.",

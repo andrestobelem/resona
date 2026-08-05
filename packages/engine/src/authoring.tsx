@@ -517,7 +517,11 @@ const finalizeTrack = (track: MutableInstrumentTrack): InstrumentTrackIR => {
   }
 
   const childIds = new Set<string>();
-  for (const childId of [...track.clips.map((clip) => clip.id), track.instrument.id]) {
+  for (const childId of [
+    ...track.clips.map((clip) => clip.id),
+    track.instrument.id,
+    ...track.effects.map((effect) => effect.id),
+  ]) {
     if (childIds.has(childId)) {
       throw new Error(`Duplicate child ID ${childId} in Track ${track.id}.`);
     }
@@ -537,7 +541,7 @@ const finalizeTrack = (track: MutableInstrumentTrack): InstrumentTrackIR => {
 
 const finalizeAudioTrack = (track: MutableAudioTrack): AudioTrackIR => {
   const childIds = new Set<string>();
-  for (const child of track.clips) {
+  for (const child of [...track.clips, ...track.effects]) {
     if (childIds.has(child.id)) {
       throw new Error(`Duplicate child ID ${child.id} in Track ${track.id}.`);
     }
