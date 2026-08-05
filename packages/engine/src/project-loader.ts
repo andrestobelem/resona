@@ -156,6 +156,9 @@ const engineNodePath = resolve(fileURLToPath(new URL(".", import.meta.url)), "..
 const configWorkerSource = [
   'import { parentPort, workerData } from "node:worker_threads";',
   "try {",
+  '  const forwardLog = (...args) => parentPort.postMessage({ type: "log", message: args.map(String).join(" ") });',
+  "  console.log = forwardLog;",
+  "  console.info = forwardLog;",
   "  const configuration = await import(workerData.moduleUrl);",
   '  parentPort.postMessage({ type: "success", config: configuration.default });',
   "} catch (error) {",

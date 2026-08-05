@@ -33,6 +33,7 @@ const Root = () => <Composition id="Alternate" component={Song} duration={durati
 registerRoot(Root);`,
   );
   await writeFile(join(projectRoot, "custom-config.ts"), "export default {};\n");
+  await writeFile(join(projectRoot, "broken-config.ts"), "export default {;\n");
 });
 
 afterAll(async () => {
@@ -150,6 +151,18 @@ describe("resona CLI", () => {
 
   it("keeps JSON protocol output for parser failures after --json", async () => {
     const result = await invoke(["validate", "--json", "--input"]);
+
+    expect(result.exitCode).toBe(2);
+    expect(result.stderr).toBe("");
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      format: "resona/cli-error",
+      schemaVersion: 1,
+      exitCode: 2,
+    });
+  });
+
+  it("uses the configuration exit code for an unreadable config", async () => {
+    const result = await invoke(["compositions", "--config", "broken-config.ts", "--json"]);
 
     expect(result.exitCode).toBe(2);
     expect(result.stderr).toBe("");
