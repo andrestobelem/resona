@@ -1104,7 +1104,8 @@ resona render <entry> <composition-id> <output.wav>
 
 `studio` inicia el entorno local; `compositions` evalúa el registro y enumera sus
 descripciones; `validate` construye y verifica una variante sin renderizar; `render` crea un
-trabajo y lo entrega a `renderAudio()`. Los cuatro comandos presentan los diagnósticos
+trabajo y lo entrega a `renderAudioToFile()`, que comparte la misma ruta de render y publicación
+atómica de la API. Los cuatro comandos presentan los diagnósticos
 estructurados compartidos y adaptan progreso y cancelación a la terminal.
 
 Inputs y opciones se aceptan mediante flags o archivos JSON y usan los mismos descriptores,
