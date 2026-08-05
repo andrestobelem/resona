@@ -14,6 +14,16 @@ export type StaticAudioReference = Readonly<{
 
 export type PreparedAudioMetadata = ResolvedResourcePlan;
 
+export type PreparedAudioRuntimeResource = Readonly<{
+  type: "wav";
+  hash: `sha256:${string}`;
+  channels: 1 | 2;
+  sampleRate: 48_000;
+  frameCount: number;
+  sourcePaths: readonly string[];
+  samples: readonly number[];
+}>;
+
 export type PreparationResourceResolver = Readonly<{
   audio(reference: StaticAudioReference): Promise<PreparedAudioMetadata>;
 }>;
@@ -45,6 +55,7 @@ export type ResolvedPreparation = Readonly<{
   tempo: ConstantTempo;
   metadata: JsonObject;
   resources: readonly PreparedAudioMetadata[];
+  runtimeResources: readonly PreparedAudioRuntimeResource[];
   provenance: Readonly<{
     duration: PreparationProvenance;
     tempo: PreparationProvenance;
@@ -112,7 +123,13 @@ const validateResource = (resource: PreparedAudioMetadata): PreparedAudioMetadat
   ) {
     throw new Error("The audio resource resolver returned invalid metadata.");
   }
-  return deepFreeze(structuredClone(resource));
+  return deepFreeze({
+    type: resource.type,
+    hash: resource.hash,
+    channels: resource.channels,
+    sampleRate: resource.sampleRate,
+    frameCount: resource.frameCount,
+  });
 };
 
 const validateTiming = (duration: DurationIR, tempo: ConstantTempo): void => {
@@ -141,12 +158,39 @@ export const resolvePreparation = async ({
   try {
     if (signal.aborted) throw preparationCancelled(compositionId);
     const consultedResources = new Map<string, PreparedAudioMetadata>();
+    const runtimeResources = new Map<string, PreparedAudioRuntimeResource>();
     const trackingResources: PreparationResourceResolver = Object.freeze({
       audio: async (reference): Promise<PreparedAudioMetadata> => {
         if (signal.aborted) throw preparationCancelled(compositionId);
-        const resource = validateResource(await resources.audio(reference));
+        const candidate = await resources.audio(reference);
+        const resource = validateResource(candidate);
         if (signal.aborted) throw preparationCancelled(compositionId);
         consultedResources.set(resource.hash, resource);
+        const runtime = candidate as PreparedAudioMetadata &
+          Partial<Pick<PreparedAudioRuntimeResource, "samples">>;
+        if (runtime.samples !== undefined) {
+          if (
+            !Array.isArray(runtime.samples) ||
+            runtime.samples.length !== resource.frameCount * resource.channels ||
+            runtime.samples.some(
+              (sample) =>
+                !Number.isFinite(sample) || Math.fround(sample) !== sample || Object.is(sample, -0),
+            )
+          ) {
+            throw new Error("The audio resource resolver returned invalid PCM samples.");
+          }
+          runtimeResources.set(
+            resource.hash,
+            (() => {
+              const previous = runtimeResources.get(resource.hash);
+              return deepFreeze({
+                ...resource,
+                sourcePaths: [...new Set([...(previous?.sourcePaths ?? []), reference.path])],
+                samples: [...runtime.samples],
+              });
+            })(),
+          );
+        }
         return resource;
       },
     });
@@ -182,6 +226,9 @@ export const resolvePreparation = async ({
       tempo: resolvedTempo,
       metadata: { ...cloneJsonObject(metadata), ...preparedMetadata },
       resources: [...consultedResources.values()].sort((left, right) =>
+        left.hash.localeCompare(right.hash),
+      ),
+      runtimeResources: [...runtimeResources.values()].sort((left, right) =>
         left.hash.localeCompare(right.hash),
       ),
       provenance: {

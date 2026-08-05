@@ -143,6 +143,26 @@ describe("renderAudio", () => {
     expect(repeatedLouderAudio.samples).toEqual(louderAudio.samples);
   });
 
+  it("renders an AudioClip through preparation, planning, and the shared renderer", async () => {
+    const job = await createRenderJob({
+      projectRoot: configuredProjectRoot,
+      compositionId: "AudioClip",
+    });
+    const rendered = renderAudio(job);
+    expect(job.plan.resources).toHaveLength(1);
+    expect(job.plan.audioRegions).toEqual([
+      expect.objectContaining({
+        resource: 0,
+        startFrame: 0,
+        durationFrames: 1,
+        sourceOffsetFrame: 0,
+      }),
+    ]);
+    expect(job.runtimeResources[0]?.samples).toEqual([Math.fround(0.25)]);
+    expect(rendered.samples[0]).toBe(Math.fround(0.25));
+    expect(rendered.samples[1]).toBe(Math.fround(0.25));
+  });
+
   it("derives reproducible audio and fingerprints from an explicit seed", async () => {
     const first = await createRenderJob({
       projectRoot: configuredProjectRoot,

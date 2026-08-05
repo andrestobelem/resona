@@ -4,12 +4,16 @@ import type {
   ExecutionPlan,
   InstrumentEventPlan,
   InstrumentTrackIR,
+  AudioTrackIR,
+  AudioRegionPlan,
   NodePath,
   ProcessorPlan,
   SequenceIR,
   SignalRoute,
   RationalIR,
+  ResolvedResourcePlan,
 } from "./model.js";
+import type { PreparedAudioRuntimeResource } from "./preparation.js";
 import { ResonaError } from "./resona-error.js";
 import {
   addFractions,
@@ -133,7 +137,7 @@ const validateHeader = (composition: CompositionIR): Fraction => {
 };
 
 type TrackPlacement = Readonly<{
-  track: InstrumentTrackIR;
+  track: InstrumentTrackIR | AudioTrackIR;
   start: Fraction;
   end: Fraction;
 }>;
@@ -154,10 +158,8 @@ const collectTracks = (
   for (const child of sequence.children) {
     if (child.type === "sequence") {
       collectTracks(child, start, end, bpm, placements);
-    } else if (child.type === "instrument-track") {
+    } else if (child.type === "instrument-track" || child.type === "audio-track") {
       placements.push({ track: child, start, end });
-    } else {
-      throw new Error("Audio tracks are not implemented by the T01 planner slice.");
     }
   }
 };
@@ -199,6 +201,7 @@ const validateBeforePruning = (
   const diagnostics: Diagnostic[] = [];
 
   for (const { track, start: trackStart } of placements) {
+    if (track.type !== "instrument-track") continue;
     const instrument = track.instrument;
     if (!Number.isSafeInteger(instrument.maxVoices) || instrument.maxVoices <= 0) {
       diagnostics.push(
@@ -339,7 +342,10 @@ const validateBeforePruning = (
   }
 };
 
-export const compileExecutionPlan = (composition: CompositionIR): PlanCompilation => {
+export const compileExecutionPlan = (
+  composition: CompositionIR,
+  resolvedResources: readonly PreparedAudioRuntimeResource[] = [],
+): PlanCompilation => {
   const bpm = validateHeader(composition);
   const compositionDuration = durationToSeconds(composition.duration, bpm);
   const zero = fraction(0n);
@@ -351,19 +357,27 @@ export const compileExecutionPlan = (composition: CompositionIR): PlanCompilatio
   const routes: SignalRoute[] = [];
   const candidates: NoteCandidate[] = [];
   const gainByTrack = new Map<string, number>();
+  const resources: ResolvedResourcePlan[] = [];
+  const resourceIndices = new Map<string, number>();
+  const audioRegions: AudioRegionPlan[] = [];
+  const audioDiagnostics: Diagnostic[] = [];
 
   for (const placement of placements) {
     const instrumentIndex = processors.length;
-    const instrument = placement.track.instrument;
-    processors.push({
-      type: "poly-synth",
-      maxVoices: instrument.maxVoices,
-      oscillator: instrument.oscillator,
-      attackFrames: frameFromSeconds(durationToSeconds(instrument.envelope.attack, bpm)),
-      decayFrames: frameFromSeconds(durationToSeconds(instrument.envelope.decay, bpm)),
-      sustain: canonicalF32(instrument.envelope.sustain),
-      releaseFrames: frameFromSeconds(durationToSeconds(instrument.envelope.release, bpm)),
-    });
+    if (placement.track.type === "instrument-track") {
+      const instrument = placement.track.instrument;
+      processors.push({
+        type: "poly-synth",
+        maxVoices: instrument.maxVoices,
+        oscillator: instrument.oscillator,
+        attackFrames: frameFromSeconds(durationToSeconds(instrument.envelope.attack, bpm)),
+        decayFrames: frameFromSeconds(durationToSeconds(instrument.envelope.decay, bpm)),
+        sustain: canonicalF32(instrument.envelope.sustain),
+        releaseFrames: frameFromSeconds(durationToSeconds(instrument.envelope.release, bpm)),
+      });
+    } else {
+      processors.push({ type: "sum" });
+    }
 
     const gainEffect = placement.track.effects.find((effect) => effect.type === "gain");
     if (gainEffect !== undefined && (!Number.isFinite(gainEffect.gain) || gainEffect.gain < 0)) {
@@ -385,6 +399,108 @@ export const compileExecutionPlan = (composition: CompositionIR): PlanCompilatio
 
     for (const clip of placement.track.clips) {
       const clipStart = addFractions(placement.start, positionToSeconds(clip.from, bpm));
+      if (clip.type === "audio-clip") {
+        const resource = resolvedResources.find((candidate) =>
+          candidate.sourcePaths.includes(clip.resource.path),
+        );
+        if (resource === undefined) {
+          throw new ResonaError("AudioClip resource was not prepared.", [
+            diagnosticFor(
+              composition,
+              "plan.audio-resource-missing",
+              "AudioClip requires a prepared WAV resource.",
+              clip,
+            ),
+          ]);
+        }
+        const resourceIndex =
+          resourceIndices.get(resource.hash) ??
+          (() => {
+            const index = resources.length;
+            resources.push({
+              type: resource.type,
+              hash: resource.hash,
+              channels: resource.channels,
+              sampleRate: resource.sampleRate,
+              frameCount: resource.frameCount,
+            });
+            resourceIndices.set(resource.hash, index);
+            return index;
+          })();
+        const sourceOffsetFrame = frameFromSeconds(fractionFromIR(clip.offset.seconds));
+        if (sourceOffsetFrame < 0 || sourceOffsetFrame >= resource.frameCount) {
+          throw new ResonaError("AudioClip offset is outside the resource.", [
+            diagnosticFor(
+              composition,
+              "plan.audio-offset-invalid",
+              "AudioClip offset must reference an existing resource frame.",
+              clip,
+            ),
+          ]);
+        }
+        if (clip.loop && clip.duration === undefined) {
+          throw new ResonaError("Looped AudioClip requires a duration.", [
+            diagnosticFor(
+              composition,
+              "plan.audio-loop-duration-required",
+              "A looped AudioClip must declare a duration.",
+              clip,
+            ),
+          ]);
+        }
+        const requestedDuration =
+          clip.duration === undefined
+            ? resource.frameCount - sourceOffsetFrame
+            : frameFromSeconds(durationToSeconds(clip.duration, bpm));
+        if (requestedDuration <= 0) {
+          throw new ResonaError("AudioClip duration must be positive.", [
+            diagnosticFor(
+              composition,
+              "plan.audio-duration-invalid",
+              "AudioClip duration must be positive.",
+              clip,
+            ),
+          ]);
+        }
+        if (!clip.loop && requestedDuration > resource.frameCount - sourceOffsetFrame) {
+          audioDiagnostics.push({
+            code: "plan.audio-duration-exceeds-resource",
+            phase: "planning",
+            severity: "warning",
+            message:
+              "AudioClip duration exceeds the available resource frames; the remainder is silence.",
+            compositionId: composition.compositionId,
+            nodePath: clip.path,
+          });
+        }
+        const startFrame = frameFromSeconds(clipStart);
+        if (startFrame < 0) {
+          throw new ResonaError("AudioClip cannot begin before frame zero.", [
+            diagnosticFor(
+              composition,
+              "plan.audio-start-invalid",
+              "AudioClip start must be non-negative.",
+              clip,
+            ),
+          ]);
+        }
+        const activeEndFrame = Math.min(
+          frameFromSeconds(compositionDuration),
+          frameFromSeconds(placement.end),
+        );
+        if (startFrame >= activeEndFrame) continue;
+        const durationFrames = Math.min(requestedDuration, activeEndFrame - startFrame);
+        audioRegions.push({
+          type: "audio-region",
+          resource: resourceIndex,
+          destination: instrumentIndex,
+          startFrame,
+          durationFrames,
+          sourceOffsetFrame,
+          loop: clip.loop,
+        });
+        continue;
+      }
       clip.events.forEach((event, eventIndex) => {
         const noteStart = addFractions(clipStart, positionToSeconds(event.at, bpm));
         const naturalEnd = addFractions(noteStart, durationToSeconds(event.duration, bpm));
@@ -406,11 +522,15 @@ export const compileExecutionPlan = (composition: CompositionIR): PlanCompilatio
   const masterProcessor = processors.length;
   processors.push({ type: "sum" });
   for (let processorIndex = 0; processorIndex < masterProcessor; processorIndex += 1) {
-    if (!routes.some((route) => route.from === processorIndex))
-      routes.push({ from: processorIndex, to: masterProcessor });
-    else {
-      const destination = routes.find((route) => route.from === processorIndex)?.to;
-      if (destination !== undefined) routes.push({ from: destination, to: masterProcessor });
+    if (routes.some((route) => route.to === processorIndex)) continue;
+    let sink = processorIndex;
+    while (true) {
+      const next = routes.find((route) => route.from === sink);
+      if (next === undefined) break;
+      sink = next.to;
+    }
+    if (!routes.some((route) => route.from === sink && route.to === masterProcessor)) {
+      routes.push({ from: sink, to: masterProcessor });
     }
   }
 
@@ -470,6 +590,31 @@ export const compileExecutionPlan = (composition: CompositionIR): PlanCompilatio
     return left.occurrence - right.occurrence;
   });
 
+  const usedResourceHashes = new Set(
+    audioRegions.map((region) => resources[region.resource]!.hash),
+  );
+  const sortedResources = resources
+    .filter((resource) => usedResourceHashes.has(resource.hash))
+    .sort((left, right) => left.hash.localeCompare(right.hash));
+  const resourceRemap = new Map(sortedResources.map((resource, index) => [resource.hash, index]));
+  const sortedAudioRegions = audioRegions
+    .map((region, encounter) => ({
+      ...region,
+      resource: resourceRemap.get(resources[region.resource]!.hash)!,
+      encounter,
+    }))
+    .sort(
+      (left, right) =>
+        left.destination - right.destination ||
+        left.startFrame - right.startFrame ||
+        left.encounter - right.encounter,
+    )
+    .map((entry) => {
+      const { encounter, ...region } = entry;
+      void encounter;
+      return region;
+    });
+
   const plan: ExecutionPlan = {
     format: "resona/execution-plan",
     schemaVersion: 1,
@@ -480,8 +625,8 @@ export const compileExecutionPlan = (composition: CompositionIR): PlanCompilatio
     masterProcessor,
     processors,
     routes,
-    resources: [],
-    audioRegions: [],
+    resources: sortedResources,
+    audioRegions: sortedAudioRegions,
     events,
     automation: placements.flatMap((placement) =>
       placement.track.automation.map((lane) => {
@@ -538,15 +683,18 @@ export const compileExecutionPlan = (composition: CompositionIR): PlanCompilatio
       }),
     ),
   };
-  const diagnostics = [...roundedAwayByClip.values()].map(({ path, count }) => ({
-    code: "plan.note-rounded-to-zero-frames",
-    phase: "planning" as const,
-    severity: "warning" as const,
-    message: "One or more positive notes rounded to no executable frames.",
-    compositionId: composition.compositionId,
-    nodePath: path,
-    cause: { count },
-  }));
+  const diagnostics = [
+    ...audioDiagnostics,
+    ...[...roundedAwayByClip.values()].map(({ path, count }) => ({
+      code: "plan.note-rounded-to-zero-frames",
+      phase: "planning" as const,
+      severity: "warning" as const,
+      message: "One or more positive notes rounded to no executable frames.",
+      compositionId: composition.compositionId,
+      nodePath: path,
+      cause: { count },
+    })),
+  ];
 
   return { plan, diagnostics };
 };

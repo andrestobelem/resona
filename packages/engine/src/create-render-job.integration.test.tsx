@@ -258,8 +258,30 @@ registerRoot(Root);`,
     });
 
     expect(job.variant.resources).toEqual([
-      { type: "wav", hash, channels: 1, sampleRate: 48_000, frameCount: 1 },
+      {
+        type: "wav",
+        hash,
+        channels: 1,
+        sampleRate: 48_000,
+        frameCount: 1,
+      },
     ]);
+    expect(job.runtimeResources).toEqual([
+      {
+        type: "wav",
+        hash,
+        channels: 1,
+        sampleRate: 48_000,
+        frameCount: 1,
+        sourcePaths: ["tone.wav"],
+        samples: [0.25],
+      },
+    ]);
+    expect(Object.isFrozen(job.runtimeResources[0]?.samples)).toBe(true);
+    expect(() => {
+      (job.runtimeResources[0]?.samples as number[])[0] = 0.75;
+    }).toThrow();
+    expect(job.runtimeResources[0]?.samples).toEqual([0.25]);
     expect(job.spec.resourceHashes).toEqual([hash]);
   });
 
@@ -498,6 +520,7 @@ registerRoot(Root);`,
         ],
         automation: [],
       },
+      runtimeResources: [],
       diagnostics: [],
     });
 

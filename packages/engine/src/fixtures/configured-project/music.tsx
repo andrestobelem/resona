@@ -1,5 +1,6 @@
 import {
   Composition,
+  AudioClip,
   EventClip,
   PolySynth,
   Sequence,
@@ -10,11 +11,28 @@ import {
   position,
   rational,
   registerRoot,
+  staticAudio,
   useRandom,
   type PrepareComposition,
 } from "../../index.js";
 
 const ConfiguredComposition = () => <Sequence id="root" from={position.seconds(0n)} />;
+
+const AudioClipComposition = () => (
+  <Sequence id="root" from={position.seconds(0n)}>
+    <Track
+      id="audio"
+      source={
+        <AudioClip
+          id="clip"
+          src={staticAudio("tone.wav")}
+          from={position.seconds(0n)}
+          duration={duration.seconds(1n, 48_000n)}
+        />
+      }
+    />
+  </Sequence>
+);
 
 const MustNotEvaluate = () => {
   throw new Error("Authoring ran after invalid preparation.");
@@ -121,6 +139,14 @@ const ConfiguredRoot = () => (
       component={ConfiguredComposition}
       prepare={prepareResource}
       duration={duration.seconds(1n)}
+      bpm={rational(120n)}
+      timeSignature={{ beatsPerBar: 4, beatUnit: 4 }}
+    />
+    <Composition
+      id="AudioClip"
+      component={AudioClipComposition}
+      prepare={prepareResource}
+      duration={duration.seconds(1n, 48_000n)}
       bpm={rational(120n)}
       timeSignature={{ beatsPerBar: 4, beatUnit: 4 }}
     />

@@ -1,5 +1,6 @@
 export {
   Composition,
+  AudioClip,
   EventClip,
   PolySynth,
   Sequence,
@@ -7,6 +8,7 @@ export {
   note,
   pitch,
   registerRoot,
+  staticAudio,
   useRandom,
 } from "./authoring.js";
 export { createRenderJob, type CreateRenderJobOptions } from "./create-render-job.js";
@@ -22,6 +24,7 @@ export {
   type PreparationResourceResolver,
   type PrepareComposition,
   type PrepareCompositionResult,
+  type PreparedAudioRuntimeResource,
   type PreparedAudioMetadata,
   type ResolvedPreparation,
   type ResolvedVariant,
