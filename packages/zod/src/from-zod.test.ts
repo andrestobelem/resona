@@ -73,10 +73,19 @@ describe("fromZod", () => {
     ).toThrowError(UnsupportedZodInputSchemaError);
   });
 
-  it("rejects a declared async superRefine when the adapter is created", () => {
-    expect(() =>
-      fromZod(z.strictObject({ value: z.string() }).superRefine(async () => {})),
-    ).toThrowError(UnsupportedZodInputSchemaError);
+  it("supports synchronous superRefine and guards its opaque async wrapper at validation", () => {
+    const synchronous = fromZod(
+      z.strictObject({ value: z.string() }).superRefine((value, context) => {
+        if (!value.value.startsWith("resona")) context.addIssue({ code: "custom" });
+      }),
+    );
+    const opaqueAsync = fromZod(z.strictObject({ value: z.string() }).superRefine(async () => {}));
+
+    expect(synchronous.validate({ value: "resona-input" })).toEqual({ success: true });
+    expect(opaqueAsync.validate({ value: "resona-input" })).toMatchObject({
+      success: false,
+      issues: [{ code: "async_validation" }],
+    });
   });
 
   it("turns a latent refinement promise into a synchronous validation failure", () => {
