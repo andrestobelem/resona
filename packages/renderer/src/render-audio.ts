@@ -162,6 +162,22 @@ const validatePlan = (plan: ExecutionPlan): void => {
   }
 };
 
+const validateRuntimeResources = (job: CreateRenderJobResult): void => {
+  for (const resource of job.plan.resources) {
+    const runtime = job.runtimeResources.find((candidate) => candidate.hash === resource.hash);
+    if (
+      runtime === undefined ||
+      runtime.channels !== resource.channels ||
+      runtime.sampleRate !== resource.sampleRate ||
+      runtime.frameCount !== resource.frameCount ||
+      runtime.samples.length !== runtime.frameCount * runtime.channels ||
+      runtime.samples.some((sample) => !Number.isFinite(sample))
+    ) {
+      throw new RangeError("The render job contains an invalid or unavailable audio resource.");
+    }
+  }
+};
+
 const createVoice = (): Voice => ({
   active: false,
   occurrence: -1,
@@ -228,6 +244,7 @@ export const renderAudio = (
   }
   const { plan } = job;
   validatePlan(plan);
+  validateRuntimeResources(job);
 
   const instruments: InstrumentState[] = plan.processors
     .map((processor, index) => ({ processor, index }))
@@ -248,17 +265,14 @@ export const renderAudio = (
   const instrumentsByProcessor = new Map(
     instruments.map((instrument) => [instrument.processorIndex, instrument]),
   );
-  const gainByInstrument = new Map<number, number>();
+  const gainBySource = new Map<number, number>();
   for (const route of plan.routes) {
-    if (
-      plan.processors[route.from]?.type === "poly-synth" &&
-      plan.processors[route.to]?.type === "gain"
-    ) {
-      gainByInstrument.set(route.from, route.to);
+    if (plan.processors[route.to]?.type === "gain") {
+      gainBySource.set(route.from, route.to);
     }
   }
-  const gainAt = (instrument: number, frame: number): number => {
-    const target = gainByInstrument.get(instrument);
+  const gainAt = (source: number, frame: number): number => {
+    const target = gainBySource.get(source);
     if (target === undefined) return 1;
     const processor = plan.processors[target];
     if (processor?.type !== "gain") return 1;
@@ -343,7 +357,7 @@ export const renderAudio = (
         }
       }
 
-      let mono = 0;
+      const sourceOutputs = new Map<number, Readonly<{ left: number; right: number }>>();
       for (const instrument of instruments) {
         let instrumentSample = 0;
         for (const voice of instrument.voices) {
@@ -359,11 +373,56 @@ export const renderAudio = (
           voice.phase += phaseDelta;
           voice.phase -= Math.floor(voice.phase);
         }
-        mono = canonicalF32(mono + instrumentSample * gainAt(instrument.processorIndex, frame));
+        const gained = canonicalF32(instrumentSample * gainAt(instrument.processorIndex, frame));
+        sourceOutputs.set(instrument.processorIndex, { left: gained, right: gained });
       }
-      const sample = canonicalF32(mono);
-      samples[frame * plan.channels] = sample;
-      samples[frame * plan.channels + 1] = sample;
+      for (const region of plan.audioRegions) {
+        if (frame < region.startFrame || frame >= region.startFrame + region.durationFrames)
+          continue;
+        const resourcePlan = plan.resources[region.resource];
+        if (resourcePlan === undefined) {
+          throw new RangeError("Audio region references an unknown resource.");
+        }
+        const resource = job.runtimeResources.find(
+          (candidate) => candidate.hash === resourcePlan.hash,
+        );
+        if (resource?.samples === undefined) {
+          throw new RangeError("Audio region resource PCM is unavailable.");
+        }
+        const elapsed = frame - region.startFrame;
+        const available = resourcePlan.frameCount - region.sourceOffsetFrame;
+        const sourceFrame = region.loop
+          ? region.sourceOffsetFrame + (elapsed % available)
+          : region.sourceOffsetFrame + elapsed;
+        if (sourceFrame >= resourcePlan.frameCount) continue;
+        const sourceIndex = sourceFrame * resourcePlan.channels;
+        const sourceLeft = resource.samples[sourceIndex] ?? 0;
+        const sourceRight =
+          resourcePlan.channels === 1 ? sourceLeft : (resource.samples[sourceIndex + 1] ?? 0);
+        const previous = sourceOutputs.get(region.destination) ?? { left: 0, right: 0 };
+        sourceOutputs.set(region.destination, {
+          left: canonicalF32(previous.left + sourceLeft),
+          right: canonicalF32(previous.right + sourceRight),
+        });
+      }
+      for (const [source, output] of sourceOutputs) {
+        if (plan.processors[source]?.type === "sum") {
+          const gain = gainAt(source, frame);
+          sourceOutputs.set(source, {
+            left: canonicalF32(output.left * gain),
+            right: canonicalF32(output.right * gain),
+          });
+        }
+      }
+      let left = 0;
+      let right = 0;
+      for (const processorIndex of [...sourceOutputs.keys()].sort((a, b) => a - b)) {
+        const output = sourceOutputs.get(processorIndex)!;
+        left = canonicalF32(left + output.left);
+        right = canonicalF32(right + output.right);
+      }
+      samples[frame * plan.channels] = canonicalF32(left);
+      samples[frame * plan.channels + 1] = canonicalF32(right);
     }
   }
 
