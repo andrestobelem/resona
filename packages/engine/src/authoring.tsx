@@ -7,7 +7,6 @@ import {
   resolveCompositionInputs,
   type DeepReadonly,
   type InputSchema,
-  type InputSchemaIR,
 } from "./input-schema.js";
 import type {
   AbsoluteDurationIR,
@@ -29,6 +28,7 @@ import {
   type PrepareComposition,
   type ResolvedVariant,
 } from "./preparation.js";
+import { deterministicRandom } from "./random.js";
 import { duration } from "./time/rational.js";
 
 type CompositionDescriptor = Readonly<{
@@ -65,6 +65,7 @@ type MutableInstrumentTrack = {
 type EvaluationSession = {
   compositionId: string;
   compositionDuration: DurationIR;
+  seed: string;
   root?: MutableSequence;
 };
 
@@ -78,6 +79,16 @@ const EvaluationContext = createContext<EvaluationContextValue | null>(null);
 const TrackContext = createContext<MutableInstrumentTrack | null>(null);
 
 let registeredRoot: ComponentType | undefined;
+
+export const useRandom = (key: string): number => {
+  const context = useContext(EvaluationContext);
+  if (context === null) throw new Error("useRandom() must run while evaluating a composition.");
+  return deterministicRandom(
+    context.session.seed,
+    context.parent?.path ?? [context.session.compositionId],
+    key,
+  );
+};
 
 const assertPublicId = (id: string): void => {
   if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(id)) {
@@ -394,8 +405,6 @@ const discoverCompositions = (): readonly CompositionDescriptor[] => {
 
 type ResolvedRegisteredComposition = Readonly<{
   composition: CompositionIR;
-  inputs: JsonObject;
-  inputSchema: InputSchemaIR;
   variant: ResolvedVariant;
 }>;
 
@@ -403,6 +412,7 @@ export const resolveRegisteredComposition = async (
   compositionId: string,
   overrides?: JsonObject,
   signal: AbortSignal = new AbortController().signal,
+  seed = "resona-default",
 ): Promise<ResolvedRegisteredComposition> => {
   const descriptions = discoverCompositions();
   const descriptor = descriptions.find((candidate) => candidate.id === compositionId);
@@ -429,6 +439,7 @@ export const resolveRegisteredComposition = async (
     compositionId,
     inputs: resolved.inputs,
     inputSchema: resolved.inputSchema,
+    seed,
     duration: preparation.duration,
     tempo: preparation.tempo,
     metadata: preparation.metadata,
@@ -439,6 +450,7 @@ export const resolveRegisteredComposition = async (
   const session: EvaluationSession = {
     compositionId: descriptor.id,
     compositionDuration: preparation.duration,
+    seed,
   };
   const Component = descriptor.component;
   const EvaluateComponent = (): ReactElement | null => Component(resolved.inputs);
@@ -466,8 +478,6 @@ export const resolveRegisteredComposition = async (
       metadata: preparation.metadata,
       root: finalizeSequence(session.root),
     },
-    inputs: resolved.inputs,
-    inputSchema: resolved.inputSchema,
     variant,
   };
 };

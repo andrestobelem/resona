@@ -40,9 +40,11 @@ describe("createRenderJob", () => {
       configuration: {
         entry: { value: "music.tsx", source: "project-config" },
         staticDir: { value: "assets", source: "project-config" },
+        seed: { value: "configured-seed", source: "project-config" },
       },
     });
     expect(Object.isFrozen(job.project)).toBe(true);
+    expect(job.spec.seed).toEqual({ value: "configured-seed", source: "project-config" });
     expect(job.composition.duration).toEqual({
       type: "absolute-duration",
       seconds: { numerator: "2", denominator: "1" },
@@ -76,7 +78,7 @@ describe("createRenderJob", () => {
         },
       },
     });
-    expect(job.variant.inputs).toBe(job.inputs);
+    expect(Object.isFrozen(job.variant.inputs)).toBe(true);
 
     const repeated = await createRenderJob({
       projectRoot: configuredProjectRoot,
@@ -97,6 +99,24 @@ describe("createRenderJob", () => {
           code: "configuration.invalid",
           phase: "configuration",
           severity: "error",
+          compositionId: "Configured",
+        },
+      ],
+    });
+  });
+
+  it("rejects an invalid invocation seed with configuration provenance", async () => {
+    await expect(
+      createRenderJob({
+        projectRoot: configuredProjectRoot,
+        compositionId: "Configured",
+        seed: "",
+      }),
+    ).rejects.toMatchObject({
+      diagnostics: [
+        {
+          code: "configuration.seed-invalid",
+          phase: "configuration",
           compositionId: "Configured",
         },
       ],
@@ -134,8 +154,45 @@ describe("createRenderJob", () => {
         configuration: {
           entry: { value: "src/index.tsx", source: "resona-default" },
           staticDir: { value: "public", source: "resona-default" },
+          seed: { value: "resona-default", source: "resona-default" },
         },
       },
+      spec: {
+        format: "resona/render-spec",
+        schemaVersion: 1,
+        engineVersion: "0.0.0",
+        buildId: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
+        compositionId: "ExactNote",
+        compositionIrVersion: 1,
+        executionPlanVersion: 1,
+        randomAlgorithmVersion: 1,
+        inputs: {},
+        seed: { value: "resona-default", source: "resona-default" },
+        metadata: { title: "Exact note" },
+        configuration: {
+          entry: { value: "src/index.tsx", source: "resona-default" },
+          staticDir: { value: "public", source: "resona-default" },
+        },
+        resourceHashes: [],
+        hashes: {
+          compositionIr: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
+          executionPlan: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
+        },
+        range: { startFrame: 0, endFrame: 48_000, source: "resona-default" },
+        tail: { type: "cut", source: "resona-default" },
+        options: {
+          sampleRate: { value: 48_000, source: "resona-default" },
+          channels: { value: 2, source: "resona-default" },
+          encoding: { value: "wav-float32", source: "resona-default" },
+        },
+        runtime: {
+          platform: expect.any(String),
+          architecture: expect.any(String),
+          node: expect.any(String),
+          backend: "typescript",
+        },
+      },
+      fingerprint: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
       variant: {
         compositionId: "ExactNote",
         inputs: {},
@@ -148,6 +205,7 @@ describe("createRenderJob", () => {
             additionalProperties: false,
           },
         },
+        seed: "resona-default",
         duration: {
           type: "absolute-duration",
           seconds: { numerator: "1", denominator: "1" },
@@ -275,16 +333,6 @@ describe("createRenderJob", () => {
               ],
             },
           ],
-        },
-      },
-      inputs: {},
-      inputSchema: {
-        format: "resona/input-schema",
-        schemaVersion: 1,
-        jsonSchema: {
-          $schema: "https://json-schema.org/draft/2020-12/schema",
-          type: "object",
-          additionalProperties: false,
         },
       },
       plan: {
@@ -417,7 +465,7 @@ describe("createRenderJob", () => {
       compositionId: "KeyInputVariant",
     });
 
-    expect(job.inputs).toEqual({ key: "canonical" });
+    expect(job.variant.inputs).toEqual({ key: "canonical" });
     expect(job.diagnostics).toEqual([]);
   });
 
@@ -427,7 +475,7 @@ describe("createRenderJob", () => {
       compositionId: "MutatingInputVariant",
     });
 
-    expect(job.inputs).toEqual({ intensity: 0.25 });
+    expect(job.variant.inputs).toEqual({ intensity: 0.25 });
     expect(job.diagnostics).toEqual([]);
   });
 

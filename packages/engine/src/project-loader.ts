@@ -6,7 +6,6 @@ import { join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { Worker } from "node:worker_threads";
 
-import type { InputSchemaIR } from "./input-schema.js";
 import type { CompositionIR, Diagnostic, ExecutionPlan, JsonObject } from "./model.js";
 import type { ResolvedVariant } from "./preparation.js";
 import {
@@ -18,8 +17,6 @@ import { ResonaError } from "./resona-error.js";
 
 type VariantCompilation = Readonly<{
   composition: CompositionIR;
-  inputs: JsonObject;
-  inputSchema: InputSchemaIR;
   variant: ResolvedVariant;
   plan: ExecutionPlan;
   diagnostics: readonly Diagnostic[];
@@ -42,13 +39,11 @@ const compileProjectEntry = (entryPoint: string): string => {
     `import ${JSON.stringify(entryPoint)};`,
     `import {resolveRegisteredComposition} from ${JSON.stringify(authoringPath)};`,
     `import {compileExecutionPlan} from ${JSON.stringify(planningPath)};`,
-    "export const compileVariant = async (compositionId, providedInputs, signal) => {",
-    "  const resolved = await resolveRegisteredComposition(compositionId, providedInputs, signal);",
+    "export const compileVariant = async (compositionId, providedInputs, signal, seed) => {",
+    "  const resolved = await resolveRegisteredComposition(compositionId, providedInputs, signal, seed);",
     "  const compilation = compileExecutionPlan(resolved.composition);",
     "  return {",
     "    composition: resolved.composition,",
-    "    inputs: resolved.inputs,",
-    "    inputSchema: resolved.inputSchema,",
     "    variant: resolved.variant,",
     "    plan: compilation.plan,",
     "    diagnostics: compilation.diagnostics,",
@@ -62,11 +57,9 @@ const workerSource = [
   "try {",
   "  const project = await import(workerData.moduleUrl);",
   "  const controller = new AbortController();",
-  "  const compilation = await project.compileVariant(workerData.compositionId, workerData.inputs, controller.signal);",
+  "  const compilation = await project.compileVariant(workerData.compositionId, workerData.inputs, controller.signal, workerData.seed);",
   '  parentPort.postMessage({ type: "success", compilation: {',
   "    composition: compilation.composition,",
-  "    inputs: compilation.inputs,",
-  "    inputSchema: compilation.inputSchema,",
   "    variant: compilation.variant,",
   "    plan: compilation.plan,",
   "    diagnostics: compilation.diagnostics,",
@@ -95,10 +88,11 @@ const runInFreshWorker = (
   moduleUrl: string,
   compositionId: string,
   inputs?: JsonObject,
+  seed = "resona-default",
 ): Promise<VariantCompilation> =>
   new Promise((resolve, reject) => {
     const worker = new Worker(new URL(`data:text/javascript,${encodeURIComponent(workerSource)}`), {
-      workerData: { moduleUrl, compositionId, inputs: inputs ?? {} },
+      workerData: { moduleUrl, compositionId, inputs: inputs ?? {}, seed },
     });
 
     worker.once("message", (message: unknown) => {
@@ -192,6 +186,7 @@ export const loadProjectCompilation = async (
   projectRoot: string,
   compositionId: string,
   inputs?: JsonObject,
+  invocationSeed?: string,
 ): Promise<ProjectCompilation> => {
   const directory = await mkdtemp(join(projectRoot, ".resona-project-"));
   const outputFile = join(directory, "project.mjs");
@@ -212,6 +207,24 @@ export const loadProjectCompilation = async (
         },
       ]);
     }
+    if (invocationSeed !== undefined && invocationSeed.length === 0) {
+      throw new ResonaError("Render seed must be a non-empty string.", [
+        {
+          code: "configuration.seed-invalid",
+          phase: "configuration",
+          severity: "error",
+          message: "Render seed must be a non-empty string.",
+          compositionId,
+        },
+      ]);
+    }
+    const effectiveConfiguration = {
+      ...resolvedProject.configuration,
+      seed:
+        invocationSeed === undefined
+          ? resolvedProject.configuration.seed
+          : { value: invocationSeed, source: "invocation" as const },
+    };
     await build({
       bundle: true,
       format: "esm",
@@ -233,13 +246,14 @@ export const loadProjectCompilation = async (
       pathToFileURL(outputFile).href,
       compositionId,
       inputs,
+      effectiveConfiguration.seed.value,
     );
     return {
       ...compilation,
       project: {
         root: projectRoot,
         buildId,
-        configuration: resolvedProject.configuration,
+        configuration: effectiveConfiguration,
       },
     };
   } finally {

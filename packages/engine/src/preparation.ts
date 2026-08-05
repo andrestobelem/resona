@@ -61,6 +61,7 @@ export type ResolvedVariant = Readonly<{
   compositionId: string;
   inputs: JsonObject;
   inputSchema: InputSchemaIR;
+  seed: string;
   duration: DurationIR;
   tempo: ConstantTempo;
   metadata: JsonObject;
