@@ -328,7 +328,7 @@ const loadProjectConfiguration = async (
           return await loadConfigValue(pathToFileURL(outputFile).href);
         } catch (error) {
           const message = error instanceof Error ? error.message : "Project config failed.";
-          throw new Error(`Project config could not be loaded: ${message}`);
+          throw new Error(`Project config could not be loaded: ${message}`, { cause: error });
         }
       })()
     : {};
