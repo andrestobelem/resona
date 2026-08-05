@@ -3,17 +3,18 @@
 ## Readiness
 
 - Status: `partial`.
-- Evidence captured: 2026-08-04T23:03:24Z.
+- Evidence captured: 2026-08-04T22:58:50-03:00.
 - Integration line: `main`.
-- Baseline commit: `c411c6014cd08ce0950138b3e589ae25d9182496`.
-- Worktree condition: dirty before this setup; it already contained uncommitted
-  documentation and repository-instruction changes.
-- Local runtime: Node.js `24.18.0` and pnpm `11.20.0`.
-- Reason: exact local gates exist and pass, but build, typecheck, and test coverage remain
-  empty. Provider CI results and remote enforcement are also unavailable.
+- Baseline commit: `327e1b4c184efdf7b6fdfd0e8b0e6234d00d2fcf`.
+- Worktree condition: dirty with T01 on `feat/engine-compile-note-plan`.
+- Local runtime: Node.js `24.15.0` and pnpm `11.20.0`; pnpm reports the Node version is below
+  the declared `>=24.18.0 <25` range.
+- Reason: local fast and full gates pass with a non-vacuous integration test. GitHub Actions
+  also passed both gates for PR #22. Remote enforcement has not been inspected.
 
-The current gates verify the repository scaffold and documentation baseline. They do not
-yet provide meaningful product-code verification.
+The current gates verify the repository scaffold, documentation, exact rational
+nearest-even rounding, and the first source-project-to-plan vertical slice. They do not yet
+verify DSP output, browser playback, or release artifacts.
 
 ## Integration and review model
 
@@ -66,12 +67,12 @@ Recorded result:
 
 - Run date: 2026-08-04.
 - Exit code: `0`.
-- Observed wall duration: 4.56 seconds.
-- Baseline commit: `c411c6014cd08ce0950138b3e589ae25d9182496`.
-- Worktree: dirty with pre-existing and setup changes.
+- Observed wall duration: 5.29 seconds.
+- Baseline commit: `327e1b4c184efdf7b6fdfd0e8b0e6234d00d2fcf`.
+- Worktree: dirty with T01 on `feat/engine-compile-note-plan`.
 - Formatting, ESLint, and Markdown validation passed.
-- Typecheck matched no workspace projects.
-- Vitest found no unit tests and passed because `--passWithNoTests` is enabled.
+- Typecheck compiled the `@resona/engine` workspace without emitting files.
+- Vitest ran one unit suite containing seven passing tests.
 
 The fast gate runs after every integration batch. Its duration target is p95 at or below
 five minutes.
@@ -96,12 +97,12 @@ Recorded result:
 
 - Run date: 2026-08-04.
 - Exit code: `0`.
-- Observed wall duration: 6.05 seconds.
-- Baseline commit: `c411c6014cd08ce0950138b3e589ae25d9182496`.
-- Worktree: dirty with pre-existing and setup changes.
+- Observed wall duration: 7.41 seconds.
+- Baseline commit: `327e1b4c184efdf7b6fdfd0e8b0e6234d00d2fcf`.
+- Worktree: dirty with T01 on `feat/engine-compile-note-plan`.
 - The embedded fast gate passed.
-- Build matched no workspace projects.
-- Vitest found no integration tests and passed because `--passWithNoTests` is enabled.
+- Build emitted the private `@resona/engine` workspace successfully.
+- Vitest ran the source-project integration suite with six passing tests.
 
 The full gate runs before handoff or release. There is currently no executable release
 workflow.
@@ -131,9 +132,9 @@ check passed on rerun.
 
 The following checks remain proposed until the relevant implementation exists:
 
-- non-vacuous workspace typechecking;
-- non-vacuous workspace builds;
-- unit and integration tests that reject incorrect behavior;
+- broader product-code typechecking, builds, and unit coverage beyond the first vertical
+  slice;
+- additional integration coverage for audio clips, effects, automation, and source maps;
 - browser and Player tests;
 - deterministic render tests;
 - audio compatibility fixtures;
@@ -145,38 +146,38 @@ The following checks remain proposed until the relevant implementation exists:
 
 No current gate failure remains.
 
-The initial structural Prettier mismatch was repaired before either project gate ran.
+The first fast-gate run for the engine batch stopped on formatting in the two new TypeScript
+files. Prettier corrected only those files, the focused unit test passed again, and the fast
+and full gates then passed. The later T01 full gate passed with six integration tests.
 Missing historical results remain unavailable evidence, not passing evidence.
 
 ## Bootstrap limitations
 
-The initial scaffold intentionally permits an empty workspace:
+The first engine workspace retires the empty-workspace allowances for build, typecheck, unit
+tests, and integration tests:
 
-- recursive `build` and `typecheck` use `--if-present`;
-- unit and integration tests use `--passWithNoTests`.
+- recursive `build` and `typecheck` fail when no workspace matches;
+- unit tests fail when no test file exists;
+- integration tests fail when no test file exists.
 
-These allowances make the setup executable but do not constitute meaningful product
-verification. Remove the relevant allowance when the first required workspace or test is
-added. Every production workspace must expose `build` and `typecheck` scripts.
+Every production workspace must expose `build` and `typecheck` scripts.
 
 ## Missing prerequisites
 
+The current batch satisfies the first local prerequisite: a real workspace exposes
+non-vacuous `typecheck` and `build` scripts and runs a meaningful unit suite.
+
 Readiness cannot move to `ready` until:
 
-- the first real workspace exposes non-vacuous `typecheck` and `build` scripts;
-- at least one meaningful unit test runs;
-- bootstrap uses of `--if-present` and `--passWithNoTests` are retired where applicable;
-- the GitHub workflow passes and its exact check names are observed;
+- product coverage extends beyond the first vertical slice;
+- browser, Player, DSP, and deterministic-render coverage exist;
 - remote protection is reconsidered against a stable passing check.
-
-The first prerequisite is a real workspace with a meaningful typecheck, build, and unit
-test.
 
 ## CI and enforcement
 
 The local workflow exists at `.github/workflows/ci.yml`.
 
-Expected, but not yet provider-verified, check names:
+Provider-verified check names:
 
 - `CI / Fast gate`;
 - `CI / Full gate`.
@@ -184,8 +185,8 @@ Expected, but not yet provider-verified, check names:
 Both jobs are configured for pull requests targeting `main`, pushes to `main`, and manual
 workflow dispatch. The full job depends on the fast job.
 
-No provider run has occurred, so neither expected check name may be used for branch
-protection yet.
+PR #22 passed both `CI / Fast gate` and `CI / Full gate` on 2026-08-05 UTC. Neither check
+has yet been approved as required branch protection.
 
 No Git hook is configured. Hooks remain deferred until repository behavior demonstrates a
 need for one.
