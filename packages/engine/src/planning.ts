@@ -357,10 +357,12 @@ export const compileExecutionPlan = (
   const routes: SignalRoute[] = [];
   const candidates: NoteCandidate[] = [];
   const gainByNodePath = new Map<string, number>();
+  const gainOwnerByNodePath = new Map<string, string>();
   const resources: ResolvedResourcePlan[] = [];
   const resourceIndices = new Map<string, number>();
   const audioRegions: AudioRegionPlan[] = [];
   const audioDiagnostics: Diagnostic[] = [];
+  const automationKeys = new Set<string>();
 
   for (const placement of placements) {
     const instrumentIndex = processors.length;
@@ -379,24 +381,78 @@ export const compileExecutionPlan = (
       processors.push({ type: "sum" });
     }
 
-    const gainEffect = placement.track.effects.find((effect) => effect.type === "gain");
-    if (gainEffect !== undefined && (!Number.isFinite(gainEffect.gain) || gainEffect.gain < 0)) {
-      throw new ResonaError("Gain must be a finite non-negative multiplier.", [
-        diagnosticFor(
-          composition,
-          "plan.gain-invalid",
-          "Gain must be finite and non-negative.",
-          gainEffect,
-        ),
-      ]);
-    }
-    const gainIndex =
-      gainEffect === undefined
-        ? undefined
-        : processors.push({ type: "gain", gain: canonicalF32(gainEffect.gain) }) - 1;
-    if (gainIndex !== undefined) routes.push({ from: instrumentIndex, to: gainIndex });
-    if (gainIndex !== undefined && gainEffect !== undefined) {
-      gainByNodePath.set(JSON.stringify(gainEffect.path), gainIndex);
+    let effectInput = instrumentIndex;
+    for (const effect of placement.track.effects) {
+      const effectIndex = processors.length;
+      if (effect.type === "gain") {
+        const canonicalGain = canonicalF32(effect.gain);
+        if (!Number.isFinite(effect.gain) || effect.gain < 0 || !Number.isFinite(canonicalGain)) {
+          throw new ResonaError("Gain must be a finite non-negative multiplier.", [
+            diagnosticFor(
+              composition,
+              "plan.gain-invalid",
+              "Gain must be finite and non-negative.",
+              effect,
+            ),
+          ]);
+        }
+        processors.push({ type: "gain", gain: canonicalGain });
+        gainByNodePath.set(JSON.stringify(effect.path), effectIndex);
+        gainOwnerByNodePath.set(JSON.stringify(effect.path), JSON.stringify(placement.track.path));
+      } else {
+        const delayFrames = frameFromSeconds(fractionFromIR(effect.time.seconds));
+        if (delayFrames <= 0 || !Number.isSafeInteger(delayFrames)) {
+          throw new ResonaError("Delay time must resolve to at least one frame.", [
+            diagnosticFor(
+              composition,
+              "plan.delay-time-invalid",
+              "Delay time must resolve to a positive frame count.",
+              effect,
+            ),
+          ]);
+        }
+        const canonicalFeedback = canonicalF32(effect.feedback);
+        const canonicalMix = canonicalF32(effect.mix);
+        if (
+          !Number.isFinite(effect.feedback) ||
+          effect.feedback < 0 ||
+          effect.feedback >= 1 ||
+          !Number.isFinite(canonicalFeedback) ||
+          canonicalFeedback >= 1
+        ) {
+          throw new ResonaError("Delay feedback must be finite and less than one.", [
+            diagnosticFor(
+              composition,
+              "plan.delay-feedback-invalid",
+              "Delay feedback must be in [0, 1).",
+              effect,
+            ),
+          ]);
+        }
+        if (
+          !Number.isFinite(effect.mix) ||
+          effect.mix < 0 ||
+          effect.mix > 1 ||
+          !Number.isFinite(canonicalMix)
+        ) {
+          throw new ResonaError("Delay mix must be finite and within [0, 1].", [
+            diagnosticFor(
+              composition,
+              "plan.delay-mix-invalid",
+              "Delay mix must be in [0, 1].",
+              effect,
+            ),
+          ]);
+        }
+        processors.push({
+          type: "delay",
+          delayFrames,
+          feedback: canonicalFeedback,
+          mix: canonicalMix,
+        });
+      }
+      routes.push({ from: effectInput, to: effectIndex });
+      effectInput = effectIndex;
     }
 
     for (const clip of placement.track.clips) {
@@ -632,6 +688,18 @@ export const compileExecutionPlan = (
     events,
     automation: placements.flatMap((placement) =>
       placement.track.automation.map((lane) => {
+        const automationKey = `${JSON.stringify(lane.target.nodePath)}:${lane.target.parameterId}`;
+        if (automationKeys.has(automationKey)) {
+          throw new ResonaError("Duplicate automation lanes target the same parameter.", [
+            diagnosticFor(
+              composition,
+              "plan.automation-target-duplicate",
+              "Only one automation lane may target a parameter.",
+              lane,
+            ),
+          ]);
+        }
+        automationKeys.add(automationKey);
         if (lane.points.length === 0) {
           throw new ResonaError("Automation lanes require at least one point.", [
             diagnosticFor(
@@ -642,9 +710,11 @@ export const compileExecutionPlan = (
             ),
           ]);
         }
+        const targetPath = JSON.stringify(lane.target.nodePath);
         const target =
-          lane.target.parameterId === "gain"
-            ? gainByNodePath.get(JSON.stringify(lane.target.nodePath))
+          lane.target.parameterId === "gain" &&
+          gainOwnerByNodePath.get(targetPath) === JSON.stringify(placement.track.path)
+            ? gainByNodePath.get(targetPath)
             : undefined;
         if (target === undefined) {
           throw new ResonaError("Automation target has no Gain processor.", [

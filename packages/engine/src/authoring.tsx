@@ -15,6 +15,7 @@ import type {
   CompositionIR,
   DurationIR,
   EventClipIR,
+  EffectIR,
   InstrumentTrackIR,
   AutomationLaneIR,
   JsonObject,
@@ -230,6 +231,7 @@ type TrackBaseProps = Readonly<{
   source: ReactElement;
   gain?: number;
   automation?: readonly AutomationLaneIR[];
+  effects?: readonly EffectIR[];
 }>;
 
 type TrackProps =
@@ -242,7 +244,11 @@ export const Track = ({
   instrument,
   gain,
   automation = [],
+  effects,
 }: TrackProps): ReactElement => {
+  if (effects !== undefined && gain !== undefined) {
+    throw new Error("Track cannot combine the gain shorthand with an explicit effect chain.");
+  }
   if (instrument === undefined) {
     return (
       <AudioTrack
@@ -250,6 +256,7 @@ export const Track = ({
         source={source}
         {...(gain === undefined ? {} : { gain })}
         {...(automation.length === 0 ? {} : { automation })}
+        {...(effects === undefined ? {} : { effects })}
       />
     );
   }
@@ -265,16 +272,18 @@ export const Track = ({
     path: [...context.parent.path, id] as NodePath,
     clips: [],
     effects:
-      gain === undefined && automation.length === 0
-        ? []
-        : [
-            {
-              type: "gain",
-              id: `${id}-gain`,
-              path: [...context.parent.path, id, `${id}-gain`] as NodePath,
-              gain: gain ?? 1,
-            },
-          ],
+      effects !== undefined
+        ? effects.map((effect) => ({ ...effect }))
+        : gain === undefined && automation.length === 0
+          ? []
+          : [
+              {
+                type: "gain",
+                id: `${id}-gain`,
+                path: [...context.parent.path, id, `${id}-gain`] as NodePath,
+                gain: gain ?? 1,
+              },
+            ],
     automation: automation.map((lane) => ({
       ...lane,
       points: lane.points.map((point) => ({ ...point })),
@@ -297,6 +306,7 @@ type AudioTrackProps = Readonly<{
   source: ReactElement;
   gain?: number;
   automation?: readonly AutomationLaneIR[];
+  effects?: readonly EffectIR[];
 }>;
 
 export const AudioTrack = ({
@@ -304,7 +314,11 @@ export const AudioTrack = ({
   source,
   gain,
   automation = [],
+  effects,
 }: AudioTrackProps): ReactElement => {
+  if (effects !== undefined && gain !== undefined) {
+    throw new Error("Track cannot combine the gain shorthand with an explicit effect chain.");
+  }
   const context = useContext(EvaluationContext);
   if (context?.parent === undefined) {
     throw new Error("AudioTrack must be a child of Sequence.");
@@ -316,16 +330,18 @@ export const AudioTrack = ({
     path: [...context.parent.path, id] as NodePath,
     clips: [],
     effects:
-      gain === undefined && automation.length === 0
-        ? []
-        : [
-            {
-              type: "gain",
-              id: `${id}-gain`,
-              path: [...context.parent.path, id, `${id}-gain`] as NodePath,
-              gain: gain ?? 1,
-            },
-          ],
+      effects !== undefined
+        ? effects.map((effect) => ({ ...effect }))
+        : gain === undefined && automation.length === 0
+          ? []
+          : [
+              {
+                type: "gain",
+                id: `${id}-gain`,
+                path: [...context.parent.path, id, `${id}-gain`] as NodePath,
+                gain: gain ?? 1,
+              },
+            ],
     automation: automation.map((lane) => ({
       ...lane,
       points: lane.points.map((point) => ({ ...point })),
@@ -426,6 +442,9 @@ export const staticAudio = (path: string): StaticAudioReference => {
   return Object.freeze({ type: "resona/static-audio", version: 1, path: normalizedPath });
 };
 
+export const chain = (...effects: readonly EffectIR[]): readonly EffectIR[] =>
+  effects.map((effect) => ({ ...effect }));
+
 type PolySynthProps = Readonly<{
   id: string;
   oscillator: "saw" | "sine" | "square";
@@ -498,7 +517,11 @@ const finalizeTrack = (track: MutableInstrumentTrack): InstrumentTrackIR => {
   }
 
   const childIds = new Set<string>();
-  for (const childId of [...track.clips.map((clip) => clip.id), track.instrument.id]) {
+  for (const childId of [
+    ...track.clips.map((clip) => clip.id),
+    track.instrument.id,
+    ...track.effects.map((effect) => effect.id),
+  ]) {
     if (childIds.has(childId)) {
       throw new Error(`Duplicate child ID ${childId} in Track ${track.id}.`);
     }
@@ -518,7 +541,7 @@ const finalizeTrack = (track: MutableInstrumentTrack): InstrumentTrackIR => {
 
 const finalizeAudioTrack = (track: MutableAudioTrack): AudioTrackIR => {
   const childIds = new Set<string>();
-  for (const child of track.clips) {
+  for (const child of [...track.clips, ...track.effects]) {
     if (childIds.has(child.id)) {
       throw new Error(`Duplicate child ID ${child.id} in Track ${track.id}.`);
     }

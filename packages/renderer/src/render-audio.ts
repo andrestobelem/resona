@@ -24,6 +24,9 @@ type InstrumentState = {
 
 export type RenderAudioOptions = Readonly<{
   blockFrames?: number;
+  startFrame?: number;
+  endFrame?: number;
+  tailFrames?: number;
 }>;
 
 export type RenderedAudio = Readonly<{
@@ -147,9 +150,11 @@ const validatePlan = (plan: ExecutionPlan): void => {
     throw new RangeError("The renderer only supports the fixed 48 kHz stereo profile.");
   }
   if (
-    plan.processors.some((processor) => !["poly-synth", "sum", "gain"].includes(processor.type))
+    plan.processors.some(
+      (processor) => !["poly-synth", "sum", "gain", "delay"].includes(processor.type),
+    )
   ) {
-    throw new RangeError("The renderer only supports PolySynth, Gain, and sum processors.");
+    throw new RangeError("The renderer only supports PolySynth, Gain, Delay, and sum processors.");
   }
   if (
     plan.processors.some(
@@ -159,6 +164,21 @@ const validatePlan = (plan: ExecutionPlan): void => {
     )
   ) {
     throw new RangeError("PolySynth oscillator must be sine, saw, or square.");
+  }
+  for (const processor of plan.processors) {
+    if (
+      processor.type === "delay" &&
+      (!Number.isSafeInteger(processor.delayFrames) ||
+        processor.delayFrames <= 0 ||
+        !Number.isFinite(processor.feedback) ||
+        processor.feedback < 0 ||
+        processor.feedback >= 1 ||
+        !Number.isFinite(processor.mix) ||
+        processor.mix < 0 ||
+        processor.mix > 1)
+    ) {
+      throw new RangeError("Delay processor parameters are invalid.");
+    }
   }
 };
 
@@ -237,12 +257,32 @@ const selectVoice = (
 
 export const renderAudio = (
   job: CreateRenderJobResult,
-  { blockFrames = 128 }: RenderAudioOptions = {},
+  {
+    blockFrames = 128,
+    startFrame = 0,
+    endFrame = job.plan.nominalDurationFrames,
+    tailFrames = 0,
+  }: RenderAudioOptions = {},
 ): RenderedAudio => {
   if (!Number.isSafeInteger(blockFrames) || blockFrames <= 0) {
     throw new RangeError("blockFrames must be a positive safe integer.");
   }
   const { plan } = job;
+  if (
+    !Number.isSafeInteger(startFrame) ||
+    !Number.isSafeInteger(endFrame) ||
+    !Number.isSafeInteger(tailFrames) ||
+    startFrame < 0 ||
+    endFrame <= startFrame ||
+    endFrame > plan.nominalDurationFrames ||
+    tailFrames < 0 ||
+    !Number.isSafeInteger(endFrame + tailFrames) ||
+    !Number.isSafeInteger(endFrame - startFrame + tailFrames)
+  ) {
+    throw new RangeError(
+      "Render range must be a finite half-open interval with a non-negative tail.",
+    );
+  }
   validatePlan(plan);
   validateRuntimeResources(job);
 
@@ -265,15 +305,7 @@ export const renderAudio = (
   const instrumentsByProcessor = new Map(
     instruments.map((instrument) => [instrument.processorIndex, instrument]),
   );
-  const gainBySource = new Map<number, number>();
-  for (const route of plan.routes) {
-    if (plan.processors[route.to]?.type === "gain") {
-      gainBySource.set(route.from, route.to);
-    }
-  }
-  const gainAt = (source: number, frame: number): number => {
-    const target = gainBySource.get(source);
-    if (target === undefined) return 1;
+  const gainAt = (target: number, frame: number): number => {
     const processor = plan.processors[target];
     if (processor?.type !== "gain") return 1;
     const lane = plan.automation.find((candidate) => candidate.target === target);
@@ -287,9 +319,11 @@ export const renderAudio = (
       if (frame < point.frame) {
         if (previous.interpolation === "linear") {
           const span = point.frame - previous.frame;
-          return span <= 0
-            ? point.value
-            : previous.value + (point.value - previous.value) * ((frame - previous.frame) / span);
+          return canonicalF32(
+            span <= 0
+              ? point.value
+              : previous.value + (point.value - previous.value) * ((frame - previous.frame) / span),
+          );
         }
         return previous.value;
       }
@@ -297,10 +331,25 @@ export const renderAudio = (
     }
     return previous.value;
   };
-  const samples = new Float32Array(plan.nominalDurationFrames * plan.channels);
+  const delayStates = new Map<
+    number,
+    { left: Float32Array; right: Float32Array; position: number }
+  >();
+  for (const [index, processor] of plan.processors.entries()) {
+    if (processor.type === "delay") {
+      delayStates.set(index, {
+        left: new Float32Array(processor.delayFrames),
+        right: new Float32Array(processor.delayFrames),
+        position: 0,
+      });
+    }
+  }
+  const outputFrames = endFrame - startFrame + tailFrames;
+  const processEnd = endFrame + tailFrames;
+  const samples = new Float32Array(outputFrames * plan.channels);
 
-  for (let blockStart = 0; blockStart < plan.nominalDurationFrames; blockStart += blockFrames) {
-    const blockEnd = Math.min(plan.nominalDurationFrames, blockStart + blockFrames);
+  for (let blockStart = 0; blockStart < processEnd; blockStart += blockFrames) {
+    const blockEnd = Math.min(processEnd, blockStart + blockFrames);
     for (let frame = blockStart; frame < blockEnd; frame += 1) {
       for (const instrument of instruments) {
         for (const voice of instrument.voices) {
@@ -373,8 +422,8 @@ export const renderAudio = (
           voice.phase += phaseDelta;
           voice.phase -= Math.floor(voice.phase);
         }
-        const gained = canonicalF32(instrumentSample * gainAt(instrument.processorIndex, frame));
-        sourceOutputs.set(instrument.processorIndex, { left: gained, right: gained });
+        const sample = canonicalF32(instrumentSample);
+        sourceOutputs.set(instrument.processorIndex, { left: sample, right: sample });
       }
       for (const region of plan.audioRegions) {
         if (frame < region.startFrame || frame >= region.startFrame + region.durationFrames)
@@ -405,24 +454,48 @@ export const renderAudio = (
           right: canonicalF32(previous.right + sourceRight),
         });
       }
-      for (const [source, output] of sourceOutputs) {
-        if (plan.processors[source]?.type === "sum") {
-          const gain = gainAt(source, frame);
-          sourceOutputs.set(source, {
-            left: canonicalF32(output.left * gain),
-            right: canonicalF32(output.right * gain),
+      for (let processorIndex = 0; processorIndex < plan.masterProcessor; processorIndex += 1) {
+        const processor = plan.processors[processorIndex];
+        if (processor?.type !== "gain" && processor?.type !== "delay") continue;
+        const inputRoute = plan.routes.find((route) => route.to === processorIndex);
+        const input =
+          inputRoute === undefined
+            ? { left: 0, right: 0 }
+            : (sourceOutputs.get(inputRoute.from) ?? { left: 0, right: 0 });
+        if (processor.type === "gain") {
+          const gain = gainAt(processorIndex, frame);
+          sourceOutputs.set(processorIndex, {
+            left: canonicalF32(input.left * gain),
+            right: canonicalF32(input.right * gain),
           });
+        } else {
+          const state = delayStates.get(processorIndex)!;
+          const delayedLeft = state.left[state.position] ?? 0;
+          const delayedRight = state.right[state.position] ?? 0;
+          sourceOutputs.set(processorIndex, {
+            left: canonicalF32(input.left * (1 - processor.mix) + delayedLeft * processor.mix),
+            right: canonicalF32(input.right * (1 - processor.mix) + delayedRight * processor.mix),
+          });
+          state.left[state.position] = canonicalF32(input.left + delayedLeft * processor.feedback);
+          state.right[state.position] = canonicalF32(
+            input.right + delayedRight * processor.feedback,
+          );
+          state.position = (state.position + 1) % processor.delayFrames;
         }
       }
       let left = 0;
       let right = 0;
-      for (const processorIndex of [...sourceOutputs.keys()].sort((a, b) => a - b)) {
-        const output = sourceOutputs.get(processorIndex)!;
+      for (const route of plan.routes) {
+        if (route.to !== plan.masterProcessor) continue;
+        const output = sourceOutputs.get(route.from) ?? { left: 0, right: 0 };
         left = canonicalF32(left + output.left);
         right = canonicalF32(right + output.right);
       }
-      samples[frame * plan.channels] = canonicalF32(left);
-      samples[frame * plan.channels + 1] = canonicalF32(right);
+      if (frame >= startFrame) {
+        const outputFrame = frame - startFrame;
+        samples[outputFrame * plan.channels] = canonicalF32(left);
+        samples[outputFrame * plan.channels + 1] = canonicalF32(right);
+      }
     }
   }
 
@@ -443,7 +516,7 @@ export const renderAudio = (
   return Object.freeze({
     wav: encodeWav(samples, plan.sampleRate, plan.channels),
     samples,
-    frames: plan.nominalDurationFrames,
+    frames: outputFrames,
     sampleRate: plan.sampleRate,
     channels: plan.channels,
     diagnostics: Object.freeze(diagnostics),
