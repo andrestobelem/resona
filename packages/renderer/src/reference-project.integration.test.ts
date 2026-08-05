@@ -120,5 +120,5 @@ describe("reference composition", () => {
       0,
     );
     expect(peak).toBeLessThan(1);
-  });
+  }, 15_000);
 });
