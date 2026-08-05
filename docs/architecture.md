@@ -991,11 +991,12 @@ verificados y diagnósticos. El `AudioWorklet` ejecuta el plan recibido con el n
 compartido. El renderer offline obtiene su plan mediante exactamente la misma evaluación en
 Node.
 
-El protocolo local usa HTTP para operaciones finitas —descubrimiento, creación de variantes,
-planes y recursos direccionados por hash— y WebSocket solo para invalidaciones, progreso y
-diagnósticos incrementales. Cada envelope declara versión de protocolo, `sessionId`,
-`requestId` y `variantId`. Un cambio cancela la solicitud anterior y el cliente ignora toda
-respuesta que ya no corresponda a su variante vigente.
+El protocolo local reserva HTTP para operaciones finitas —descubrimiento, creación de
+variantes, planes y recursos direccionados por hash— y WebSocket para una futura capa de
+invalidaciones, progreso y diagnósticos incrementales. El primer corte implementa HTTP; cada
+envelope declara versión de protocolo, `sessionId`, `requestId` y `variantId`. Un cambio
+cancela la solicitud anterior y el cliente ignora toda respuesta que ya no corresponda a su
+variante vigente.
 
 El primer servicio HTTP expone `/api/v1/session`, `/api/v1/compositions`,
 `/api/v1/variants`, `/api/v1/variants/:variantId/plan` y

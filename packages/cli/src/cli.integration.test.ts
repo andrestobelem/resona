@@ -165,6 +165,25 @@ describe("resona CLI", () => {
     });
   }, 15_000);
 
+  it("flushes Studio startup metadata before waiting for SIGINT", async () => {
+    const controller = new AbortController();
+    const output: CliOutput = { stdout: "", stderr: "" };
+    let flushed = "";
+    const pending = runCli(["studio", "--json"], {
+      cwd: projectRoot,
+      output,
+      signal: controller.signal,
+      flush: () => {
+        flushed += output.stdout;
+        output.stdout = "";
+      },
+    });
+    await new Promise<void>((resolve) => setTimeout(resolve, 25));
+    expect(flushed).toContain('"format":"resona/studio"');
+    controller.abort();
+    await expect(pending).resolves.toBe(130);
+  }, 15_000);
+
   it("uses the stable usage exit code for an invalid invocation", async () => {
     const result = await invoke(["validate", "--json"]);
 

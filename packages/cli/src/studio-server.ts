@@ -189,6 +189,27 @@ const diagnosticFrom = (error: unknown): readonly Diagnostic[] | undefined =>
 const errorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : "Studio request failed.";
 
+const redactProjectPath = (projectRoot: string, value: unknown): unknown => {
+  if (typeof value === "string") return value.replaceAll(projectRoot, "<project>");
+  if (Array.isArray(value)) return value.map((item) => redactProjectPath(projectRoot, item));
+  if (isRecord(value)) {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [key, redactProjectPath(projectRoot, item)]),
+    );
+  }
+  return value;
+};
+
+const safeErrorMessage = (state: StudioState, error: unknown): string =>
+  String(redactProjectPath(state.options.projectRoot, errorMessage(error)));
+
+const safeDiagnostics = (state: StudioState, error: unknown): readonly Diagnostic[] | undefined => {
+  const diagnostics = diagnosticFrom(error);
+  return diagnostics === undefined
+    ? undefined
+    : (redactProjectPath(state.options.projectRoot, diagnostics) as readonly Diagnostic[]);
+};
+
 const shell = (state: StudioState): string => {
   const bootstrap = JSON.stringify({ token: state.token, sessionId: state.sessionId });
   return `<!doctype html>
@@ -311,8 +332,8 @@ const handle = async (
         envelope(state, requestId, "error", {
           error: {
             code: "studio.compositions-failed",
-            message: errorMessage(error),
-            diagnostics: diagnosticFrom(error),
+            message: safeErrorMessage(state, error),
+            diagnostics: safeDiagnostics(state, error),
           },
         }),
       );
@@ -368,8 +389,8 @@ const handle = async (
         envelope(state, requestId, "error", {
           error: {
             code: controller.signal.aborted ? "studio.variant-cancelled" : "studio.variant-failed",
-            message: errorMessage(error),
-            diagnostics: diagnosticFrom(error),
+            message: safeErrorMessage(state, error),
+            diagnostics: safeDiagnostics(state, error),
           },
         }),
       );
@@ -441,13 +462,15 @@ const handle = async (
           requestId,
           "resource",
           {
-            resource: {
-              type: resource.type,
-              hash: resource.hash,
-              channels: resource.channels,
-              sampleRate: resource.sampleRate,
-              frameCount: resource.frameCount,
-              samples: resource.samples,
+            payload: {
+              resource: {
+                type: resource.type,
+                hash: resource.hash,
+                channels: resource.channels,
+                sampleRate: resource.sampleRate,
+                frameCount: resource.frameCount,
+                samples: Array.from(resource.samples),
+              },
             },
           },
           variantId,
@@ -489,7 +512,7 @@ export const startStudioServer = async (options: StudioServerOptions): Promise<S
         requestIdFrom(request),
         500,
         "studio.internal-error",
-        errorMessage(error),
+        safeErrorMessage(state, error),
       );
       if (!response.headersSent) json(response, failure.status, failure.document);
       else response.destroy();

@@ -21,7 +21,9 @@ HTTP para contenido inmutable y controlar carreras durante rebuilds y cambios de
 ## Consecuencias
 
 - HTTP enumera composiciones, crea variantes y entrega planes y assets por hash.
-- WebSocket notifica invalidaciones, progreso y diagnósticos.
+- WebSocket queda reservado para invalidaciones, progreso y diagnósticos; el primer corte de
+  T13 implementa las operaciones finitas mediante HTTP y deja ese stream para una story de
+  transporte posterior.
 - Los envelopes incluyen protocolo, `sessionId`, `requestId` y `variantId`.
 - Una solicitud nueva cancela la anterior y las respuestas obsoletas se descartan.
 - Paths físicos no forman parte de URLs de assets.

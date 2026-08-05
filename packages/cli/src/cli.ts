@@ -31,6 +31,7 @@ type CliContext = Readonly<{
   cwd: string;
   output: { stdout: string; stderr: string };
   signal?: AbortSignal;
+  flush?: () => void;
 }>;
 
 type ParsedArgs = Readonly<{
@@ -460,6 +461,7 @@ const runStudio = async (args: ParsedArgs, context: CliContext): Promise<void> =
     context.output.stdout += `Studio listening at ${server.url}\n`;
     context.output.stdout += `Session token: ${server.token}\n`;
   }
+  context.flush?.();
   try {
     if (context.signal?.aborted === true) throw new CliCancellationError("Operation cancelled.");
     if (context.signal === undefined) {
@@ -776,6 +778,7 @@ export const runCli = async (
     cwd: string;
     output: { stdout: string; stderr: string };
     signal?: AbortSignal;
+    flush?: () => void;
   }>,
 ): Promise<0 | 1 | 2 | 130> => {
   const context: CliContext = options;
@@ -839,6 +842,12 @@ const main = async (): Promise<void> => {
     cwd: process.cwd(),
     output,
     signal: controller.signal,
+    flush: () => {
+      process.stdout.write(output.stdout);
+      process.stderr.write(output.stderr);
+      output.stdout = "";
+      output.stderr = "";
+    },
   });
   process.removeListener("SIGINT", onInterrupt);
   process.stdout.write(output.stdout);
