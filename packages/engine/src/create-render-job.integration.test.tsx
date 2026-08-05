@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { createRenderJob } from "./index.js";
+import { createRenderJob, loadProjectCompositions } from "./index.js";
 
 const exactProjectRoot = fileURLToPath(new URL("./fixtures/exact-project/", import.meta.url));
 const configuredProjectRoot = fileURLToPath(
@@ -51,6 +51,44 @@ afterAll(async () => {
 });
 
 describe("createRenderJob", () => {
+  it("discovers registered composition summaries without preparing or evaluating a variant", async () => {
+    const catalog = await loadProjectCompositions(configuredProjectRoot);
+
+    expect(catalog.project).toEqual({
+      root: canonicalConfiguredProjectRoot,
+      buildId: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
+      configuration: {
+        entry: { value: "music.tsx", source: "project-config" },
+        staticDir: { value: "assets", source: "project-config" },
+        seed: { value: "configured-seed", source: "project-config" },
+      },
+    });
+    expect(catalog.compositions.map(({ id }) => id)).toEqual([
+      "Configured",
+      "InvalidPreparation",
+      "Seeded",
+      "PreparedResource",
+      "AudioClip",
+      "CancellablePreparation",
+    ]);
+    const configured = catalog.compositions.find(({ id }) => id === "Configured");
+    expect(configured).toMatchObject({
+      id: "Configured",
+      defaultInputs: {},
+      inputSchema: {
+        format: "resona/input-schema",
+        schemaVersion: 1,
+        jsonSchema: { type: "object" },
+      },
+      duration: { type: "absolute-duration" },
+      bpm: { numerator: "120", denominator: "1" },
+      timeSignature: { beatsPerBar: 4, beatUnit: 4 },
+      metadata: { title: "Static" },
+    });
+    expect(Object.isFrozen(configured)).toBe(true);
+    expect(Object.isFrozen(configured?.inputSchema.jsonSchema)).toBe(true);
+  });
+
   it("rejects a relative project root with a structured registration diagnostic", async () => {
     await expect(
       createRenderJob({ projectRoot: "relative-project", compositionId: "ExactNote" }),

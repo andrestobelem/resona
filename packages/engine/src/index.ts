@@ -9,10 +9,17 @@ export {
   note,
   pitch,
   registerRoot,
+  listRegisteredCompositions,
   staticAudio,
   useRandom,
 } from "./authoring.js";
+export type { CompositionSummary } from "./authoring.js";
 export { createRenderJob, type CreateRenderJobOptions } from "./create-render-job.js";
+export {
+  loadProjectCompositions,
+  type ProjectCompositions,
+  type ProjectSourceOptions,
+} from "./project-loader.js";
 export {
   defineConfig,
   type ProjectConfig,
