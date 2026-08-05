@@ -256,22 +256,25 @@ describe("createRenderJob", () => {
     });
   });
 
-  it("rejects remote references in the serializable input schema", async () => {
-    await expect(
-      createRenderJob({
-        projectRoot: exactProjectRoot,
-        compositionId: "RemoteSchemaVariant",
-      }),
-    ).rejects.toMatchObject({
-      diagnostics: [
-        {
-          code: "inputs.schema-description-invalid",
-          phase: "input-validation",
-          compositionId: "RemoteSchemaVariant",
-        },
-      ],
-    });
-  });
+  it.each(["RemoteSchemaVariant", "RemoteDynamicSchemaVariant"])(
+    "rejects remote references in the serializable input schema for %s",
+    async (compositionId) => {
+      await expect(
+        createRenderJob({
+          projectRoot: exactProjectRoot,
+          compositionId,
+        }),
+      ).rejects.toMatchObject({
+        diagnostics: [
+          {
+            code: "inputs.schema-description-invalid",
+            phase: "input-validation",
+            compositionId,
+          },
+        ],
+      });
+    },
+  );
 
   it("passes a canonical input named key through React authoring", async () => {
     const job = await createRenderJob({

@@ -202,6 +202,20 @@ const remoteInputVariantSchema: InputSchema<VariantInputs> = {
   },
 };
 
+const remoteDynamicInputVariantSchema: InputSchema<VariantInputs> = {
+  ...remoteInputVariantSchema,
+  ir: {
+    ...remoteInputVariantSchema.ir,
+    jsonSchema: {
+      $schema: "https://json-schema.org/draft/2020-12/schema",
+      type: "object",
+      properties: {
+        intensity: { $dynamicRef: "https://schemas.example.com/intensity.json" },
+      },
+    },
+  },
+};
+
 type KeyInputs = { key: string };
 
 const keyInputSchema: InputSchema<KeyInputs> = {
@@ -351,6 +365,15 @@ export const ExactProjectRoot = () => (
       component={KeyInputVariant}
       schema={keyInputSchema}
       defaultInputs={{ key: "canonical" }}
+      duration={duration.seconds(1n)}
+      bpm={rational(120n)}
+      timeSignature={{ beatsPerBar: 4, beatUnit: 4 }}
+    />
+    <Composition
+      id="RemoteDynamicSchemaVariant"
+      component={InputVariant}
+      schema={remoteDynamicInputVariantSchema}
+      defaultInputs={{ intensity: 0.25, voice: { semitonesFromA4: 0 } }}
       duration={duration.seconds(1n)}
       bpm={rational(120n)}
       timeSignature={{ beatsPerBar: 4, beatUnit: 4 }}

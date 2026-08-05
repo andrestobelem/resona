@@ -133,7 +133,9 @@ const canonicalInputSchemaIr = (compositionId: string, ir: InputSchemaIR): Input
     if (Array.isArray(value)) return value.flatMap(references);
     if (value === null || typeof value !== "object") return [];
     return Object.entries(value).flatMap(([key, entry]) => {
-      if (key === "$ref") return typeof entry === "string" ? [entry] : ["<invalid>"];
+      if (key === "$ref" || key === "$dynamicRef") {
+        return typeof entry === "string" ? [entry] : ["<invalid>"];
+      }
       return references(entry);
     });
   };
