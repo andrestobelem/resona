@@ -7,6 +7,7 @@ to the workspace being changed.
 | -------------------- | --------------------------------- | -------------------------------------- |
 | Shared Resona domain | `CONTEXT.md`                      | System-wide musical domain vocabulary  |
 | Engine               | `CONTEXT.md`                      | IR, execution planning, and DSP terms  |
+| CLI                  | `packages/cli/CONTEXT.md`         | Discovery, validation, protocol output |
 | Renderer             | `packages/renderer/CONTEXT.md`    | Offline DSP execution and WAV encoding |
 | Zod input adapter    | `packages/zod/CONTEXT.md`         | Zod validation and schema description  |
 
