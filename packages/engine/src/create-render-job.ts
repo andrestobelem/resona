@@ -57,6 +57,7 @@ export const createRenderJob = async ({
       fingerprint: identity.fingerprint,
       composition,
       plan,
+      runtimeResources: compilation.runtimeResources,
       diagnostics,
     });
   } catch (error) {

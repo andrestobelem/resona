@@ -1,5 +1,5 @@
 import type { ResolvedProject } from "./project-config.js";
-import type { ResolvedVariant } from "./preparation.js";
+import type { PreparedAudioRuntimeResource, ResolvedVariant } from "./preparation.js";
 import type { RenderSpec } from "./render-spec.js";
 
 export type JsonPrimitive = boolean | number | string | null;
@@ -310,6 +310,7 @@ export type Diagnostic = Readonly<{
 export type CreateRenderJobResult = Readonly<{
   project: ResolvedProject;
   variant: ResolvedVariant;
+  runtimeResources: readonly PreparedAudioRuntimeResource[];
   spec: RenderSpec;
   fingerprint: string;
   composition: CompositionIR;

@@ -7,7 +7,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import { Worker } from "node:worker_threads";
 
 import type { CompositionIR, Diagnostic, ExecutionPlan, JsonObject } from "./model.js";
-import type { ResolvedVariant } from "./preparation.js";
+import type { PreparedAudioRuntimeResource, ResolvedVariant } from "./preparation.js";
 import {
   resolveProjectConfiguration,
   type ResolvedProject,
@@ -20,6 +20,7 @@ type VariantCompilation = Readonly<{
   variant: ResolvedVariant;
   plan: ExecutionPlan;
   diagnostics: readonly Diagnostic[];
+  runtimeResources: readonly PreparedAudioRuntimeResource[];
 }>;
 
 type ProjectCompilation = VariantCompilation & Readonly<{ project: ResolvedProject }>;
@@ -44,12 +45,13 @@ const compileProjectEntry = (entryPoint: string): string => {
     "export const compileVariant = async (compositionId, providedInputs, signal, seed, staticDirectory) => {",
     "  const resources = createStaticAudioPreparationResolver(staticDirectory, signal);",
     "  const resolved = await resolveRegisteredComposition(compositionId, providedInputs, signal, seed, resources);",
-    "  const compilation = compileExecutionPlan(resolved.composition);",
+    "  const compilation = compileExecutionPlan(resolved.composition, resolved.runtimeResources);",
     "  return {",
     "    composition: resolved.composition,",
     "    variant: resolved.variant,",
     "    plan: compilation.plan,",
     "    diagnostics: compilation.diagnostics,",
+    "    runtimeResources: resolved.runtimeResources,",
     "  };",
     "};",
   ].join("\n");
@@ -67,6 +69,7 @@ const workerSource = [
   "    variant: compilation.variant,",
   "    plan: compilation.plan,",
   "    diagnostics: compilation.diagnostics,",
+  "    runtimeResources: compilation.runtimeResources,",
   "  } });",
   "} catch (error) {",
   '  const details = error !== null && typeof error === "object" ? error : {};',
