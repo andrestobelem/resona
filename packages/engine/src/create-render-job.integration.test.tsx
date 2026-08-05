@@ -71,7 +71,8 @@ describe("createRenderJob", () => {
       "AudioClip",
       "CancellablePreparation",
     ]);
-    expect(catalog.compositions.find(({ id }) => id === "Configured")).toMatchObject({
+    const configured = catalog.compositions.find(({ id }) => id === "Configured");
+    expect(configured).toMatchObject({
       id: "Configured",
       defaultInputs: {},
       inputSchema: {
@@ -84,6 +85,8 @@ describe("createRenderJob", () => {
       timeSignature: { beatsPerBar: 4, beatUnit: 4 },
       metadata: { title: "Static" },
     });
+    expect(Object.isFrozen(configured)).toBe(true);
+    expect(Object.isFrozen(configured?.inputSchema.jsonSchema)).toBe(true);
   });
 
   it("rejects a relative project root with a structured registration diagnostic", async () => {

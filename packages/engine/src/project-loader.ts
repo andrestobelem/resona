@@ -8,6 +8,7 @@ import { Worker } from "node:worker_threads";
 
 import type { CompositionIR, Diagnostic, ExecutionPlan, JsonObject } from "./model.js";
 import type { CompositionSummary } from "./authoring.js";
+import { deepFreeze } from "./deep-freeze.js";
 import type { PreparedAudioRuntimeResource, ResolvedVariant } from "./preparation.js";
 import {
   resolveProjectConfiguration,
@@ -423,14 +424,14 @@ export const loadProjectCompositions = async (
       throw new Error("The project discovery result was invalid.");
     }
 
-    return {
+    return deepFreeze({
       project: {
         root: canonicalProjectRoot,
         buildId,
         configuration: resolvedProject.configuration,
       },
       compositions: compositions as readonly CompositionSummary[],
-    };
+    });
   } finally {
     await rm(directory, { force: true, recursive: true });
   }

@@ -28,6 +28,7 @@ import type {
   RationalIR,
   SequenceIR,
 } from "./model.js";
+import { deepFreeze } from "./deep-freeze.js";
 import {
   resolvePreparation,
   type PreparationResourceResolver,
@@ -620,15 +621,21 @@ export type CompositionSummary = Readonly<{
 }>;
 
 export const listRegisteredCompositions = (): readonly CompositionSummary[] =>
-  discoverCompositions().map((composition) => ({
-    id: composition.id,
-    defaultInputs: cloneJsonObject(composition.defaultInputs),
-    inputSchema: composition.schema.ir,
-    duration: structuredClone(composition.duration),
-    bpm: structuredClone(composition.bpm),
-    timeSignature: { ...composition.timeSignature },
-    metadata: cloneJsonObject(composition.metadata),
-  }));
+  discoverCompositions().map((composition) =>
+    deepFreeze({
+      id: composition.id,
+      defaultInputs: cloneJsonObject(composition.defaultInputs),
+      inputSchema: {
+        format: composition.schema.ir.format,
+        schemaVersion: composition.schema.ir.schemaVersion,
+        jsonSchema: cloneJsonObject(composition.schema.ir.jsonSchema),
+      },
+      duration: structuredClone(composition.duration),
+      bpm: structuredClone(composition.bpm),
+      timeSignature: { ...composition.timeSignature },
+      metadata: cloneJsonObject(composition.metadata),
+    }),
+  );
 
 type ResolvedRegisteredComposition = Readonly<{
   composition: CompositionIR;
