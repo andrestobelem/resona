@@ -1,5 +1,7 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
+import { realpath } from "node:fs/promises";
+import { relative, resolve } from "node:path";
 
 import {
   createRenderJob,
@@ -496,8 +498,29 @@ const handle = async (
 };
 
 export const startStudioServer = async (options: StudioServerOptions): Promise<StudioServer> => {
+  const canonicalProjectRoot = await realpath(options.projectRoot);
+  const canonicalPath = async (path: string | undefined): Promise<string | undefined> => {
+    if (path === undefined) return undefined;
+    const lexicalRoot = resolve(options.projectRoot);
+    const lexicalPath = resolve(lexicalRoot, path);
+    const relativePath = relative(lexicalRoot, lexicalPath);
+    const canonicalPath = resolve(canonicalProjectRoot, relativePath);
+    try {
+      return await realpath(canonicalPath);
+    } catch {
+      return canonicalPath;
+    }
+  };
+  const canonicalConfigPath = await canonicalPath(options.configPath);
+  const canonicalEntryPoint = await canonicalPath(options.entryPoint);
+  const canonicalOptions: StudioServerOptions = {
+    ...options,
+    projectRoot: canonicalProjectRoot,
+    ...(canonicalConfigPath === undefined ? {} : { configPath: canonicalConfigPath }),
+    ...(canonicalEntryPoint === undefined ? {} : { entryPoint: canonicalEntryPoint }),
+  };
   const state: StudioState = {
-    options,
+    options: canonicalOptions,
     token: randomBytes(32).toString("hex"),
     sessionId: `session-${randomUUID()}`,
     variants: new Map(),

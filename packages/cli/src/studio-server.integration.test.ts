@@ -1,4 +1,5 @@
-import { mkdir, mkdtemp, realpath, rm, writeFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import { mkdir, mkdtemp, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -205,6 +206,35 @@ describe("Studio local service", () => {
       type: "error",
       error: { code: "studio.compositions-failed", message: expect.stringContaining("<project>") },
     });
+  });
+
+  it("redacts canonical paths when the project root is a symlink", async () => {
+    const linkedProjectRoot = join(tmpdir(), `resona-studio-link-${randomUUID()}`);
+    await symlink(exactProjectRoot, linkedProjectRoot, "dir");
+    try {
+      const server = await startStudioServer({
+        projectRoot: linkedProjectRoot,
+        entryPoint: "missing.tsx",
+      });
+      servers.push(server);
+      const response = await fetch(`${server.url}/api/v1/compositions`, {
+        headers: apiHeaders(server),
+      });
+      const document = await response.json();
+
+      expect(response.status).toBe(500);
+      expect(JSON.stringify(document)).not.toContain(exactProjectRoot);
+      expect(JSON.stringify(document)).not.toContain(linkedProjectRoot);
+      expect(document).toMatchObject({
+        type: "error",
+        error: {
+          code: "studio.compositions-failed",
+          message: expect.stringContaining("<project>"),
+        },
+      });
+    } finally {
+      await rm(linkedProjectRoot, { force: true });
+    }
   });
 
   it("serves samples only for a hash authorized by the created variant", async () => {
