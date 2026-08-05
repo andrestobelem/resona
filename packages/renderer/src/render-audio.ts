@@ -171,11 +171,7 @@ const createVoice = (): Voice => ({
   attackFrame: 0,
 });
 
-const instantaneousAmplitude = (
-  voice: Voice,
-  frame: number,
-  processor: PolySynthProcessor,
-): number =>
+const envelopeLevelAt = (voice: Voice, frame: number, processor: PolySynthProcessor): number =>
   envelopeAt(
     voice,
     frame,
@@ -183,7 +179,13 @@ const instantaneousAmplitude = (
     processor.decayFrames,
     processor.sustain,
     processor.releaseFrames,
-  ) * voice.velocity;
+  );
+
+const instantaneousAmplitude = (
+  voice: Voice,
+  frame: number,
+  processor: PolySynthProcessor,
+): number => envelopeLevelAt(voice, frame, processor) * voice.velocity;
 
 const selectVoice = (
   instrument: InstrumentState,
@@ -256,7 +258,7 @@ export const renderAudio = (
           if (
             voice.active &&
             voice.releaseFrame !== undefined &&
-            instantaneousAmplitude(voice, frame, instrument.processor) === 0
+            envelopeLevelAt(voice, frame, instrument.processor) === 0
           ) {
             voice.active = false;
           }
@@ -298,14 +300,7 @@ export const renderAudio = (
           );
           if (voice !== undefined) {
             voice.releaseFrame = frame;
-            voice.releaseLevel = envelopeAt(
-              voice,
-              frame,
-              instrument.processor.attackFrames,
-              instrument.processor.decayFrames,
-              instrument.processor.sustain,
-              instrument.processor.releaseFrames,
-            );
+            voice.releaseLevel = envelopeLevelAt(voice, frame, instrument.processor);
             if (instrument.processor.releaseFrames === 0) {
               voice.active = false;
             }
@@ -318,14 +313,7 @@ export const renderAudio = (
         let instrumentSample = 0;
         for (const voice of instrument.voices) {
           if (!voice.active) continue;
-          const envelope = envelopeAt(
-            voice,
-            frame,
-            instrument.processor.attackFrames,
-            instrument.processor.decayFrames,
-            instrument.processor.sustain,
-            instrument.processor.releaseFrames,
-          );
+          const envelope = envelopeLevelAt(voice, frame, instrument.processor);
           const phaseDelta = voice.frequencyHz / plan.sampleRate;
           const contribution = canonicalF32(
             oscillatorAt(instrument.processor.oscillator, voice.phase, phaseDelta) *

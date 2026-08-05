@@ -296,6 +296,40 @@ describe("renderAudio", () => {
     expect(rendered.samples[4 * 2]).toBe(0);
   });
 
+  it("keeps a zero-velocity voice occupied until its release envelope ends", async () => {
+    const base = await createRenderJob({
+      projectRoot: exactProjectRoot,
+      compositionId: "ExactNote",
+    });
+    const job = withSynthPlan(base, {
+      maxVoices: 1,
+      releaseFrames: 4,
+      events: [
+        {
+          type: "note-attack",
+          frame: 0,
+          instrument: 0,
+          occurrence: 0,
+          semitonesFromA4: 0,
+          velocity: 0,
+        },
+        { type: "note-release", frame: 1, instrument: 0, occurrence: 0 },
+        {
+          type: "note-attack",
+          frame: 2,
+          instrument: 0,
+          occurrence: 1,
+          semitonesFromA4: 12,
+          velocity: 1,
+        },
+      ],
+    });
+
+    const rendered = renderAudio(job);
+
+    expect(rendered.diagnostics[0]?.cause.voiceSteals).toBe(1);
+  });
+
   it.each(["sine", "saw", "square"] as const)(
     "renders a finite, bounded %s oscillator signal",
     async (oscillator) => {
