@@ -1,6 +1,7 @@
 export {
   Composition,
   AudioClip,
+  chain,
   EventClip,
   PolySynth,
   Sequence,

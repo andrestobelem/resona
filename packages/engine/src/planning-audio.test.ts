@@ -111,4 +111,51 @@ describe("AudioClip planning", () => {
     expect(duplicatePlan.resources).toHaveLength(1);
     expect(duplicatePlan.audioRegions).toHaveLength(2);
   });
+
+  it("preserves the declared Gain and Delay effect order in the plan", () => {
+    const effectComposition = {
+      ...composition,
+      root: {
+        ...composition.root,
+        children: [
+          {
+            ...composition.root.children[0]!,
+            effects: [
+              ...composition.root.children[0]!.effects,
+              {
+                type: "delay" as const,
+                id: "delay",
+                path: ["audio", "root", "track", "delay"] as [string, string, string, string],
+                time: duration.seconds(1n, 48_000n),
+                feedback: 0.5,
+                mix: 0.25,
+              },
+            ],
+          },
+        ],
+      },
+    } as typeof composition;
+    const { plan } = compileExecutionPlan(effectComposition, [
+      {
+        type: "wav",
+        hash: `sha256:${"c".repeat(64)}` as `sha256:${string}`,
+        channels: 1,
+        sampleRate: 48_000,
+        frameCount: 96_000,
+        sourcePaths: ["tone.wav"],
+        samples: [0],
+      },
+    ]);
+    expect(plan.processors.map((processor) => processor.type)).toEqual([
+      "sum",
+      "gain",
+      "delay",
+      "sum",
+    ]);
+    expect(plan.routes).toEqual([
+      { from: 0, to: 1 },
+      { from: 1, to: 2 },
+      { from: 2, to: 3 },
+    ]);
+  });
 });
