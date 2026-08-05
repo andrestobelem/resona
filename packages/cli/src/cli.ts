@@ -9,10 +9,16 @@ import {
   type Diagnostic,
   type JsonObject,
 } from "@resona/engine";
+import {
+  renderAudioToFile,
+  type RenderAudioToFileOptions,
+  type RenderProgress,
+} from "@resona/renderer";
 
 const usage = `Usage:
   resona compositions [entry] [--config <path>] [--json]
-  resona validate [entry] --composition <id> [--input <json>] [--input-file <path>] [--seed <seed>] [--config <path>] [--json]`;
+  resona validate [entry] --composition <id> [--input <json>] [--input-file <path>] [--seed <seed>] [--config <path>] [--json]
+  resona render [entry] <composition-id> <output.wav> [--input <json>] [--input-file <path>] [--seed <seed>] [--start-frame <n>] [--end-frame <n>] [--tail-frames <n>] [--block-frames <n>] [--options <json>] [--overwrite] [--config <path>] [--json]`;
 
 export type CliOutput = {
   stdout: string;
@@ -27,12 +33,20 @@ type CliContext = Readonly<{
 
 type ParsedArgs = Readonly<{
   command?: string;
+  positionals: readonly string[];
   entry?: string;
   config?: string;
   composition?: string;
   input?: JsonObject;
   inputFile?: string;
   seed?: string;
+  output?: string;
+  overwrite?: boolean;
+  startFrame?: number;
+  endFrame?: number;
+  tailFrames?: number;
+  blockFrames?: number;
+  renderOptions?: JsonObject;
   json: boolean;
   help: boolean;
 }>;
@@ -71,6 +85,15 @@ const readOption = (argv: readonly string[], index: number, option: string): str
   return value;
 };
 
+const parseFrame = (source: string, option: string): number => {
+  if (!/^\d+$/.test(source)) throw new CliUsageError(`${option} must be a non-negative integer.`);
+  const value = Number(source);
+  if (!Number.isSafeInteger(value)) {
+    throw new CliUsageError(`${option} must be a safe integer.`);
+  }
+  return value;
+};
+
 const parseArgs = (argv: readonly string[]): ParsedArgs => {
   const [command, ...rest] = argv;
   const positional: string[] = [];
@@ -79,6 +102,13 @@ const parseArgs = (argv: readonly string[]): ParsedArgs => {
   let input: JsonObject | undefined;
   let inputFile: string | undefined;
   let seed: string | undefined;
+  let output: string | undefined;
+  let overwrite = false;
+  let startFrame: number | undefined;
+  let endFrame: number | undefined;
+  let tailFrames: number | undefined;
+  let blockFrames: number | undefined;
+  let renderOptions: JsonObject | undefined;
   let json = false;
   let help = false;
 
@@ -129,23 +159,79 @@ const parseArgs = (argv: readonly string[]): ParsedArgs => {
       index += 1;
       continue;
     }
+    if (argument === "--output") {
+      if (output !== undefined) throw new CliUsageError("--output may be provided once.");
+      output = readOption(rest, index, "--output");
+      index += 1;
+      continue;
+    }
+    if (argument === "--overwrite") {
+      overwrite = true;
+      continue;
+    }
+    if (argument === "--options" || argument === "--render-options") {
+      if (renderOptions !== undefined) {
+        throw new CliUsageError("--options may be provided once.");
+      }
+      renderOptions = parseInput(readOption(rest, index, argument));
+      index += 1;
+      continue;
+    }
+    if (
+      argument === "--start-frame" ||
+      argument === "--end-frame" ||
+      argument === "--tail-frames" ||
+      argument === "--block-frames"
+    ) {
+      const value = parseFrame(readOption(rest, index, argument), argument);
+      if (argument === "--start-frame") {
+        if (startFrame !== undefined)
+          throw new CliUsageError("--start-frame may be provided once.");
+        startFrame = value;
+      } else if (argument === "--end-frame") {
+        if (endFrame !== undefined) throw new CliUsageError("--end-frame may be provided once.");
+        endFrame = value;
+      } else if (argument === "--tail-frames") {
+        if (tailFrames !== undefined)
+          throw new CliUsageError("--tail-frames may be provided once.");
+        tailFrames = value;
+      } else {
+        if (blockFrames !== undefined)
+          throw new CliUsageError("--block-frames may be provided once.");
+        if (value === 0) throw new CliUsageError("--block-frames must be positive.");
+        blockFrames = value;
+      }
+      index += 1;
+      continue;
+    }
     if (argument.startsWith("-")) {
       throw new CliUsageError(`Unknown option: ${argument}.`);
     }
     positional.push(argument);
   }
 
-  if (positional.length > 1) {
+  if (command !== "render" && positional.length > 1) {
     throw new CliUsageError("Only one project entry may be provided.");
+  }
+  if (command === "render" && positional.length > 3) {
+    throw new CliUsageError("render accepts at most an entry, composition, and output positional.");
   }
   return {
     ...(command === undefined ? {} : { command }),
+    positionals: positional,
     ...(positional[0] === undefined ? {} : { entry: positional[0] }),
     ...(config === undefined ? {} : { config }),
     ...(composition === undefined ? {} : { composition }),
     ...(input === undefined ? {} : { input }),
     ...(inputFile === undefined ? {} : { inputFile }),
     ...(seed === undefined ? {} : { seed }),
+    ...(output === undefined ? {} : { output }),
+    ...(overwrite ? { overwrite } : {}),
+    ...(startFrame === undefined ? {} : { startFrame }),
+    ...(endFrame === undefined ? {} : { endFrame }),
+    ...(tailFrames === undefined ? {} : { tailFrames }),
+    ...(blockFrames === undefined ? {} : { blockFrames }),
+    ...(renderOptions === undefined ? {} : { renderOptions }),
     json,
     help,
   };
@@ -264,7 +350,9 @@ const isCancellation = (error: unknown, signal: AbortSignal | undefined): boolea
   if (signal?.aborted === true || error instanceof CliCancellationError) return true;
   return (
     error instanceof ResonaError &&
-    error.diagnostics.some(({ code }) => code === "preparation.cancelled")
+    error.diagnostics.some(
+      ({ code }) => code === "preparation.cancelled" || code === "render.cancelled",
+    )
   );
 };
 
@@ -308,7 +396,14 @@ const runCompositions = async (args: ParsedArgs, context: CliContext): Promise<v
     args.composition !== undefined ||
     args.input !== undefined ||
     args.inputFile !== undefined ||
-    args.seed !== undefined
+    args.seed !== undefined ||
+    args.output !== undefined ||
+    args.overwrite === true ||
+    args.startFrame !== undefined ||
+    args.endFrame !== undefined ||
+    args.tailFrames !== undefined ||
+    args.blockFrames !== undefined ||
+    args.renderOptions !== undefined
   ) {
     throw new CliUsageError("compositions does not accept validation options.");
   }
@@ -328,6 +423,17 @@ const runCompositions = async (args: ParsedArgs, context: CliContext): Promise<v
 };
 
 const runValidate = async (args: ParsedArgs, context: CliContext): Promise<void> => {
+  if (
+    args.output !== undefined ||
+    args.overwrite === true ||
+    args.startFrame !== undefined ||
+    args.endFrame !== undefined ||
+    args.tailFrames !== undefined ||
+    args.blockFrames !== undefined ||
+    args.renderOptions !== undefined
+  ) {
+    throw new CliUsageError("validate does not accept render options.");
+  }
   if (args.composition === undefined || args.composition.length === 0) {
     throw new CliUsageError("validate requires --composition <id>.");
   }
@@ -371,6 +477,242 @@ const runValidate = async (args: ParsedArgs, context: CliContext): Promise<void>
   }
 };
 
+type RenderJsonOptions = Readonly<{
+  composition?: string;
+  output?: string;
+  inputs?: JsonObject;
+  seed?: string;
+  overwrite?: boolean;
+  startFrame?: number;
+  endFrame?: number;
+  tailFrames?: number;
+  blockFrames?: number;
+}>;
+
+const renderJsonOptions = (value: JsonObject | undefined): RenderJsonOptions => {
+  if (value === undefined) return {};
+  const options: {
+    composition?: string;
+    output?: string;
+    inputs?: JsonObject;
+    seed?: string;
+    overwrite?: boolean;
+    startFrame?: number;
+    endFrame?: number;
+    tailFrames?: number;
+    blockFrames?: number;
+  } = {};
+  for (const [key, raw] of Object.entries(value)) {
+    if (key === "inputs") {
+      if (!isRecord(raw)) throw new CliUsageError("render options.inputs must be a JSON object.");
+      options.inputs = raw as JsonObject;
+    } else if (key === "composition" || key === "output" || key === "seed") {
+      if (typeof raw !== "string" || raw.length === 0) {
+        throw new CliUsageError(`render options.${key} must be a non-empty string.`);
+      }
+      options[key] = raw;
+    } else if (key === "overwrite") {
+      if (typeof raw !== "boolean") {
+        throw new CliUsageError("render options.overwrite must be boolean.");
+      }
+      options.overwrite = raw;
+    } else if (
+      key === "startFrame" ||
+      key === "endFrame" ||
+      key === "tailFrames" ||
+      key === "blockFrames"
+    ) {
+      if (
+        typeof raw !== "number" ||
+        !Number.isSafeInteger(raw) ||
+        raw < 0 ||
+        (key === "blockFrames" && raw === 0)
+      ) {
+        throw new CliUsageError(`render options.${key} must be a non-negative safe integer.`);
+      }
+      options[key] = raw;
+    } else {
+      throw new CliUsageError(`Unknown render option: ${key}.`);
+    }
+  }
+  return options;
+};
+
+const renderInvocation = (
+  args: ParsedArgs,
+  options: RenderJsonOptions,
+): Readonly<{ entry?: string; composition?: string; output?: string }> => {
+  const positional = args.positionals;
+  let entry = args.entry;
+  let composition = args.composition ?? options.composition;
+  let output = args.output ?? options.output;
+  if (positional.length === 3) {
+    entry = positional[0];
+    composition ??= positional[1];
+    output ??= positional[2];
+  } else if (positional.length === 2) {
+    if (composition === undefined) {
+      composition = positional[0];
+      output ??= positional[1];
+      entry = undefined;
+    } else {
+      entry = positional[0];
+      output ??= positional[1];
+    }
+  } else if (positional.length === 1 && composition !== undefined) {
+    entry = positional[0];
+  }
+  return {
+    ...(entry === undefined ? {} : { entry }),
+    ...(composition === undefined ? {} : { composition }),
+    ...(output === undefined ? {} : { output }),
+  };
+};
+
+const renderProgressEvent = (
+  event:
+    | Readonly<{
+        phase: "configuration" | "compilation" | "preparation" | "planning";
+        status: "started" | "completed";
+        compositionId: string;
+      }>
+    | RenderProgress,
+): Record<string, unknown> => ({
+  format: "resona/render-event",
+  schemaVersion: 1,
+  type: "progress",
+  ...event,
+});
+
+const reportRenderProgress = (
+  context: CliContext,
+  json: boolean,
+  event:
+    | Readonly<{
+        phase: "configuration" | "compilation" | "preparation" | "planning";
+        status: "started" | "completed";
+        compositionId: string;
+      }>
+    | RenderProgress,
+): void => {
+  if (json) writeJson(context.output, renderProgressEvent(event));
+  else if ("status" in event) {
+    context.output.stdout += `render: ${event.phase} ${event.status}\n`;
+  } else {
+    const unit = event.phase === "render" ? "frames" : "bytes";
+    const completed = event.phase === "render" ? event.completedFrames : event.completedBytes;
+    const total = event.phase === "render" ? event.totalFrames : event.totalBytes;
+    context.output.stdout += `render: ${event.phase} ${completed}/${total} ${unit}\n`;
+  }
+};
+
+const reportRenderDiagnostics = (
+  context: CliContext,
+  json: boolean,
+  diagnostics: readonly Diagnostic[],
+): void => {
+  if (!json) {
+    humanDiagnostics(context.output, diagnostics);
+    return;
+  }
+  for (const diagnostic of diagnostics) {
+    writeJson(context.output, {
+      format: "resona/render-event",
+      schemaVersion: 1,
+      type: "diagnostic",
+      diagnostic,
+    });
+  }
+};
+
+const readInputs = async (
+  args: ParsedArgs,
+  context: CliContext,
+): Promise<JsonObject | undefined> => {
+  if (args.inputFile === undefined) return args.input;
+  let source: string;
+  try {
+    source = await readFile(resolve(context.cwd, args.inputFile), "utf8");
+  } catch {
+    throw new CliUsageError(`Input file not found: ${resolve(context.cwd, args.inputFile)}.`);
+  }
+  return parseInput(source);
+};
+
+const runRender = async (args: ParsedArgs, context: CliContext): Promise<void> => {
+  const options = renderJsonOptions(args.renderOptions);
+  const invocation = renderInvocation(args, options);
+  if (invocation.composition === undefined || invocation.composition.length === 0) {
+    throw new CliUsageError("render requires a composition id.");
+  }
+  if (invocation.output === undefined || invocation.output.length === 0) {
+    throw new CliUsageError("render requires an output path.");
+  }
+  const startFrame = args.startFrame ?? options.startFrame ?? 0;
+  const endFrame = args.endFrame ?? options.endFrame;
+  if (endFrame !== undefined && endFrame <= startFrame) {
+    throw new CliUsageError("render end frame must be greater than its start frame.");
+  }
+  const location = await resolveProjectRoot(context.cwd, invocation.entry, args.config);
+  const inputs = (await readInputs(args, context)) ?? options.inputs;
+  const json = args.json;
+  const renderOptions = {
+    ...((args.startFrame ?? options.startFrame) === undefined
+      ? {}
+      : { startFrame: args.startFrame ?? options.startFrame }),
+    ...((args.endFrame ?? options.endFrame) === undefined
+      ? {}
+      : { endFrame: args.endFrame ?? options.endFrame }),
+    ...((args.tailFrames ?? options.tailFrames) === undefined
+      ? {}
+      : { tailFrames: args.tailFrames ?? options.tailFrames }),
+    ...((args.blockFrames ?? options.blockFrames) === undefined
+      ? {}
+      : { blockFrames: args.blockFrames ?? options.blockFrames }),
+  } satisfies Partial<RenderAudioToFileOptions>;
+  const job = await createRenderJob({
+    projectRoot: location.root,
+    compositionId: invocation.composition,
+    ...(inputs === undefined ? {} : { inputs }),
+    ...((args.seed ?? options.seed) === undefined ? {} : { seed: args.seed ?? options.seed }),
+    ...(context.signal === undefined ? {} : { signal: context.signal }),
+    onProgress: (event) => reportRenderProgress(context, json, event),
+    ...(location.configPath === undefined ? {} : { configPath: location.configPath }),
+    ...(location.entryPoint === undefined ? {} : { entryPoint: location.entryPoint }),
+  });
+  reportRenderDiagnostics(context, json, job.diagnostics);
+  const published = await renderAudioToFile(job, {
+    outputPath: resolve(context.cwd, invocation.output),
+    overwrite: args.overwrite ?? options.overwrite ?? false,
+    ...(context.signal === undefined ? {} : { signal: context.signal }),
+    ...renderOptions,
+    onProgress: (event) => reportRenderProgress(context, json, event),
+  });
+  reportRenderDiagnostics(context, json, published.diagnostics);
+  const diagnostics = [...job.diagnostics, ...published.diagnostics];
+  const result = {
+    format: "resona/render-event",
+    schemaVersion: 1,
+    type: "result",
+    project: job.project,
+    composition: job.composition,
+    compositionId: job.plan.compositionId,
+    variant: job.variant,
+    spec: job.spec,
+    fingerprint: job.fingerprint,
+    outputPath: published.outputPath,
+    bytes: published.bytes,
+    frames: published.frames,
+    sampleRate: published.sampleRate,
+    channels: published.channels,
+    diagnostics,
+  };
+  if (json) writeJson(context.output, result);
+  else {
+    context.output.stdout += `Rendered ${published.outputPath} (${published.frames} frames, ${diagnosticSummary(diagnostics)}).\n`;
+  }
+};
+
 const help = (context: CliContext): void => {
   context.output.stdout += `${usage}\n`;
 };
@@ -396,6 +738,7 @@ export const runCli = async (
     if (context.signal?.aborted === true) throw new CliCancellationError("Operation cancelled.");
     if (args.command === "compositions") await runCompositions(args, context);
     else if (args.command === "validate") await runValidate(args, context);
+    else if (args.command === "render") await runRender(args, context);
     else throw new CliUsageError(`Unknown command: ${args.command}.`);
     return 0;
   } catch (error) {
@@ -408,7 +751,16 @@ export const runCli = async (
       message: errorMessage(error),
       ...(diagnostics === undefined ? {} : { diagnostics }),
     };
-    if (args?.json === true || jsonRequested) writeJson(context.output, document);
+    if ((args?.command === "render" || argv[0] === "render") && (args?.json || jsonRequested)) {
+      writeJson(context.output, {
+        format: "resona/render-event",
+        schemaVersion: 1,
+        type: "error",
+        exitCode,
+        message: document.message,
+        ...(diagnostics === undefined ? {} : { diagnostics }),
+      });
+    } else if (args?.json === true || jsonRequested) writeJson(context.output, document);
     else {
       context.output.stderr += `resona: ${document.message}\n`;
       if (diagnostics !== undefined) {

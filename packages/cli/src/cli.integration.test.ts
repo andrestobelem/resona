@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, realpath, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -19,11 +19,12 @@ beforeAll(async () => {
   await writeFile(join(projectRoot, "resona.config.ts"), "export default {};\n");
   await writeFile(
     join(projectRoot, "src", "index.tsx"),
-    `import { Composition, Sequence, duration, position, rational, registerRoot } from ${JSON.stringify(engineModulePath)};
+    `import { Composition, EventClip, PolySynth, Sequence, Track, duration, note, pitch, position, rational, registerRoot } from ${JSON.stringify(engineModulePath)};
 console.log("project-log");
 process.stdout.write("project-write\\n");
 const Song = () => <Sequence id="root" from={position.seconds(0n)} />;
-const Root = () => <Composition id="Smoke" component={Song} duration={duration.seconds(1n)} bpm={rational(120n)} timeSignature={{ beatsPerBar: 4, beatUnit: 4 }} />;
+const ToneSong = () => <Sequence id="root" from={position.seconds(0n)}><Track id="lead" source={<EventClip id="notes" from={position.seconds(0n)} events={[note({ at: position.seconds(0n), duration: duration.seconds(1n, 10n), pitch: pitch.semitonesFromA4(0) })]} />} instrument={<PolySynth id="synth" oscillator="sine" />} /></Sequence>;
+const Root = () => <><Composition id="Smoke" component={Song} duration={duration.seconds(1n)} bpm={rational(120n)} timeSignature={{ beatsPerBar: 4, beatUnit: 4 }} /><Composition id="Tone" component={ToneSong} duration={duration.seconds(1n)} bpm={rational(120n)} timeSignature={{ beatsPerBar: 4, beatUnit: 4 }} /></>;
 registerRoot(Root);`,
   );
   await writeFile(
@@ -41,9 +42,9 @@ afterAll(async () => {
   await rm(projectRoot, { force: true, recursive: true });
 });
 
-const invoke = async (args: readonly string[], cwd = projectRoot) => {
+const invoke = async (args: readonly string[], cwd = projectRoot, signal?: AbortSignal) => {
   const output: CliOutput = { stdout: "", stderr: "" };
-  const exitCode = await runCli(args, { cwd, output });
+  const exitCode = await runCli(args, { cwd, output, ...(signal === undefined ? {} : { signal }) });
   return { ...output, exitCode };
 };
 
@@ -171,6 +172,110 @@ describe("resona CLI", () => {
       format: "resona/cli-error",
       schemaVersion: 1,
       exitCode: 2,
+    });
+  });
+
+  it("renders the same job through the positional CLI contract as versioned JSONL", async () => {
+    const outputPath = join(projectRoot, "tone.wav");
+    const result = await invoke([
+      "render",
+      "src/index.tsx",
+      "Tone",
+      outputPath,
+      "--json",
+      "--block-frames",
+      "4096",
+    ]);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.stderr).toBe("");
+    const events = result.stdout
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line) as Record<string, unknown>);
+    expect(events.length).toBeGreaterThan(3);
+    expect(events.every((event) => event.format === "resona/render-event")).toBe(true);
+    expect(events.every((event) => event.schemaVersion === 1)).toBe(true);
+    expect(
+      events.some((event) => event.type === "progress" && event.phase === "configuration"),
+    ).toBe(true);
+    expect(events.at(-1)).toMatchObject({
+      type: "result",
+      compositionId: "Tone",
+      outputPath,
+      frames: 48_000,
+      sampleRate: 48_000,
+      channels: 2,
+    });
+    const bytes = await readFile(outputPath);
+    expect(bytes.subarray(0, 4).toString("ascii")).toBe("RIFF");
+  }, 20_000);
+
+  it("gives explicit range flags precedence over render options JSON", async () => {
+    const outputPath = join(projectRoot, "range.wav");
+    const result = await invoke([
+      "render",
+      "--composition",
+      "Tone",
+      "--output",
+      outputPath,
+      "--options",
+      '{"endFrame":48000,"tailFrames":100}',
+      "--end-frame",
+      "24000",
+      "--json",
+    ]);
+
+    expect(result.exitCode).toBe(0);
+    expect(JSON.parse(result.stdout.trim().split("\n").at(-1) ?? "{}")).toMatchObject({
+      type: "result",
+      frames: 24_100,
+    });
+  }, 20_000);
+
+  it("uses the stable domain failure for an existing render output", async () => {
+    const outputPath = join(projectRoot, "existing.wav");
+    await writeFile(outputPath, "existing artifact");
+
+    const result = await invoke([
+      "render",
+      "--composition",
+      "Tone",
+      "--output",
+      outputPath,
+      "--json",
+    ]);
+
+    expect(result.exitCode).toBe(1);
+    const lines = result.stdout
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line));
+    expect(lines.at(-1)).toMatchObject({
+      format: "resona/render-event",
+      schemaVersion: 1,
+      type: "error",
+      exitCode: 1,
+      diagnostics: [expect.objectContaining({ code: "render.output-exists" })],
+    });
+    await expect(readFile(outputPath, "utf8")).resolves.toBe("existing artifact");
+  }, 20_000);
+
+  it("maps an already requested SIGINT to the stable cancellation code", async () => {
+    const controller = new AbortController();
+    controller.abort();
+    const result = await invoke(
+      ["render", "--composition", "Tone", "--output", join(projectRoot, "cancel.wav"), "--json"],
+      projectRoot,
+      controller.signal,
+    );
+
+    expect(result.exitCode).toBe(130);
+    expect(JSON.parse(result.stdout.trim())).toMatchObject({
+      format: "resona/render-event",
+      schemaVersion: 1,
+      type: "error",
+      exitCode: 130,
     });
   });
 });
