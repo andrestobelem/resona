@@ -14,8 +14,10 @@ import {
   type RenderAudioToFileOptions,
   type RenderProgress,
 } from "@resona/renderer";
+import { startStudioServer } from "./studio-server.js";
 
 const usage = `Usage:
+  resona studio [entry] [--config <path>] [--json]
   resona compositions [entry] [--config <path>] [--json]
   resona validate [entry] --composition <id> [--input <json>] [--input-file <path>] [--seed <seed>] [--config <path>] [--json]
   resona render [entry] <composition-id> <output.wav> [--input <json>] [--input-file <path>] [--seed <seed>] [--start-frame <n>] [--end-frame <n>] [--tail-frames <n>] [--block-frames <n>] [--options <json>] [--overwrite] [--config <path>] [--json]`;
@@ -422,6 +424,57 @@ const runCompositions = async (args: ParsedArgs, context: CliContext): Promise<v
   else humanCompositions(context.output, catalog.project.root, catalog.compositions);
 };
 
+const runStudio = async (args: ParsedArgs, context: CliContext): Promise<void> => {
+  if (
+    args.composition !== undefined ||
+    args.input !== undefined ||
+    args.inputFile !== undefined ||
+    args.seed !== undefined ||
+    args.output !== undefined ||
+    args.overwrite === true ||
+    args.startFrame !== undefined ||
+    args.endFrame !== undefined ||
+    args.tailFrames !== undefined ||
+    args.blockFrames !== undefined ||
+    args.renderOptions !== undefined
+  ) {
+    throw new CliUsageError("studio does not accept render or validation options.");
+  }
+  const location = await resolveProjectRoot(context.cwd, args.entry, args.config);
+  const server = await startStudioServer({
+    projectRoot: location.root,
+    ...(location.configPath === undefined ? {} : { configPath: location.configPath }),
+    ...(location.entryPoint === undefined ? {} : { entryPoint: location.entryPoint }),
+  });
+  const document = {
+    format: "resona/studio",
+    schemaVersion: 1,
+    host: server.host,
+    port: server.port,
+    url: server.url,
+    token: server.token,
+    sessionId: server.sessionId,
+  };
+  if (args.json) writeJson(context.output, document);
+  else {
+    context.output.stdout += `Studio listening at ${server.url}\n`;
+    context.output.stdout += `Session token: ${server.token}\n`;
+  }
+  try {
+    if (context.signal?.aborted === true) throw new CliCancellationError("Operation cancelled.");
+    if (context.signal === undefined) {
+      await new Promise<void>(() => undefined);
+    } else {
+      await new Promise<void>((resolve) => {
+        context.signal?.addEventListener("abort", () => resolve(), { once: true });
+      });
+      throw new CliCancellationError("Operation cancelled.");
+    }
+  } finally {
+    await server.close();
+  }
+};
+
 const runValidate = async (args: ParsedArgs, context: CliContext): Promise<void> => {
   if (
     args.output !== undefined ||
@@ -737,6 +790,7 @@ export const runCli = async (
     if (args.command === undefined) throw new CliUsageError("A command is required.");
     if (context.signal?.aborted === true) throw new CliCancellationError("Operation cancelled.");
     if (args.command === "compositions") await runCompositions(args, context);
+    else if (args.command === "studio") await runStudio(args, context);
     else if (args.command === "validate") await runValidate(args, context);
     else if (args.command === "render") await runRender(args, context);
     else throw new CliUsageError(`Unknown command: ${args.command}.`);

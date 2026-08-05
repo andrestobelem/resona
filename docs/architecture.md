@@ -997,6 +997,13 @@ diagnósticos incrementales. Cada envelope declara versión de protocolo, `sessi
 `requestId` y `variantId`. Un cambio cancela la solicitud anterior y el cliente ignora toda
 respuesta que ya no corresponda a su variante vigente.
 
+El primer servicio HTTP expone `/api/v1/session`, `/api/v1/compositions`,
+`/api/v1/variants`, `/api/v1/variants/:variantId/plan` y
+`/api/v1/variants/:variantId/resources/:sha256-hash`. Las respuestas usan
+`resona/studio-envelope` v1; los planes, IR y recursos viajan como payload serializable, y los
+paths físicos y `sourcePaths` permanecen en Node. El cliente solo puede pedir hashes que la
+variante ya autorizó.
+
 Studio transfiere `ExecutionPlan` al `AudioWorklet` mediante structured clone y entrega los
 buffers decodificados como `ArrayBuffer` transferibles para no copiarlos por bloque. El
 worklet nunca consulta HTTP ni WebSocket desde su callback. La decisión está registrada en
