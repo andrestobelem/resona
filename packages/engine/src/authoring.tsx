@@ -25,6 +25,7 @@ import type {
 } from "./model.js";
 import {
   resolvePreparation,
+  type PreparationResourceResolver,
   type PrepareComposition,
   type ResolvedVariant,
 } from "./preparation.js";
@@ -413,6 +414,11 @@ export const resolveRegisteredComposition = async (
   overrides?: JsonObject,
   signal: AbortSignal = new AbortController().signal,
   seed = "resona-default",
+  resources: PreparationResourceResolver = Object.freeze({
+    audio: async () => {
+      throw new Error("Preparation resource resolution requires a project context.");
+    },
+  }),
 ): Promise<ResolvedRegisteredComposition> => {
   const descriptions = discoverCompositions();
   const descriptor = descriptions.find((candidate) => candidate.id === compositionId);
@@ -434,6 +440,7 @@ export const resolveRegisteredComposition = async (
     metadata: descriptor.metadata,
     ...(descriptor.prepare === undefined ? {} : { prepare: descriptor.prepare }),
     signal,
+    resources,
   });
   const variant: ResolvedVariant = {
     compositionId,
@@ -443,7 +450,7 @@ export const resolveRegisteredComposition = async (
     duration: preparation.duration,
     tempo: preparation.tempo,
     metadata: preparation.metadata,
-    resources: [],
+    resources: preparation.resources,
     provenance: preparation.provenance,
   };
 

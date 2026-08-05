@@ -1,4 +1,1 @@
-export default {
-  entry: "music.tsx",
-  unsupported: true,
-};
+export default new Date(0);

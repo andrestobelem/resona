@@ -2,7 +2,7 @@ import { build } from "esbuild";
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { Worker } from "node:worker_threads";
 
@@ -35,12 +35,15 @@ const engineModulePath = (name: string, sourceExtension: string): string => {
 const compileProjectEntry = (entryPoint: string): string => {
   const authoringPath = engineModulePath("authoring", "tsx");
   const planningPath = engineModulePath("planning", "ts");
+  const resourceResolverPath = engineModulePath("static-audio-resolver", "ts");
   return [
     `import ${JSON.stringify(entryPoint)};`,
     `import {resolveRegisteredComposition} from ${JSON.stringify(authoringPath)};`,
     `import {compileExecutionPlan} from ${JSON.stringify(planningPath)};`,
-    "export const compileVariant = async (compositionId, providedInputs, signal, seed) => {",
-    "  const resolved = await resolveRegisteredComposition(compositionId, providedInputs, signal, seed);",
+    `import {createStaticAudioPreparationResolver} from ${JSON.stringify(resourceResolverPath)};`,
+    "export const compileVariant = async (compositionId, providedInputs, signal, seed, staticDirectory) => {",
+    "  const resources = createStaticAudioPreparationResolver(staticDirectory, signal);",
+    "  const resolved = await resolveRegisteredComposition(compositionId, providedInputs, signal, seed, resources);",
     "  const compilation = compileExecutionPlan(resolved.composition);",
     "  return {",
     "    composition: resolved.composition,",
@@ -57,7 +60,8 @@ const workerSource = [
   "try {",
   "  const project = await import(workerData.moduleUrl);",
   "  const controller = new AbortController();",
-  "  const compilation = await project.compileVariant(workerData.compositionId, workerData.inputs, controller.signal, workerData.seed);",
+  '  parentPort.on("message", (message) => { if (message?.type === "abort") controller.abort(); });',
+  "  const compilation = await project.compileVariant(workerData.compositionId, workerData.inputs, controller.signal, workerData.seed, workerData.staticDirectory);",
   '  parentPort.postMessage({ type: "success", compilation: {',
   "    composition: compilation.composition,",
   "    variant: compilation.variant,",
@@ -74,6 +78,8 @@ const workerSource = [
   "}",
 ].join("\n");
 
+const engineNodePath = resolve(fileURLToPath(new URL(".", import.meta.url)), "../node_modules");
+
 const configWorkerSource = [
   'import { parentPort, workerData } from "node:worker_threads";',
   "try {",
@@ -87,16 +93,51 @@ const configWorkerSource = [
 const runInFreshWorker = (
   moduleUrl: string,
   compositionId: string,
+  staticDirectory: string,
   inputs?: JsonObject,
   seed = "resona-default",
+  signal?: AbortSignal,
 ): Promise<VariantCompilation> =>
   new Promise((resolve, reject) => {
     const worker = new Worker(new URL(`data:text/javascript,${encodeURIComponent(workerSource)}`), {
-      workerData: { moduleUrl, compositionId, inputs: inputs ?? {}, seed },
+      workerData: { moduleUrl, compositionId, staticDirectory, inputs: inputs ?? {}, seed },
     });
 
-    worker.once("message", (message: unknown) => {
+    let settled = false;
+    let terminationTimer: ReturnType<typeof setTimeout> | undefined;
+    const cancellationError = (): ResonaError =>
+      new ResonaError("Composition preparation was cancelled.", [
+        {
+          code: "preparation.cancelled",
+          phase: "preparation",
+          severity: "error",
+          message: "Composition preparation was cancelled.",
+          compositionId,
+        },
+      ]);
+    const cleanup = (): void => {
+      if (terminationTimer !== undefined) clearTimeout(terminationTimer);
+      signal?.removeEventListener("abort", abort);
+    };
+    const finish = (callback: () => void): void => {
+      if (settled) return;
+      settled = true;
+      cleanup();
       void worker.terminate();
+      callback();
+    };
+    const abort = (): void => {
+      if (settled) return;
+      worker.postMessage({ type: "abort" });
+      terminationTimer = setTimeout(() => finish(() => reject(cancellationError())), 100);
+    };
+    if (signal?.aborted === true) {
+      finish(() => reject(cancellationError()));
+      return;
+    }
+    signal?.addEventListener("abort", abort, { once: true });
+
+    worker.once("message", (message: unknown) => {
       if (
         message !== null &&
         typeof message === "object" &&
@@ -104,25 +145,29 @@ const runInFreshWorker = (
         message.type === "success" &&
         "compilation" in message
       ) {
-        resolve(message.compilation as VariantCompilation);
+        finish(() => resolve(message.compilation as VariantCompilation));
         return;
       }
 
       const failure = message as Readonly<{
         error?: Readonly<{ name?: string; message?: string; diagnostics?: Diagnostic[] }>;
       }>;
-      if (failure.error?.name === "ResonaError" && failure.error.diagnostics !== undefined) {
-        reject(
-          new ResonaError(
-            failure.error.message ?? "Project evaluation failed.",
-            failure.error.diagnostics,
+      const failureError = failure.error;
+      const failureDiagnostics = failureError?.diagnostics;
+      if (failureError?.name === "ResonaError" && failureDiagnostics !== undefined) {
+        finish(() =>
+          reject(
+            new ResonaError(
+              failureError.message ?? "Project evaluation failed.",
+              failureDiagnostics,
+            ),
           ),
         );
         return;
       }
-      reject(new Error(failure.error?.message ?? "The project worker failed."));
+      finish(() => reject(new Error(failure.error?.message ?? "The project worker failed.")));
     });
-    worker.once("error", reject);
+    worker.once("error", (error) => finish(() => reject(error)));
   });
 
 const loadConfigValue = (moduleUrl: string): Promise<unknown> =>
@@ -158,18 +203,28 @@ const assertEntryPoint = (entryPoint: string): string => {
 const loadProjectConfiguration = async (
   projectRoot: string,
   directory: string,
-): Promise<Readonly<{ entryPoint: string; configuration: ResolvedProjectConfiguration }>> => {
+): Promise<
+  Readonly<{
+    entryPoint: string;
+    staticDirectory: string;
+    configuration: ResolvedProjectConfiguration;
+  }>
+> => {
   const configPath = join(projectRoot, "resona.config.ts");
   const configValue = existsSync(configPath)
     ? await (async () => {
         const outputFile = join(directory, "config.mjs");
         await build({
+          banner: {
+            js: 'import { createRequire as __resonaCreateRequire } from "node:module"; const require = __resonaCreateRequire(import.meta.url);',
+          },
           bundle: true,
           entryPoints: [configPath],
           format: "esm",
           outfile: outputFile,
-          packages: "external",
+          nodePaths: [engineNodePath],
           platform: "node",
+          supported: { "top-level-await": false },
           target: "node24",
         });
         return loadConfigValue(pathToFileURL(outputFile).href);
@@ -178,6 +233,7 @@ const loadProjectConfiguration = async (
   const resolved = resolveProjectConfiguration(projectRoot, configValue);
   return {
     entryPoint: assertEntryPoint(resolved.entryPoint),
+    staticDirectory: resolved.staticDirectory,
     configuration: resolved.configuration,
   };
 };
@@ -187,11 +243,23 @@ export const loadProjectCompilation = async (
   compositionId: string,
   inputs?: JsonObject,
   invocationSeed?: string,
+  signal?: AbortSignal,
 ): Promise<ProjectCompilation> => {
   const directory = await mkdtemp(join(projectRoot, ".resona-project-"));
   const outputFile = join(directory, "project.mjs");
 
   try {
+    if (signal?.aborted === true) {
+      throw new ResonaError("Composition preparation was cancelled.", [
+        {
+          code: "preparation.cancelled",
+          phase: "preparation",
+          severity: "error",
+          message: "Composition preparation was cancelled.",
+          compositionId,
+        },
+      ]);
+    }
     let resolvedProject: Awaited<ReturnType<typeof loadProjectConfiguration>>;
     try {
       resolvedProject = await loadProjectConfiguration(projectRoot, directory);
@@ -226,11 +294,14 @@ export const loadProjectCompilation = async (
           : { value: invocationSeed, source: "invocation" as const },
     };
     await build({
+      banner: {
+        js: 'import { createRequire as __resonaCreateRequire } from "node:module"; const require = __resonaCreateRequire(import.meta.url);',
+      },
       bundle: true,
       format: "esm",
       jsx: "automatic",
       outfile: outputFile,
-      packages: "external",
+      nodePaths: [engineNodePath],
       platform: "node",
       stdin: {
         contents: compileProjectEntry(resolvedProject.entryPoint),
@@ -245,8 +316,10 @@ export const loadProjectCompilation = async (
     const compilation = await runInFreshWorker(
       pathToFileURL(outputFile).href,
       compositionId,
+      resolvedProject.staticDirectory,
       inputs,
       effectiveConfiguration.seed.value,
+      signal,
     );
     return {
       ...compilation,

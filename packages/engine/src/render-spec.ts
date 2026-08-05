@@ -18,6 +18,7 @@ export type RenderSpec = Readonly<{
   inputs: ResolvedVariant["inputs"];
   seed: ResolvedProject["configuration"]["seed"];
   metadata: ResolvedVariant["metadata"];
+  provenance: ResolvedVariant["provenance"];
   configuration: Readonly<{
     entry: ResolvedProject["configuration"]["entry"];
     staticDir: ResolvedProject["configuration"]["staticDir"];
@@ -75,6 +76,7 @@ export const createRenderIdentity = ({
     inputs: variant.inputs,
     seed: project.configuration.seed,
     metadata: variant.metadata,
+    provenance: variant.provenance,
     configuration: {
       entry: project.configuration.entry,
       staticDir: project.configuration.staticDir,

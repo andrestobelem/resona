@@ -1,6 +1,6 @@
 import { deepFreeze } from "./deep-freeze.js";
 import { cloneJsonObject, type DeepReadonly, type InputSchemaIR } from "./input-schema.js";
-import type { DurationIR, JsonObject, RationalIR } from "./model.js";
+import type { DurationIR, JsonObject, RationalIR, ResolvedResourcePlan } from "./model.js";
 import { ResonaError } from "./resona-error.js";
 import { durationToSeconds, fractionFromIR } from "./time/rational.js";
 
@@ -12,13 +12,7 @@ export type StaticAudioReference = Readonly<{
   path: string;
 }>;
 
-export type PreparedAudioMetadata = Readonly<{
-  reference: StaticAudioReference;
-  hash: string;
-  sampleRate: 48_000;
-  channels: 1 | 2;
-  frames: number;
-}>;
+export type PreparedAudioMetadata = ResolvedResourcePlan;
 
 export type PreparationResourceResolver = Readonly<{
   audio(reference: StaticAudioReference): Promise<PreparedAudioMetadata>;
@@ -50,6 +44,7 @@ export type ResolvedPreparation = Readonly<{
   duration: DurationIR;
   tempo: ConstantTempo;
   metadata: JsonObject;
+  resources: readonly PreparedAudioMetadata[];
   provenance: Readonly<{
     duration: PreparationProvenance;
     tempo: PreparationProvenance;
@@ -77,15 +72,8 @@ type ResolvePreparationOptions = Readonly<{
   metadata: JsonObject;
   prepare?: PrepareComposition<JsonObject>;
   signal: AbortSignal;
+  resources: PreparationResourceResolver;
 }>;
-
-const unsupportedResources: PreparationResourceResolver = Object.freeze({
-  audio: async (): Promise<PreparedAudioMetadata> => {
-    throw new Error(
-      "Static audio resources are not available until the audio resource adapter runs.",
-    );
-  },
-});
 
 const preparationError = (compositionId: string, error: unknown): ResonaError => {
   const message = error instanceof Error ? error.message : "Composition preparation failed.";
@@ -98,6 +86,33 @@ const preparationError = (compositionId: string, error: unknown): ResonaError =>
       compositionId,
     },
   ]);
+};
+
+const preparationCancelled = (compositionId: string): ResonaError =>
+  new ResonaError("Composition preparation was cancelled.", [
+    {
+      code: "preparation.cancelled",
+      phase: "preparation",
+      severity: "error",
+      message: "Composition preparation was cancelled.",
+      compositionId,
+    },
+  ]);
+
+const validateResource = (resource: PreparedAudioMetadata): PreparedAudioMetadata => {
+  if (
+    resource === null ||
+    typeof resource !== "object" ||
+    resource.type !== "wav" ||
+    !/^sha256:[0-9a-f]{64}$/.test(resource.hash) ||
+    resource.sampleRate !== 48_000 ||
+    (resource.channels !== 1 && resource.channels !== 2) ||
+    !Number.isSafeInteger(resource.frameCount) ||
+    resource.frameCount <= 0
+  ) {
+    throw new Error("The audio resource resolver returned invalid metadata.");
+  }
+  return deepFreeze(structuredClone(resource));
 };
 
 const validateTiming = (duration: DurationIR, tempo: ConstantTempo): void => {
@@ -121,13 +136,25 @@ export const resolvePreparation = async ({
   metadata,
   prepare,
   signal,
+  resources,
 }: ResolvePreparationOptions): Promise<ResolvedPreparation> => {
   try {
-    if (signal.aborted) throw new Error("Composition preparation was cancelled.");
+    if (signal.aborted) throw preparationCancelled(compositionId);
+    const consultedResources = new Map<string, PreparedAudioMetadata>();
+    const trackingResources: PreparationResourceResolver = Object.freeze({
+      audio: async (reference): Promise<PreparedAudioMetadata> => {
+        if (signal.aborted) throw preparationCancelled(compositionId);
+        const resource = validateResource(await resources.audio(reference));
+        if (signal.aborted) throw preparationCancelled(compositionId);
+        consultedResources.set(resource.hash, resource);
+        return resource;
+      },
+    });
     const prepared =
       prepare === undefined
         ? {}
-        : await prepare({ compositionId, inputs, signal, resources: unsupportedResources });
+        : await prepare({ compositionId, inputs, signal, resources: trackingResources });
+    if (signal.aborted) throw preparationCancelled(compositionId);
     if (prepared === null || typeof prepared !== "object" || Array.isArray(prepared)) {
       throw new Error("Composition prepare() must return an object.");
     }
@@ -154,6 +181,9 @@ export const resolvePreparation = async ({
       duration: resolvedDuration,
       tempo: resolvedTempo,
       metadata: { ...cloneJsonObject(metadata), ...preparedMetadata },
+      resources: [...consultedResources.values()].sort((left, right) =>
+        left.hash.localeCompare(right.hash),
+      ),
       provenance: {
         duration: prepared.duration === undefined ? "static-declaration" : "prepare",
         tempo: prepared.tempo === undefined ? "static-declaration" : "prepare",

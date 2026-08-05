@@ -60,6 +60,10 @@ export const resolveProjectConfiguration = (
   if (config === null || typeof config !== "object" || Array.isArray(config)) {
     throw new Error("Project config must export a plain object.");
   }
+  const prototype = Object.getPrototypeOf(config);
+  if (prototype !== Object.prototype && prototype !== null) {
+    throw new Error("Project config must export a plain object.");
+  }
   const record = config as Readonly<Record<string, unknown>>;
   const unknownKeys = Object.keys(record).filter(
     (key) => key !== "entry" && key !== "staticDir" && key !== "seed",

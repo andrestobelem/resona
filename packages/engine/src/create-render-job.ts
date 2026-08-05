@@ -11,6 +11,7 @@ export type CreateRenderJobOptions = Readonly<{
   compositionId: string;
   inputs?: JsonObject;
   seed?: string;
+  signal?: AbortSignal;
 }>;
 
 export const createRenderJob = async ({
@@ -18,6 +19,7 @@ export const createRenderJob = async ({
   compositionId,
   inputs,
   seed,
+  signal,
 }: CreateRenderJobOptions): Promise<CreateRenderJobResult> => {
   if (!isAbsolute(projectRoot)) {
     throw new ResonaError("projectRoot must be an absolute path.", [
@@ -32,7 +34,13 @@ export const createRenderJob = async ({
   }
 
   try {
-    const compilation = await loadProjectCompilation(projectRoot, compositionId, inputs, seed);
+    const compilation = await loadProjectCompilation(
+      projectRoot,
+      compositionId,
+      inputs,
+      seed,
+      signal,
+    );
     const { composition, variant, plan, diagnostics } = compilation;
     const identity = createRenderIdentity({
       project: compilation.project,

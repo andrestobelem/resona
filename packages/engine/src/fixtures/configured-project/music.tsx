@@ -55,6 +55,23 @@ const SeededComposition = () => {
   );
 };
 
+const prepareResource: PrepareComposition<Record<string, never>> = async ({ resources }) => {
+  await resources.audio({ type: "resona/static-audio", version: 1, path: "tone.wav" });
+  await resources.audio({ type: "resona/static-audio", version: 1, path: "tone.wav" });
+  return {};
+};
+
+const prepareUntilCancelled: PrepareComposition<Record<string, never>> = ({ signal }) =>
+  new Promise((_, reject) => {
+    signal.addEventListener(
+      "abort",
+      () => reject(new Error("Preparation observed cancellation.")),
+      {
+        once: true,
+      },
+    );
+  });
+
 const prepareConfigured: PrepareComposition<Record<string, never>> = async ({
   compositionId,
   inputs,
@@ -95,6 +112,22 @@ const ConfiguredRoot = () => (
     <Composition
       id="Seeded"
       component={SeededComposition}
+      duration={duration.seconds(1n)}
+      bpm={rational(120n)}
+      timeSignature={{ beatsPerBar: 4, beatUnit: 4 }}
+    />
+    <Composition
+      id="PreparedResource"
+      component={ConfiguredComposition}
+      prepare={prepareResource}
+      duration={duration.seconds(1n)}
+      bpm={rational(120n)}
+      timeSignature={{ beatsPerBar: 4, beatUnit: 4 }}
+    />
+    <Composition
+      id="CancellablePreparation"
+      component={MustNotEvaluate}
+      prepare={prepareUntilCancelled}
       duration={duration.seconds(1n)}
       bpm={rational(120n)}
       timeSignature={{ beatsPerBar: 4, beatUnit: 4 }}

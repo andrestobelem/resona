@@ -1,6 +1,10 @@
+import { createHash } from "node:crypto";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { createRenderJob } from "./index.js";
 
@@ -11,6 +15,39 @@ const configuredProjectRoot = fileURLToPath(
 const invalidConfigProjectRoot = fileURLToPath(
   new URL("./fixtures/invalid-config-project/", import.meta.url),
 );
+const configuredAudioPath = fileURLToPath(
+  new URL("./fixtures/configured-project/assets/tone.wav", import.meta.url),
+);
+
+const wavBytes = (): Buffer => {
+  const bytes = Buffer.alloc(48);
+  bytes.write("RIFF", 0);
+  bytes.writeUInt32LE(40, 4);
+  bytes.write("WAVEfmt ", 8);
+  bytes.writeUInt32LE(16, 16);
+  bytes.writeUInt16LE(3, 20);
+  bytes.writeUInt16LE(1, 22);
+  bytes.writeUInt32LE(48_000, 24);
+  bytes.writeUInt32LE(192_000, 28);
+  bytes.writeUInt16LE(4, 32);
+  bytes.writeUInt16LE(32, 34);
+  bytes.write("data", 36);
+  bytes.writeUInt32LE(4, 40);
+  bytes.writeFloatLE(0.25, 44);
+  return bytes;
+};
+
+beforeAll(async () => {
+  await mkdir(fileURLToPath(new URL("./fixtures/configured-project/assets/", import.meta.url)), {
+    recursive: true,
+  });
+  await writeFile(configuredAudioPath, wavBytes());
+});
+
+afterAll(async () => {
+  await rm(configuredAudioPath, { force: true });
+});
+
 describe("createRenderJob", () => {
   it("rejects a relative project root with a structured registration diagnostic", async () => {
     await expect(
@@ -87,6 +124,38 @@ describe("createRenderJob", () => {
     expect(repeated.project).toEqual(job.project);
   });
 
+  it("changes build identity when a bundled project dependency changes", async () => {
+    const projectRoot = await mkdtemp(join(tmpdir(), "resona-build-identity-"));
+    const dependencyRoot = join(projectRoot, "node_modules", "music-dependency");
+    const engineEntry = fileURLToPath(new URL("./index.ts", import.meta.url));
+    await mkdir(join(projectRoot, "src"), { recursive: true });
+    await mkdir(dependencyRoot, { recursive: true });
+    await writeFile(
+      join(dependencyRoot, "package.json"),
+      JSON.stringify({ name: "music-dependency", type: "module", exports: "./index.js" }),
+    );
+    await writeFile(
+      join(projectRoot, "src", "index.tsx"),
+      `import { Composition, Sequence, duration, position, rational, registerRoot } from ${JSON.stringify(engineEntry)};
+import { value } from "music-dependency";
+const Song = () => <Sequence id="root" from={position.seconds(0n)} />;
+const Root = () => <Composition id="Dependency" component={Song} duration={duration.seconds(1n)} bpm={rational(120n)} timeSignature={{ beatsPerBar: 4, beatUnit: 4 }} metadata={{ value }} />;
+registerRoot(Root);`,
+    );
+
+    try {
+      await writeFile(join(dependencyRoot, "index.js"), "export const value = 1;\n");
+      const first = await createRenderJob({ projectRoot, compositionId: "Dependency" });
+      await writeFile(join(dependencyRoot, "index.js"), "export const value = 2;\n");
+      const second = await createRenderJob({ projectRoot, compositionId: "Dependency" });
+
+      expect(second.project.buildId).not.toBe(first.project.buildId);
+      expect(second.variant.metadata).toEqual({ value: 2 });
+    } finally {
+      await rm(projectRoot, { force: true, recursive: true });
+    }
+  });
+
   it("rejects invalid project configuration with a structured diagnostic", async () => {
     await expect(
       createRenderJob({
@@ -141,6 +210,41 @@ describe("createRenderJob", () => {
     });
   });
 
+  it("cancels preparation and terminates its variant worker", async () => {
+    const controller = new AbortController();
+    const pending = createRenderJob({
+      projectRoot: configuredProjectRoot,
+      compositionId: "CancellablePreparation",
+      signal: controller.signal,
+    });
+
+    setTimeout(() => controller.abort(), 25);
+
+    await expect(pending).rejects.toMatchObject({
+      diagnostics: [
+        {
+          code: "preparation.cancelled",
+          phase: "preparation",
+          compositionId: "CancellablePreparation",
+        },
+      ],
+    });
+  });
+
+  it("binds preparation resources, records them once, and fingerprints their bytes", async () => {
+    const bytes = wavBytes();
+    const hash = `sha256:${createHash("sha256").update(bytes).digest("hex")}`;
+    const job = await createRenderJob({
+      projectRoot: configuredProjectRoot,
+      compositionId: "PreparedResource",
+    });
+
+    expect(job.variant.resources).toEqual([
+      { type: "wav", hash, channels: 1, sampleRate: 48_000, frameCount: 1 },
+    ]);
+    expect(job.spec.resourceHashes).toEqual([hash]);
+  });
+
   it("compiles nested exact time from a registered TSX project into inspectable artifacts", async () => {
     const job = await createRenderJob({
       projectRoot: exactProjectRoot,
@@ -169,6 +273,11 @@ describe("createRenderJob", () => {
         inputs: {},
         seed: { value: "resona-default", source: "resona-default" },
         metadata: { title: "Exact note" },
+        provenance: {
+          duration: "static-declaration",
+          tempo: "static-declaration",
+          metadata: { title: "static-declaration" },
+        },
         configuration: {
           entry: { value: "src/index.tsx", source: "resona-default" },
           staticDir: { value: "public", source: "resona-default" },
