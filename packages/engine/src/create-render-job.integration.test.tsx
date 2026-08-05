@@ -256,6 +256,43 @@ describe("createRenderJob", () => {
     });
   });
 
+  it("rejects remote references in the serializable input schema", async () => {
+    await expect(
+      createRenderJob({
+        projectRoot: exactProjectRoot,
+        compositionId: "RemoteSchemaVariant",
+      }),
+    ).rejects.toMatchObject({
+      diagnostics: [
+        {
+          code: "inputs.schema-description-invalid",
+          phase: "input-validation",
+          compositionId: "RemoteSchemaVariant",
+        },
+      ],
+    });
+  });
+
+  it("passes a canonical input named key through React authoring", async () => {
+    const job = await createRenderJob({
+      projectRoot: exactProjectRoot,
+      compositionId: "KeyInputVariant",
+    });
+
+    expect(job.inputs).toEqual({ key: "canonical" });
+    expect(job.diagnostics).toEqual([]);
+  });
+
+  it("protects the canonical candidate from a mutating input validator", async () => {
+    const job = await createRenderJob({
+      projectRoot: exactProjectRoot,
+      compositionId: "MutatingInputVariant",
+    });
+
+    expect(job.inputs).toEqual({ intensity: 0.25 });
+    expect(job.diagnostics).toEqual([]);
+  });
+
   it("validates an invalid note before pruning its offscreen clip", async () => {
     await expect(
       createRenderJob({

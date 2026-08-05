@@ -129,6 +129,21 @@ const canonicalInputSchemaIr = (compositionId: string, ir: InputSchemaIR): Input
       "InputSchemaIR must contain a Draft 2020-12 object schema.",
     );
   }
+  const references = (value: JsonValue): readonly string[] => {
+    if (Array.isArray(value)) return value.flatMap(references);
+    if (value === null || typeof value !== "object") return [];
+    return Object.entries(value).flatMap(([key, entry]) => {
+      if (key === "$ref") return typeof entry === "string" ? [entry] : ["<invalid>"];
+      return references(entry);
+    });
+  };
+  if (references(jsonSchema).some((reference) => reference !== "" && !reference.startsWith("#"))) {
+    throw inputError(
+      compositionId,
+      "inputs.schema-description-invalid",
+      "InputSchemaIR cannot contain remote JSON Schema references.",
+    );
+  }
   return deepFreeze({ format: ir.format, schemaVersion: ir.schemaVersion, jsonSchema });
 };
 
@@ -157,7 +172,7 @@ export const resolveCompositionInputs = <TInputs extends JsonObject>({
     );
   }
 
-  const candidate = { ...defaultsClone, ...overridesClone };
+  const candidate = deepFreeze({ ...defaultsClone, ...overridesClone });
   let validation: unknown;
   try {
     validation = schema.validate(candidate);
@@ -202,7 +217,7 @@ export const resolveCompositionInputs = <TInputs extends JsonObject>({
 
   const inputSchema = canonicalInputSchemaIr(compositionId, schema.ir);
   return {
-    inputs: deepFreeze(candidate) as DeepReadonly<TInputs>,
+    inputs: candidate as DeepReadonly<TInputs>,
     inputSchema,
   };
 };

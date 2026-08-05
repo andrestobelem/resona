@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import {
   emptyInputSchema,
   resolveCompositionInputs,
+  type DeepReadonly,
   type InputSchema,
   type InputSchemaIR,
 } from "./input-schema.js";
@@ -27,7 +28,7 @@ import { duration } from "./time/rational.js";
 
 type CompositionDescriptor = Readonly<{
   id: string;
-  component: ComponentType<JsonObject>;
+  component: (inputs: JsonObject) => ReactElement | null;
   schema: InputSchema;
   defaultInputs: JsonObject;
   duration: DurationIR;
@@ -112,7 +113,7 @@ export const registerRoot = (root: ComponentType): void => {
 
 type CompositionProps<TInputs extends JsonObject> = Readonly<{
   id: string;
-  component: ComponentType<TInputs>;
+  component: (inputs: DeepReadonly<TInputs>) => ReactElement | null;
   schema?: InputSchema<TInputs>;
   defaultInputs?: TInputs;
   duration: DurationIR;
@@ -142,7 +143,7 @@ export const Composition = <TInputs extends JsonObject = JsonObject>({
   }
   registry.push({
     id,
-    component: component as ComponentType<JsonObject>,
+    component: component as (inputs: JsonObject) => ReactElement | null,
     schema: schema ?? emptyInputSchema,
     defaultInputs: defaultInputs === undefined ? {} : cloneJsonObject(defaultInputs),
     duration: compositionDuration,
@@ -426,9 +427,10 @@ export const resolveRegisteredComposition = (
     compositionDuration: descriptor.duration,
   };
   const Component = descriptor.component;
+  const EvaluateComponent = (): ReactElement | null => Component(resolved.inputs);
   renderToStaticMarkup(
     <EvaluationContext.Provider value={{ session }}>
-      <Component {...resolved.inputs} />
+      <EvaluateComponent />
     </EvaluationContext.Provider>,
   );
 

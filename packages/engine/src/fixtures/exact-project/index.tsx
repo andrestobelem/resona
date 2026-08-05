@@ -187,6 +187,72 @@ const inputVariantSchema: InputSchema<VariantInputs> = {
   },
 };
 
+const remoteInputVariantSchema: InputSchema<VariantInputs> = {
+  ...inputVariantSchema,
+  ir: {
+    format: "resona/input-schema",
+    schemaVersion: 1,
+    jsonSchema: {
+      $schema: "https://json-schema.org/draft/2020-12/schema",
+      type: "object",
+      properties: {
+        intensity: { $ref: "https://schemas.example.com/intensity.json" },
+      },
+    },
+  },
+};
+
+type KeyInputs = { key: string };
+
+const keyInputSchema: InputSchema<KeyInputs> = {
+  ir: {
+    format: "resona/input-schema",
+    schemaVersion: 1,
+    jsonSchema: {
+      $schema: "https://json-schema.org/draft/2020-12/schema",
+      type: "object",
+      properties: { key: { type: "string" } },
+      required: ["key"],
+      additionalProperties: false,
+    },
+  },
+  validate: (value) =>
+    value !== null && typeof value === "object" && "key" in value && typeof value.key === "string"
+      ? { success: true }
+      : { success: false, issues: [] },
+};
+
+const KeyInputVariant = ({ key }: KeyInputs) => {
+  if (key !== "canonical") throw new Error("The canonical key input did not reach authoring.");
+  return <Sequence id="root" from={position.seconds(0n)} />;
+};
+
+const mutatingInputSchema: InputSchema<{ intensity: number }> = {
+  ir: {
+    format: "resona/input-schema",
+    schemaVersion: 1,
+    jsonSchema: {
+      $schema: "https://json-schema.org/draft/2020-12/schema",
+      type: "object",
+      properties: { intensity: { type: "number" } },
+      required: ["intensity"],
+      additionalProperties: false,
+    },
+  },
+  validate: (value) => {
+    if (value !== null && typeof value === "object" && "intensity" in value) {
+      Reflect.set(value, "intensity", 1);
+      return { success: true };
+    }
+    return { success: false, issues: [] };
+  },
+};
+
+const MutatingInputVariant = ({ intensity }: { intensity: number }) => {
+  if (intensity !== 0.25) throw new Error("Input validation changed the canonical candidate.");
+  return <Sequence id="root" from={position.seconds(0n)} />;
+};
+
 const InputVariant = ({ intensity, voice }: VariantInputs) => {
   if (!Object.isFrozen(voice)) {
     throw new Error("Composition inputs must be deeply frozen before authoring evaluation.");
@@ -267,6 +333,33 @@ export const ExactProjectRoot = () => (
       component={InputVariant}
       schema={inputVariantSchema}
       defaultInputs={{ intensity: 0.25, voice: { semitonesFromA4: 0 } }}
+      duration={duration.seconds(1n)}
+      bpm={rational(120n)}
+      timeSignature={{ beatsPerBar: 4, beatUnit: 4 }}
+    />
+    <Composition
+      id="RemoteSchemaVariant"
+      component={InputVariant}
+      schema={remoteInputVariantSchema}
+      defaultInputs={{ intensity: 0.25, voice: { semitonesFromA4: 0 } }}
+      duration={duration.seconds(1n)}
+      bpm={rational(120n)}
+      timeSignature={{ beatsPerBar: 4, beatUnit: 4 }}
+    />
+    <Composition
+      id="KeyInputVariant"
+      component={KeyInputVariant}
+      schema={keyInputSchema}
+      defaultInputs={{ key: "canonical" }}
+      duration={duration.seconds(1n)}
+      bpm={rational(120n)}
+      timeSignature={{ beatsPerBar: 4, beatUnit: 4 }}
+    />
+    <Composition
+      id="MutatingInputVariant"
+      component={MutatingInputVariant}
+      schema={mutatingInputSchema}
+      defaultInputs={{ intensity: 0.25 }}
       duration={duration.seconds(1n)}
       bpm={rational(120n)}
       timeSignature={{ beatsPerBar: 4, beatUnit: 4 }}
