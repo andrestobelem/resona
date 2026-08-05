@@ -1072,6 +1072,18 @@ decoder y encoder. El renderer escribe a un temporal y publica el WAV final de f
 solo después de completarlo; una cancelación o falla no presenta un artefacto parcial como
 válido.
 
+La API `renderAudioToFile(job, { outputPath, overwrite, signal, onProgress })` adapta el
+render en memoria a publicación de filesystem. Relee y valida el WAV temporal antes de
+publicarlo; el resultado exitoso solo se resuelve después de la publicación. La operación
+conserva el destino existente sin `overwrite: true` y elimina el temporal ante cualquier
+falla.
+
+La atomicidad depende de que el temporal y el destino estén en el mismo filesystem y de las
+garantías de `link`/`rename` de la plataforma; no se promete publicación atómica entre
+dispositivos. El `fsync` del archivo protege los bytes antes de publicar, pero la durabilidad
+del nombre de directorio y la limpieza posterior pueden depender del filesystem y sus
+permisos.
+
 Si el destino ya existe, la operación falla salvo que la invocación haya resuelto
 `overwrite: true`; el CLI lo expone como `--overwrite`. El temporal se crea en el mismo
 directorio que el destino. Antes de renombrarlo, el encoder cierra el archivo y valida su

@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { createRenderJob, loadProjectCompositions } from "./index.js";
+import { createRenderJob, loadProjectCompositions, type RenderJobProgress } from "./index.js";
 
 const exactProjectRoot = fileURLToPath(new URL("./fixtures/exact-project/", import.meta.url));
 const configuredProjectRoot = fileURLToPath(
@@ -51,6 +51,46 @@ afterAll(async () => {
 });
 
 describe("createRenderJob", () => {
+  it("reports structured progress for configuration, compilation, preparation, and planning", async () => {
+    const progress: RenderJobProgress[] = [];
+    await createRenderJob({
+      projectRoot: exactProjectRoot,
+      compositionId: "ExactNote",
+      onProgress: (event) => progress.push(event),
+    });
+
+    expect(progress).toEqual([
+      { phase: "configuration", status: "started", compositionId: "ExactNote" },
+      { phase: "configuration", status: "completed", compositionId: "ExactNote" },
+      { phase: "compilation", status: "started", compositionId: "ExactNote" },
+      { phase: "compilation", status: "completed", compositionId: "ExactNote" },
+      { phase: "preparation", status: "started", compositionId: "ExactNote" },
+      { phase: "preparation", status: "completed", compositionId: "ExactNote" },
+      { phase: "planning", status: "started", compositionId: "ExactNote" },
+      { phase: "planning", status: "completed", compositionId: "ExactNote" },
+    ]);
+  });
+
+  it("turns a progress callback failure into a structured job error", async () => {
+    await expect(
+      createRenderJob({
+        projectRoot: exactProjectRoot,
+        compositionId: "ExactNote",
+        onProgress: ({ phase }) => {
+          if (phase === "preparation") throw new Error("progress callback failed");
+        },
+      }),
+    ).rejects.toMatchObject({
+      name: "ResonaError",
+      diagnostics: [
+        expect.objectContaining({
+          code: "tsx-evaluation.failed",
+          phase: "tsx-evaluation",
+        }),
+      ],
+    });
+  });
+
   it("discovers registered composition summaries without preparing or evaluating a variant", async () => {
     const catalog = await loadProjectCompositions(configuredProjectRoot);
 

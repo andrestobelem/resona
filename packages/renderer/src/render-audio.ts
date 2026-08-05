@@ -1,4 +1,4 @@
-import type { CreateRenderJobResult, ExecutionPlan } from "@resona/engine";
+import { ResonaError, type CreateRenderJobResult, type ExecutionPlan } from "@resona/engine";
 
 const TAU = Math.PI * 2;
 
@@ -22,11 +22,25 @@ type InstrumentState = {
   voiceSteals: number;
 };
 
+export type RenderProgress =
+  | Readonly<{
+      phase: "render";
+      completedFrames: number;
+      totalFrames: number;
+    }>
+  | Readonly<{
+      phase: "publish";
+      completedBytes: number;
+      totalBytes: number;
+    }>;
+
 export type RenderAudioOptions = Readonly<{
   blockFrames?: number;
   startFrame?: number;
   endFrame?: number;
   tailFrames?: number;
+  signal?: AbortSignal;
+  onProgress?: (progress: RenderProgress) => void;
 }>;
 
 export type RenderedAudio = Readonly<{
@@ -57,6 +71,17 @@ const canonicalF32 = (value: number): number => {
   }
   return Object.is(rounded, -0) ? 0 : rounded;
 };
+
+const cancellationError = (compositionId: string): ResonaError =>
+  new ResonaError("Audio rendering was cancelled.", [
+    {
+      code: "render.cancelled",
+      phase: "render",
+      severity: "error",
+      message: "Audio rendering was cancelled.",
+      compositionId,
+    },
+  ]);
 
 const frequencyFromSemitones = (semitonesFromA4: number): number =>
   440 * 2 ** (semitonesFromA4 / 12);
@@ -262,8 +287,11 @@ export const renderAudio = (
     startFrame = 0,
     endFrame = job.plan.nominalDurationFrames,
     tailFrames = 0,
+    signal,
+    onProgress,
   }: RenderAudioOptions = {},
 ): RenderedAudio => {
+  if (signal?.aborted === true) throw cancellationError(job.plan.compositionId);
   if (!Number.isSafeInteger(blockFrames) || blockFrames <= 0) {
     throw new RangeError("blockFrames must be a positive safe integer.");
   }
@@ -347,6 +375,12 @@ export const renderAudio = (
   const outputFrames = endFrame - startFrame + tailFrames;
   const processEnd = endFrame + tailFrames;
   const samples = new Float32Array(outputFrames * plan.channels);
+
+  const reportProgress = (completedFrames: number): void => {
+    onProgress?.({ phase: "render", completedFrames, totalFrames: processEnd });
+    if (signal?.aborted === true) throw cancellationError(job.plan.compositionId);
+  };
+  reportProgress(0);
 
   for (let blockStart = 0; blockStart < processEnd; blockStart += blockFrames) {
     const blockEnd = Math.min(processEnd, blockStart + blockFrames);
@@ -497,6 +531,7 @@ export const renderAudio = (
         samples[outputFrame * plan.channels + 1] = canonicalF32(right);
       }
     }
+    reportProgress(blockEnd);
   }
 
   const diagnostics: RenderDiagnostic[] = instruments

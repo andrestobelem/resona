@@ -14,7 +14,11 @@ export {
   useRandom,
 } from "./authoring.js";
 export type { CompositionSummary } from "./authoring.js";
-export { createRenderJob, type CreateRenderJobOptions } from "./create-render-job.js";
+export {
+  createRenderJob,
+  type CreateRenderJobOptions,
+  type RenderJobProgress,
+} from "./create-render-job.js";
 export {
   loadProjectCompositions,
   type ProjectCompositions,

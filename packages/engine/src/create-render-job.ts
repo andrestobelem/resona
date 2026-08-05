@@ -13,8 +13,15 @@ export type CreateRenderJobOptions = Readonly<{
   inputs?: JsonObject;
   seed?: string;
   signal?: AbortSignal;
+  onProgress?: (progress: RenderJobProgress) => void;
   configPath?: string;
   entryPoint?: string;
+}>;
+
+export type RenderJobProgress = Readonly<{
+  phase: "configuration" | "compilation" | "preparation" | "planning";
+  status: "started" | "completed";
+  compositionId: string;
 }>;
 
 export const createRenderJob = async ({
@@ -23,6 +30,7 @@ export const createRenderJob = async ({
   inputs,
   seed,
   signal,
+  onProgress,
   configPath,
   entryPoint,
 }: CreateRenderJobOptions): Promise<CreateRenderJobResult> => {
@@ -50,6 +58,7 @@ export const createRenderJob = async ({
         ...(configPath === undefined ? {} : { configPath }),
         ...(entryPoint === undefined ? {} : { entryPoint }),
       } satisfies ProjectSourceOptions,
+      onProgress,
     );
     const { composition, variant, plan, diagnostics } = compilation;
     const identity = createRenderIdentity({
