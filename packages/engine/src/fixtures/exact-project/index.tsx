@@ -17,11 +17,9 @@ const beyondSafeInteger = 9_007_199_254_740_993n;
 const evaluationCountKey = Symbol.for("resona.test.exact-note-evaluation-count");
 const evaluationCountHost = globalThis as typeof globalThis & Record<symbol, number | undefined>;
 
-export const getExactNoteEvaluationCount = (): number =>
-  evaluationCountHost[evaluationCountKey] ?? 0;
-
 const ExactNote = () => {
-  evaluationCountHost[evaluationCountKey] = getExactNoteEvaluationCount() + 1;
+  const evaluationCount = (evaluationCountHost[evaluationCountKey] ?? 0) + 1;
+  evaluationCountHost[evaluationCountKey] = evaluationCount;
 
   return (
     <Sequence id="root" from={position.seconds(0n)}>
@@ -40,7 +38,7 @@ const ExactNote = () => {
                   note({
                     at: position.seconds(0n),
                     duration: duration.seconds(1n, 48_000n),
-                    pitch: pitch.semitonesFromA4(0),
+                    pitch: pitch.semitonesFromA4(evaluationCount - 1),
                   }),
                 ]}
               />
