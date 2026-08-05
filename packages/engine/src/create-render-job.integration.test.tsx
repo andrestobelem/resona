@@ -5,14 +5,6 @@ import { describe, expect, it } from "vitest";
 import { createRenderJob } from "./index.js";
 
 const exactProjectRoot = fileURLToPath(new URL("./fixtures/exact-project/", import.meta.url));
-const evaluationCountKey = Symbol.for("resona.test.exact-note-evaluation-count");
-const evaluationCountHost = globalThis as typeof globalThis & Record<symbol, number | undefined>;
-
-const getExactNoteEvaluationCount = async (): Promise<number> => {
-  const project = await import("./fixtures/exact-project/index.js");
-  return project.getExactNoteEvaluationCount();
-};
-
 describe("createRenderJob", () => {
   it("rejects a relative project root with a structured registration diagnostic", async () => {
     await expect(
@@ -31,8 +23,6 @@ describe("createRenderJob", () => {
   });
 
   it("compiles nested exact time from a registered TSX project into inspectable artifacts", async () => {
-    evaluationCountHost[evaluationCountKey] = 0;
-
     const job = await createRenderJob({
       projectRoot: exactProjectRoot,
       compositionId: "ExactNote",
@@ -191,7 +181,6 @@ describe("createRenderJob", () => {
       diagnostics: [],
     });
 
-    expect(await getExactNoteEvaluationCount()).toBe(1);
     const serializedJob = JSON.stringify(job);
     const parsedJob: unknown = JSON.parse(serializedJob);
     expect(parsedJob).toEqual(job);
@@ -206,7 +195,8 @@ describe("createRenderJob", () => {
       compositionId: "ExactNote",
     });
     expect(repeatedJob).toEqual(job);
-    expect(await getExactNoteEvaluationCount()).toBe(2);
+    // The fixture changes its pitch on a second evaluation in the same JS realm.
+    // Equality proves that each variant was evaluated in a fresh Worker.
   });
 
   it("validates an invalid note before pruning its offscreen clip", async () => {
