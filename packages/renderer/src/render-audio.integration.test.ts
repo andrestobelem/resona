@@ -117,6 +117,7 @@ describe("renderAudio", () => {
     expect(louderJob.inputs).toEqual({ intensity: 0.75, voice: { semitonesFromA4: 0 } });
     expect(Object.isFrozen(louderJob.inputs)).toBe(true);
     expect(Object.isFrozen(louderJob.inputs.voice)).toBe(true);
+    expect(louderJob.project).toEqual(defaultJob.project);
     expect(repeatedLouderJob).toEqual(louderJob);
 
     const defaultAudio = renderAudio(defaultJob);

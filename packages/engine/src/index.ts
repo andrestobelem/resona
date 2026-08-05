@@ -10,6 +10,12 @@ export {
 } from "./authoring.js";
 export { createRenderJob, type CreateRenderJobOptions } from "./create-render-job.js";
 export {
+  defineConfig,
+  type ProjectConfig,
+  type ResolvedProject,
+  type ResolvedProjectConfiguration,
+} from "./project-config.js";
+export {
   type DeepReadonly,
   type InferInputs,
   type InputSchema,

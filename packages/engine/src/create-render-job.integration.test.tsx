@@ -5,6 +5,12 @@ import { describe, expect, it } from "vitest";
 import { createRenderJob } from "./index.js";
 
 const exactProjectRoot = fileURLToPath(new URL("./fixtures/exact-project/", import.meta.url));
+const configuredProjectRoot = fileURLToPath(
+  new URL("./fixtures/configured-project/", import.meta.url),
+);
+const invalidConfigProjectRoot = fileURLToPath(
+  new URL("./fixtures/invalid-config-project/", import.meta.url),
+);
 describe("createRenderJob", () => {
   it("rejects a relative project root with a structured registration diagnostic", async () => {
     await expect(
@@ -22,6 +28,47 @@ describe("createRenderJob", () => {
     });
   });
 
+  it("resolves a typed project config and identifies its immutable authoring build", async () => {
+    const job = await createRenderJob({
+      projectRoot: configuredProjectRoot,
+      compositionId: "Configured",
+    });
+
+    expect(job.project).toEqual({
+      root: configuredProjectRoot,
+      buildId: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
+      configuration: {
+        entry: { value: "music.tsx", source: "project-config" },
+        staticDir: { value: "assets", source: "project-config" },
+      },
+    });
+    expect(Object.isFrozen(job.project)).toBe(true);
+
+    const repeated = await createRenderJob({
+      projectRoot: configuredProjectRoot,
+      compositionId: "Configured",
+    });
+    expect(repeated.project).toEqual(job.project);
+  });
+
+  it("rejects invalid project configuration with a structured diagnostic", async () => {
+    await expect(
+      createRenderJob({
+        projectRoot: invalidConfigProjectRoot,
+        compositionId: "Configured",
+      }),
+    ).rejects.toMatchObject({
+      diagnostics: [
+        {
+          code: "configuration.invalid",
+          phase: "configuration",
+          severity: "error",
+          compositionId: "Configured",
+        },
+      ],
+    });
+  });
+
   it("compiles nested exact time from a registered TSX project into inspectable artifacts", async () => {
     const job = await createRenderJob({
       projectRoot: exactProjectRoot,
@@ -29,6 +76,14 @@ describe("createRenderJob", () => {
     });
 
     expect(job).toEqual({
+      project: {
+        root: exactProjectRoot,
+        buildId: expect.stringMatching(/^sha256:[a-f0-9]{64}$/),
+        configuration: {
+          entry: { value: "src/index.tsx", source: "resona-default" },
+          staticDir: { value: "public", source: "resona-default" },
+        },
+      },
       composition: {
         format: "resona/composition-ir",
         schemaVersion: 1,

@@ -29,14 +29,10 @@ export const createRenderJob = async ({
   }
 
   try {
-    const {
-      composition,
-      inputs: resolvedInputs,
-      inputSchema,
-      plan,
-      diagnostics,
-    } = await loadProjectCompilation(projectRoot, compositionId, inputs);
+    const compilation = await loadProjectCompilation(projectRoot, compositionId, inputs);
+    const { composition, inputs: resolvedInputs, inputSchema, plan, diagnostics } = compilation;
     return deepFreeze({
+      project: compilation.project,
       composition,
       inputs: resolvedInputs,
       inputSchema,
