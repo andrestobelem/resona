@@ -43,6 +43,40 @@ describe("createRenderJob", () => {
       },
     });
     expect(Object.isFrozen(job.project)).toBe(true);
+    expect(job.composition.duration).toEqual({
+      type: "absolute-duration",
+      seconds: { numerator: "2", denominator: "1" },
+    });
+    expect(job.composition.tempo).toEqual({
+      type: "constant-tempo",
+      bpm: { numerator: "90", denominator: "1" },
+      timeSignature: { beatsPerBar: 3, beatUnit: 4 },
+    });
+    expect(job.composition.metadata).toEqual({
+      title: "Prepared",
+      nested: { source: "dynamic" },
+      retained: true,
+    });
+    expect(job.variant).toMatchObject({
+      compositionId: "Configured",
+      duration: job.composition.duration,
+      tempo: {
+        bpm: job.composition.tempo.bpm,
+        timeSignature: job.composition.tempo.timeSignature,
+      },
+      metadata: job.composition.metadata,
+      resources: [],
+      provenance: {
+        duration: "prepare",
+        tempo: "prepare",
+        metadata: {
+          title: "prepare",
+          nested: "prepare",
+          retained: "static-declaration",
+        },
+      },
+    });
+    expect(job.variant.inputs).toBe(job.inputs);
 
     const repeated = await createRenderJob({
       projectRoot: configuredProjectRoot,
@@ -69,6 +103,24 @@ describe("createRenderJob", () => {
     });
   });
 
+  it("rejects invalid preparation before evaluating authoring", async () => {
+    await expect(
+      createRenderJob({
+        projectRoot: configuredProjectRoot,
+        compositionId: "InvalidPreparation",
+      }),
+    ).rejects.toMatchObject({
+      diagnostics: [
+        {
+          code: "preparation.failed",
+          phase: "preparation",
+          severity: "error",
+          compositionId: "InvalidPreparation",
+        },
+      ],
+    });
+  });
+
   it("compiles nested exact time from a registered TSX project into inspectable artifacts", async () => {
     const job = await createRenderJob({
       projectRoot: exactProjectRoot,
@@ -82,6 +134,34 @@ describe("createRenderJob", () => {
         configuration: {
           entry: { value: "src/index.tsx", source: "resona-default" },
           staticDir: { value: "public", source: "resona-default" },
+        },
+      },
+      variant: {
+        compositionId: "ExactNote",
+        inputs: {},
+        inputSchema: {
+          format: "resona/input-schema",
+          schemaVersion: 1,
+          jsonSchema: {
+            $schema: "https://json-schema.org/draft/2020-12/schema",
+            type: "object",
+            additionalProperties: false,
+          },
+        },
+        duration: {
+          type: "absolute-duration",
+          seconds: { numerator: "1", denominator: "1" },
+        },
+        tempo: {
+          bpm: { numerator: "120", denominator: "1" },
+          timeSignature: { beatsPerBar: 4, beatUnit: 4 },
+        },
+        metadata: { title: "Exact note" },
+        resources: [],
+        provenance: {
+          duration: "static-declaration",
+          tempo: "static-declaration",
+          metadata: { title: "static-declaration" },
         },
       },
       composition: {

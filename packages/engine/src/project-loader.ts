@@ -8,6 +8,7 @@ import { Worker } from "node:worker_threads";
 
 import type { InputSchemaIR } from "./input-schema.js";
 import type { CompositionIR, Diagnostic, ExecutionPlan, JsonObject } from "./model.js";
+import type { ResolvedVariant } from "./preparation.js";
 import {
   resolveProjectConfiguration,
   type ResolvedProject,
@@ -19,6 +20,7 @@ type VariantCompilation = Readonly<{
   composition: CompositionIR;
   inputs: JsonObject;
   inputSchema: InputSchemaIR;
+  variant: ResolvedVariant;
   plan: ExecutionPlan;
   diagnostics: readonly Diagnostic[];
 }>;
@@ -40,13 +42,14 @@ const compileProjectEntry = (entryPoint: string): string => {
     `import ${JSON.stringify(entryPoint)};`,
     `import {resolveRegisteredComposition} from ${JSON.stringify(authoringPath)};`,
     `import {compileExecutionPlan} from ${JSON.stringify(planningPath)};`,
-    "export const compileVariant = (compositionId, providedInputs) => {",
-    "  const resolved = resolveRegisteredComposition(compositionId, providedInputs);",
+    "export const compileVariant = async (compositionId, providedInputs, signal) => {",
+    "  const resolved = await resolveRegisteredComposition(compositionId, providedInputs, signal);",
     "  const compilation = compileExecutionPlan(resolved.composition);",
     "  return {",
     "    composition: resolved.composition,",
     "    inputs: resolved.inputs,",
     "    inputSchema: resolved.inputSchema,",
+    "    variant: resolved.variant,",
     "    plan: compilation.plan,",
     "    diagnostics: compilation.diagnostics,",
     "  };",
@@ -58,11 +61,13 @@ const workerSource = [
   'import { parentPort, workerData } from "node:worker_threads";',
   "try {",
   "  const project = await import(workerData.moduleUrl);",
-  "  const compilation = project.compileVariant(workerData.compositionId, workerData.inputs);",
+  "  const controller = new AbortController();",
+  "  const compilation = await project.compileVariant(workerData.compositionId, workerData.inputs, controller.signal);",
   '  parentPort.postMessage({ type: "success", compilation: {',
   "    composition: compilation.composition,",
   "    inputs: compilation.inputs,",
   "    inputSchema: compilation.inputSchema,",
+  "    variant: compilation.variant,",
   "    plan: compilation.plan,",
   "    diagnostics: compilation.diagnostics,",
   "  } });",

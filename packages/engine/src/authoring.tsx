@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 import {
   emptyInputSchema,
+  cloneJsonObject,
   resolveCompositionInputs,
   type DeepReadonly,
   type InputSchema,
@@ -15,7 +16,6 @@ import type {
   EventClipIR,
   InstrumentTrackIR,
   JsonObject,
-  JsonValue,
   NodePath,
   NoteIR,
   PitchIR,
@@ -24,6 +24,11 @@ import type {
   RationalIR,
   SequenceIR,
 } from "./model.js";
+import {
+  resolvePreparation,
+  type PrepareComposition,
+  type ResolvedVariant,
+} from "./preparation.js";
 import { duration } from "./time/rational.js";
 
 type CompositionDescriptor = Readonly<{
@@ -35,6 +40,7 @@ type CompositionDescriptor = Readonly<{
   bpm: RationalIR;
   timeSignature: Readonly<{ beatsPerBar: number; beatUnit: number }>;
   metadata: JsonObject;
+  prepare?: PrepareComposition<JsonObject>;
 }>;
 
 type MutableSequence = {
@@ -79,22 +85,6 @@ const assertPublicId = (id: string): void => {
   }
 };
 
-const cloneJsonValue = (value: JsonValue): JsonValue => {
-  if (Array.isArray(value)) {
-    return value.map(cloneJsonValue);
-  }
-
-  if (value !== null && typeof value === "object") {
-    return Object.fromEntries(
-      Object.entries(value).map(([key, entry]) => [key, cloneJsonValue(entry)]),
-    );
-  }
-
-  return value;
-};
-
-const cloneJsonObject = (value: JsonObject): JsonObject => cloneJsonValue(value) as JsonObject;
-
 const cloneNote = (value: NoteIR): NoteIR => ({
   type: "note",
   at: value.at,
@@ -120,6 +110,7 @@ type CompositionProps<TInputs extends JsonObject> = Readonly<{
   bpm: RationalIR;
   timeSignature: Readonly<{ beatsPerBar: number; beatUnit: number }>;
   metadata?: JsonObject;
+  prepare?: PrepareComposition<TInputs>;
 }>;
 
 export const Composition = <TInputs extends JsonObject = JsonObject>({
@@ -131,6 +122,7 @@ export const Composition = <TInputs extends JsonObject = JsonObject>({
   bpm,
   timeSignature,
   metadata = {},
+  prepare,
 }: CompositionProps<TInputs>): null => {
   const registry = useContext(RegistrationContext);
   if (registry === null) {
@@ -150,6 +142,7 @@ export const Composition = <TInputs extends JsonObject = JsonObject>({
     bpm,
     timeSignature: { ...timeSignature },
     metadata: cloneJsonObject(metadata),
+    ...(prepare === undefined ? {} : { prepare: prepare as PrepareComposition<JsonObject> }),
   });
   return null;
 };
@@ -403,12 +396,14 @@ type ResolvedRegisteredComposition = Readonly<{
   composition: CompositionIR;
   inputs: JsonObject;
   inputSchema: InputSchemaIR;
+  variant: ResolvedVariant;
 }>;
 
-export const resolveRegisteredComposition = (
+export const resolveRegisteredComposition = async (
   compositionId: string,
   overrides?: JsonObject,
-): ResolvedRegisteredComposition => {
+  signal: AbortSignal = new AbortController().signal,
+): Promise<ResolvedRegisteredComposition> => {
   const descriptions = discoverCompositions();
   const descriptor = descriptions.find((candidate) => candidate.id === compositionId);
   if (descriptor === undefined) {
@@ -421,10 +416,29 @@ export const resolveRegisteredComposition = (
     defaultInputs: descriptor.defaultInputs,
     ...(overrides === undefined ? {} : { overrides }),
   });
+  const preparation = await resolvePreparation({
+    compositionId,
+    inputs: resolved.inputs,
+    duration: descriptor.duration,
+    tempo: { bpm: descriptor.bpm, timeSignature: descriptor.timeSignature },
+    metadata: descriptor.metadata,
+    ...(descriptor.prepare === undefined ? {} : { prepare: descriptor.prepare }),
+    signal,
+  });
+  const variant: ResolvedVariant = {
+    compositionId,
+    inputs: resolved.inputs,
+    inputSchema: resolved.inputSchema,
+    duration: preparation.duration,
+    tempo: preparation.tempo,
+    metadata: preparation.metadata,
+    resources: [],
+    provenance: preparation.provenance,
+  };
 
   const session: EvaluationSession = {
     compositionId: descriptor.id,
-    compositionDuration: descriptor.duration,
+    compositionDuration: preparation.duration,
   };
   const Component = descriptor.component;
   const EvaluateComponent = (): ReactElement | null => Component(resolved.inputs);
@@ -443,21 +457,23 @@ export const resolveRegisteredComposition = (
       format: "resona/composition-ir",
       schemaVersion: 1,
       compositionId: descriptor.id,
-      duration: descriptor.duration,
+      duration: preparation.duration,
       tempo: {
         type: "constant-tempo",
-        bpm: descriptor.bpm,
-        timeSignature: descriptor.timeSignature,
+        bpm: preparation.tempo.bpm,
+        timeSignature: preparation.tempo.timeSignature,
       },
-      metadata: descriptor.metadata,
+      metadata: preparation.metadata,
       root: finalizeSequence(session.root),
     },
     inputs: resolved.inputs,
     inputSchema: resolved.inputSchema,
+    variant,
   };
 };
 
-export const evaluateRegisteredComposition = (
+export const evaluateRegisteredComposition = async (
   compositionId: string,
   inputs?: JsonObject,
-): CompositionIR => resolveRegisteredComposition(compositionId, inputs).composition;
+): Promise<CompositionIR> =>
+  (await resolveRegisteredComposition(compositionId, inputs)).composition;

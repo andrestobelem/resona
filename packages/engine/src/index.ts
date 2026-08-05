@@ -16,6 +16,17 @@ export {
   type ResolvedProjectConfiguration,
 } from "./project-config.js";
 export {
+  type ConstantTempo,
+  type MaybePromise,
+  type PreparationResourceResolver,
+  type PrepareComposition,
+  type PrepareCompositionResult,
+  type PreparedAudioMetadata,
+  type ResolvedPreparation,
+  type ResolvedVariant,
+  type StaticAudioReference,
+} from "./preparation.js";
+export {
   type DeepReadonly,
   type InferInputs,
   type InputSchema,
