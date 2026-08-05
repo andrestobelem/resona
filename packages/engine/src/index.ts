@@ -48,6 +48,7 @@ export {
   type InputValidationResult,
 } from "./input-schema.js";
 export { ResonaError } from "./resona-error.js";
+export { normalizeMidiMessages, type MidiMessage } from "./midi.js";
 export type {
   CompositionIR,
   CreateRenderJobResult,
