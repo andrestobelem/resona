@@ -46,7 +46,7 @@ const validateManifestFiles = async (
   projectRoot: string,
   manifest: DocumentationManifest,
 ): Promise<void> => {
-  for (const entry of [...manifest.sources, ...manifest.outputs, ...manifest.orphanedOutputs]) {
+  for (const entry of [...manifest.outputs, ...manifest.orphanedOutputs]) {
     const target = safeProjectPath(projectRoot, entry.path);
     let metadata;
     try {

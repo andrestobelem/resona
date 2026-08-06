@@ -161,6 +161,23 @@ describe("buildDocumentationSite", () => {
     await expect(stat(join(inconsistentRoot, "README.html"))).resolves.toBeTruthy();
   });
 
+  it("cleans registered outputs after a Markdown source changes", async () => {
+    const projectRoot = await mkdtemp(join(tmpdir(), "resona-docs-clean-source-change-test-"));
+    temporaryRoots.push(projectRoot);
+    await writeFile(join(projectRoot, "README.md"), "# Before\n");
+    await runDocumentationBuild(projectRoot);
+    await writeFile(join(projectRoot, "README.md"), "# After\n");
+
+    const clean = await runDocumentationClean(projectRoot);
+
+    expect(clean.removedFiles).toContain("README.html");
+    await expect(stat(join(projectRoot, "README.md"))).resolves.toBeTruthy();
+    await expect(stat(join(projectRoot, "README.html"))).rejects.toMatchObject({ code: "ENOENT" });
+    await expect(stat(join(projectRoot, ".resona-docs", "manifest.json"))).rejects.toMatchObject({
+      code: "ENOENT",
+    });
+  });
+
   it("renders GFM, frontmatter, safe HTML, links, images, and highlighted code", async () => {
     const projectRoot = await mkdtemp(join(tmpdir(), "resona-docs-markdown-test-"));
     temporaryRoots.push(projectRoot);
