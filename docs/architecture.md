@@ -999,11 +999,16 @@ cancela la solicitud anterior y el cliente ignora toda respuesta que ya no corre
 variante vigente.
 
 El primer servicio HTTP expone `/api/v1/session`, `/api/v1/compositions`,
-`/api/v1/variants`, `/api/v1/variants/:variantId/plan` y
+`/api/v1/static-resources`, `/api/v1/variants`, `/api/v1/variants/:variantId/plan` y
 `/api/v1/variants/:variantId/resources/:sha256-hash`. Las respuestas usan
 `resona/studio-envelope` v1; los planes, IR y recursos viajan como payload serializable, y los
 paths físicos y `sourcePaths` permanecen en Node. El cliente solo puede pedir hashes que la
 variante ya autorizó.
+
+`/api/v1/static-resources` devuelve únicamente rutas lógicas de archivos WAV bajo el
+`staticDir` configurado, ordenadas y sin seguir symlinks. Studio usa esa lista para poblar el
+selector de referencias `resona/static-audio`; la validación final continúa ocurriendo en el
+`InputSchema` del proyecto.
 
 La shell del primer corte carga además los módulos privados same-origin
 `/studio/audio-worklet.js` y `/studio/audio-engine.js`. Tras obtener una variante, convierte
