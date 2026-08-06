@@ -531,22 +531,19 @@ existentes. Resona publica Agent Skills versionadas que les enseñan sus contrat
 no incorpora un agente ni un modelo de IA dentro del runtime musical. Esta decisión está
 registrada en el [ADR 0054](adr/0054-versioned-agent-skills-for-coding-agents.md).
 
-Las primeras skills forman parte de la primera versión utilizable del producto. Se diseñan
-en paralelo con sus superficies públicas, pero no bloquean el primer corte vertical del
-motor: solo se publican cuando los workflows que describen funcionan de punta a punta.
-El conjunto inicial cubre buenas prácticas, composición, audio y MIDI, Studio y render.
-Su fuente canónica vive en el monorepo y se sincroniza a un repositorio oficial compatible
-con el estándar Agent Skills. Pueden instalarse con el instalador estándar o mediante
-`resona skills add`; `resona skills update` actualiza una instalación existente.
-Cada skill declara exactamente la versión del release de Resona cuyos workflows documenta;
-no tiene un ciclo de versiones independiente.
-La ausencia de skills no produce advertencias. Si hay una instalación cuya versión difiere
-de Resona, Studio y `resona skills status` informan la versión instalada, la esperada y el
-comando correctivo sin impedir autoría, reproducción ni render. Las actualizaciones nunca
-modifican el proyecto automáticamente.
-El estado también detecta cambios locales mediante el hash del lockfile. `update` no
-sobrescribe una skill oficial modificada; requiere `--force`. Una personalización durable se
-guarda como otra skill, con identidad propia, para no bloquear futuras actualizaciones.
+Las primeras skills forman parte de la primera versión utilizable del producto. El corpus
+canónico inicial ya vive en `packages/skills/skills` y sus workflows pasan un gate
+determinista contra un proyecto fixture. El conjunto cubre buenas prácticas, composición,
+audio y MIDI, Studio y render. Cada skill declara exactamente la versión del release de
+Resona cuyos workflows documenta; no tiene un ciclo de versiones independiente.
+
+La sincronización al repositorio oficial compatible con el estándar Agent Skills y la
+instalación (`npx skills add`, `resona skills add`, `resona skills update` y
+`resona skills status`) son el alcance de T20/#21 y todavía no están disponibles en el
+release actual. La ausencia de skills no afecta autoría, reproducción ni render. El lockfile,
+la detección de modificaciones locales y la actualización con `--force` se implementarán
+junto con esa story; no deben confundirse con el `skills-lock.json` de terceros que ya existe
+en el checkout.
 
 Una skill oficial solo se publica si sus metadatos, referencias, comandos, ejemplos y
 workflows pasan pruebas deterministas contra el mismo release de Resona. Las evaluaciones

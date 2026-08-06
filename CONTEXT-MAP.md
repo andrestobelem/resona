@@ -10,6 +10,7 @@ to the workspace being changed.
 | CLI                  | `packages/cli/CONTEXT.md`         | Discovery, validation, protocol output |
 | Renderer             | `packages/renderer/CONTEXT.md`    | Offline DSP execution and WAV encoding |
 | Zod input adapter    | `packages/zod/CONTEXT.md`         | Zod validation and schema description  |
+| Agent Skills         | `packages/skills/CONTEXT.md`      | Skills source and quality gate         |
 
 As workspaces are introduced, add each context and its `CONTEXT.md` to this map.
 Context-specific ADRs live alongside that context; system-wide decisions remain in
