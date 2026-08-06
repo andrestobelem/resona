@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { mkdir, mkdtemp, realpath, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -126,6 +126,10 @@ describe("Studio local service", () => {
     expect(html).toContain('id="studio-diagnostics"');
     expect(html).toContain('id="composition-ir"');
     expect(html).toContain('id="execution-plan"');
+    expect(html).toContain('id="render-output"');
+    expect(html).toContain('id="render-overwrite"');
+    expect(html).toContain('id="render"');
+    expect(html).toContain("/render");
     expect(html).toContain("renderInspection");
     expect(html).toContain("message.type === 'meter'");
 
@@ -350,6 +354,137 @@ describe("Studio local service", () => {
     });
     expect(loudVariant.document.payload.fingerprint).toBe(nodeJob.fingerprint);
   }, 15_000);
+
+  it("renders a prepared variant through the canonical file publisher", async () => {
+    const server = await createServer();
+    const outputPath = join(exactProjectRoot, "studio-render.wav");
+    try {
+      const created = await fetch(`${server.url}/api/v1/variants`, {
+        method: "POST",
+        headers: apiHeaders(server, { "content-type": "application/json" }),
+        body: JSON.stringify({ compositionId: "InputFixture", requestId: "render-variant" }),
+      });
+      const variant = (await created.json()) as {
+        variantId: string;
+        payload: { fingerprint: string; spec: unknown };
+      };
+      expect(created.status).toBe(201);
+
+      const render = await fetch(`${server.url}/api/v1/variants/${variant.variantId}/render`, {
+        method: "POST",
+        headers: apiHeaders(server, { "content-type": "application/json" }),
+        body: JSON.stringify({
+          outputPath,
+          overwrite: false,
+          startFrame: 128,
+          endFrame: 256,
+          tailFrames: 4,
+          blockFrames: 64,
+          requestId: "render-1",
+        }),
+      });
+      const document = (await render.json()) as {
+        format: string;
+        schemaVersion: number;
+        type: string;
+        requestId: string;
+        variantId: string;
+        payload: {
+          fingerprint: string;
+          spec: unknown;
+          outputPath: string;
+          bytes: number;
+          frames: number;
+          sampleRate: number;
+          channels: number;
+          effectiveOptions: {
+            outputPath: string;
+            overwrite: boolean;
+            startFrame: number;
+            endFrame: number;
+            tailFrames: number;
+            blockFrames: number;
+          };
+        };
+      };
+      expect(render.status).toBe(201);
+      expect(document).toMatchObject({
+        format: "resona/studio-envelope",
+        schemaVersion: 1,
+        type: "render",
+        requestId: "render-1",
+        variantId: variant.variantId,
+        payload: {
+          fingerprint: variant.payload.fingerprint,
+          spec: variant.payload.spec,
+          frames: 132,
+          sampleRate: 48_000,
+          channels: 2,
+          effectiveOptions: {
+            outputPath: "<project>/studio-render.wav",
+            overwrite: false,
+            startFrame: 128,
+            endFrame: 256,
+            tailFrames: 4,
+            blockFrames: 64,
+          },
+        },
+      });
+      const bytes = await readFile(outputPath);
+      expect(bytes.byteLength).toBe(document.payload.bytes);
+      expect(bytes.subarray(0, 4).toString("ascii")).toBe("RIFF");
+
+      const exists = await fetch(`${server.url}/api/v1/variants/${variant.variantId}/render`, {
+        method: "POST",
+        headers: apiHeaders(server, { "content-type": "application/json" }),
+        body: JSON.stringify({ outputPath }),
+      });
+      expect(exists.status).toBe(409);
+      await expect(exists.json()).resolves.toMatchObject({
+        type: "error",
+        variantId: variant.variantId,
+        error: {
+          code: "studio.render-failed",
+          diagnostics: [expect.objectContaining({ code: "render.output-exists" })],
+        },
+      });
+
+      const overwrite = await fetch(`${server.url}/api/v1/variants/${variant.variantId}/render`, {
+        method: "POST",
+        headers: apiHeaders(server, { "content-type": "application/json" }),
+        body: JSON.stringify({ outputPath, overwrite: true }),
+      });
+      expect(overwrite.status).toBe(201);
+      await expect(overwrite.json()).resolves.toMatchObject({
+        type: "render",
+        payload: {
+          fingerprint: variant.payload.fingerprint,
+          effectiveOptions: {
+            outputPath: "<project>/studio-render.wav",
+            overwrite: true,
+            startFrame: 0,
+            endFrame: 48_000,
+            tailFrames: 0,
+            blockFrames: 128,
+          },
+        },
+      });
+
+      const invalid = await fetch(`${server.url}/api/v1/variants/${variant.variantId}/render`, {
+        method: "POST",
+        headers: apiHeaders(server, { "content-type": "application/json" }),
+        body: JSON.stringify({ overwrite: true }),
+      });
+      expect(invalid.status).toBe(400);
+      await expect(invalid.json()).resolves.toMatchObject({
+        type: "error",
+        variantId: variant.variantId,
+        error: { code: "studio.invalid-request" },
+      });
+    } finally {
+      await rm(outputPath, { force: true });
+    }
+  }, 30_000);
 
   it("returns protocol errors for malformed or unknown variant requests", async () => {
     const server = await createServer();
