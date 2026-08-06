@@ -21,6 +21,9 @@ habilita play y pause únicamente después de `ready` y de que el contexto confi
 El adaptador procesa el quantum estándar de 128 frames y publica un snapshot por quantum. El
 callback no hace red, filesystem, evaluación TSX ni crea buffers; usa un buffer interleaved
 reservado al construir el processor y copia la señal a las salidas planares de Web Audio.
+El único intercambio durante el callback es el snapshot reutilizado que se publica por
+`MessagePort` una vez por quantum; su structured clone es una decisión controlada del
+adaptador y una futura optimización puede moverlo a un canal compartido.
 Playback se detiene al alcanzar la duración nominal del plan. Las colas explícitas pertenecen
 al renderer offline y no se agregan a esta preview.
 

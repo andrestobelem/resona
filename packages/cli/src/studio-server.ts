@@ -249,12 +249,13 @@ const shell = (state: StudioState): string => {
         audioNode = node;
         node.connect(audioContext.destination);
         const readyPromise = new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => reject(new Error('AudioWorklet readiness timed out.')), 5000);
           node.port.onmessage = event => {
             const message = event.data;
-            if (message.type === 'ready') { ready = true; resolve(message); }
+            if (message.type === 'ready') { clearTimeout(timeout); ready = true; resolve(message); }
             if (message.type === 'snapshot') cursor.textContent = ' · frame ' + message.cursorFrame;
             if (message.type === 'ended') { ended = true; play.disabled = false; pause.disabled = true; status.textContent = 'Playback ended'; }
-            if (message.type === 'error') reject(new Error(message.message));
+            if (message.type === 'error') { clearTimeout(timeout); reject(new Error(message.message)); }
           };
         });
         const resources = [];

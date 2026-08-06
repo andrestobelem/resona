@@ -1017,7 +1017,8 @@ por lo que exigen Host/Origin pero no el bearer token.
 Studio transfiere `ExecutionPlan` al `AudioWorklet` mediante structured clone y entrega los
 buffers decodificados como `ArrayBuffer` transferibles para no copiarlos por bloque. El
 worklet nunca consulta HTTP ni WebSocket desde su callback. La decisión está registrada en
-el [ADR 0050](adr/0050-versioned-local-studio-protocol.md).
+el [ADR 0050](adr/0050-versioned-local-studio-protocol.md) y el
+[ADR 0081](adr/0081-studio-worklet-transport-and-module-delivery.md).
 
 El servicio escucha exclusivamente en interfaces loopback y elige un puerto disponible. Al
 iniciar genera un token criptográfico de sesión que el cliente debe presentar tanto en HTTP
