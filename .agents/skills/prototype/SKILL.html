@@ -6,84 +6,2327 @@
     <title>Prototype · Resona</title>
     <link rel="stylesheet" href="../../../.resona-docs/styles.css" />
   </head>
-  <body>
-    <main>
-      <p class="source-path">.agents/skills/prototype/SKILL.md</p>
-      <article>
-        <aside class="frontmatter">
-          <details>
-            <summary>Frontmatter</summary>
-            <pre><code>---
+  <body id="top">
+    <a class="skip-link" href="#content">Saltar al contenido</a>
+    <header class="docs-header">
+      <a class="brand" href="../../../index.html">Resona <span>docs</span></a>
+      <label class="theme-control" for="theme-select">
+        <span>Tema</span>
+        <select id="theme-select" name="theme">
+          <option value="system">Sistema</option>
+          <option value="light">Claro</option>
+          <option value="dark">Oscuro</option>
+        </select>
+      </label>
+    </header>
+    <div class="docs-layout">
+      <aside class="docs-sidebar">
+        <nav aria-label="Documentación">
+          <p class="sidebar-title">Explorar</p>
+          <div class="navigation-tree">
+            <ul>
+              <li class="nav-directory">
+                <details open>
+                  <summary>Todos los documentos</summary>
+                  <ul>
+                    <li class="nav-directory">
+                      <details open>
+                        <summary>.agents</summary>
+                        <ul>
+                          <li class="nav-directory">
+                            <details open>
+                              <summary>skills</summary>
+                              <ul>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>ask-matt</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../ask-matt/SKILL.html">
+                                          <span class="nav-document-title">Ask Matt</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/ask-matt/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>batch-grill-me</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../batch-grill-me/SKILL.html">
+                                          <span class="nav-document-title">SKILL</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/batch-grill-me/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>claude-handoff</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../claude-handoff/SKILL.html">
+                                          <span class="nav-document-title">SKILL</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/claude-handoff/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>code-review</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../code-review/SKILL.html">
+                                          <span class="nav-document-title">SKILL</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/code-review/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>codebase-design</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../codebase-design/SKILL.html">
+                                          <span class="nav-document-title">Codebase Design</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/codebase-design/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../codebase-design/DEEPENING.html">
+                                          <span class="nav-document-title">Deepening</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/codebase-design/DEEPENING.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../codebase-design/DESIGN-IT-TWICE.html">
+                                          <span class="nav-document-title">Design It Twice</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/codebase-design/DESIGN-IT-TWICE.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>design-an-interface</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../design-an-interface/SKILL.html">
+                                          <span class="nav-document-title"
+                                            >Design an Interface</span
+                                          >
+                                          <span class="nav-document-path"
+                                            >.agents/skills/design-an-interface/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>diagnosing-bugs</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../diagnosing-bugs/SKILL.html">
+                                          <span class="nav-document-title">Diagnosing Bugs</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/diagnosing-bugs/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>domain-modeling</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../domain-modeling/ADR-FORMAT.html">
+                                          <span class="nav-document-title">ADR Format</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/domain-modeling/ADR-FORMAT.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../domain-modeling/CONTEXT-FORMAT.html">
+                                          <span class="nav-document-title">CONTEXT.md Format</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/domain-modeling/CONTEXT-FORMAT.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../domain-modeling/SKILL.html">
+                                          <span class="nav-document-title">Domain Modeling</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/domain-modeling/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>edit-article</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../edit-article/SKILL.html">
+                                          <span class="nav-document-title">SKILL</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/edit-article/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>git-guardrails-claude-code</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../git-guardrails-claude-code/SKILL.html">
+                                          <span class="nav-document-title"
+                                            >Setup Git Guardrails</span
+                                          >
+                                          <span class="nav-document-path"
+                                            >.agents/skills/git-guardrails-claude-code/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>grill-me</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../grill-me/SKILL.html">
+                                          <span class="nav-document-title">SKILL</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/grill-me/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>grill-with-docs</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../grill-with-docs/SKILL.html">
+                                          <span class="nav-document-title">SKILL</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/grill-with-docs/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>grilling</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../grilling/SKILL.html">
+                                          <span class="nav-document-title">SKILL</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/grilling/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>handoff</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../handoff/SKILL.html">
+                                          <span class="nav-document-title">SKILL</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/handoff/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>implement</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../implement/SKILL.html">
+                                          <span class="nav-document-title">SKILL</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/implement/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>improve-codebase-architecture</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../improve-codebase-architecture/HTML-REPORT.html">
+                                          <span class="nav-document-title">HTML Report Format</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/improve-codebase-architecture/HTML-REPORT.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../improve-codebase-architecture/SKILL.html">
+                                          <span class="nav-document-title"
+                                            >Improve Codebase Architecture</span
+                                          >
+                                          <span class="nav-document-path"
+                                            >.agents/skills/improve-codebase-architecture/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>loop-me</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../loop-me/SKILL.html">
+                                          <span class="nav-document-title">SKILL</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/loop-me/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>migrate-to-shoehorn</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../migrate-to-shoehorn/SKILL.html">
+                                          <span class="nav-document-title"
+                                            >Migrate to Shoehorn</span
+                                          >
+                                          <span class="nav-document-path"
+                                            >.agents/skills/migrate-to-shoehorn/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>obsidian-vault</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../obsidian-vault/SKILL.html">
+                                          <span class="nav-document-title">Obsidian Vault</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/obsidian-vault/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details open>
+                                    <summary>prototype</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="LOGIC.html">
+                                          <span class="nav-document-title">Logic Prototype</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/prototype/LOGIC.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                      <li
+                                        class="nav-document nav-current"
+                                        data-category="agent-skill"
+                                      >
+                                        <a href="SKILL.html" aria-current="page">
+                                          <span class="nav-document-title">Prototype</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/prototype/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="UI.html">
+                                          <span class="nav-document-title">UI Prototype</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/prototype/UI.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>qa</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../qa/SKILL.html">
+                                          <span class="nav-document-title">QA Session</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/qa/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>request-refactor-plan</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../request-refactor-plan/SKILL.html">
+                                          <span class="nav-document-title">SKILL</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/request-refactor-plan/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>research</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../research/SKILL.html">
+                                          <span class="nav-document-title">SKILL</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/research/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>resolving-merge-conflicts</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../resolving-merge-conflicts/SKILL.html">
+                                          <span class="nav-document-title">SKILL</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/resolving-merge-conflicts/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>scaffold-exercises</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../scaffold-exercises/SKILL.html">
+                                          <span class="nav-document-title">Scaffold Exercises</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/scaffold-exercises/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>setup-matt-pocock-skills</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../setup-matt-pocock-skills/domain.html">
+                                          <span class="nav-document-title">Domain Docs</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/setup-matt-pocock-skills/domain.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a
+                                          href="../setup-matt-pocock-skills/issue-tracker-github.html"
+                                        >
+                                          <span class="nav-document-title"
+                                            >Issue tracker: GitHub</span
+                                          >
+                                          <span class="nav-document-path"
+                                            >.agents/skills/setup-matt-pocock-skills/issue-tracker-github.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a
+                                          href="../setup-matt-pocock-skills/issue-tracker-gitlab.html"
+                                        >
+                                          <span class="nav-document-title"
+                                            >Issue tracker: GitLab</span
+                                          >
+                                          <span class="nav-document-path"
+                                            >.agents/skills/setup-matt-pocock-skills/issue-tracker-gitlab.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a
+                                          href="../setup-matt-pocock-skills/issue-tracker-local.html"
+                                        >
+                                          <span class="nav-document-title"
+                                            >Issue tracker: Local Markdown</span
+                                          >
+                                          <span class="nav-document-path"
+                                            >.agents/skills/setup-matt-pocock-skills/issue-tracker-local.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../setup-matt-pocock-skills/SKILL.html">
+                                          <span class="nav-document-title"
+                                            >Setup Matt Pocock's Skills</span
+                                          >
+                                          <span class="nav-document-path"
+                                            >.agents/skills/setup-matt-pocock-skills/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../setup-matt-pocock-skills/triage-labels.html">
+                                          <span class="nav-document-title">Triage Labels</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/setup-matt-pocock-skills/triage-labels.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>setup-pre-commit</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../setup-pre-commit/SKILL.html">
+                                          <span class="nav-document-title"
+                                            >Setup Pre-Commit Hooks</span
+                                          >
+                                          <span class="nav-document-path"
+                                            >.agents/skills/setup-pre-commit/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>setup-trunk-based-development</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../setup-trunk-based-development/SKILL.html">
+                                          <span class="nav-document-title"
+                                            >Setup Trunk-Based Development</span
+                                          >
+                                          <span class="nav-document-path"
+                                            >.agents/skills/setup-trunk-based-development/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>setup-ts-deep-modules</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../setup-ts-deep-modules/SKILL.html">
+                                          <span class="nav-document-title"
+                                            >Setup TS Deep Modules</span
+                                          >
+                                          <span class="nav-document-path"
+                                            >.agents/skills/setup-ts-deep-modules/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>tdd</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../tdd/tests.html">
+                                          <span class="nav-document-title">Good and Bad Tests</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/tdd/tests.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../tdd/SKILL.html">
+                                          <span class="nav-document-title"
+                                            >Test-Driven Development</span
+                                          >
+                                          <span class="nav-document-path"
+                                            >.agents/skills/tdd/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../tdd/mocking.html">
+                                          <span class="nav-document-title">When to Mock</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/tdd/mocking.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>teach</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../teach/GLOSSARY-FORMAT.html">
+                                          <span class="nav-document-title">GLOSSARY.md Format</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/teach/GLOSSARY-FORMAT.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../teach/LEARNING-RECORD-FORMAT.html">
+                                          <span class="nav-document-title"
+                                            >Learning Record Format</span
+                                          >
+                                          <span class="nav-document-path"
+                                            >.agents/skills/teach/LEARNING-RECORD-FORMAT.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../teach/MISSION-FORMAT.html">
+                                          <span class="nav-document-title">MISSION.md Format</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/teach/MISSION-FORMAT.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../teach/RESOURCES-FORMAT.html">
+                                          <span class="nav-document-title"
+                                            >RESOURCES.md Format</span
+                                          >
+                                          <span class="nav-document-path"
+                                            >.agents/skills/teach/RESOURCES-FORMAT.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../teach/SKILL.html">
+                                          <span class="nav-document-title">SKILL</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/teach/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>to-questionnaire</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../to-questionnaire/SKILL.html">
+                                          <span class="nav-document-title"
+                                            >&lt;Questionnaire title&gt;</span
+                                          >
+                                          <span class="nav-document-path"
+                                            >.agents/skills/to-questionnaire/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>to-spec</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../to-spec/SKILL.html">
+                                          <span class="nav-document-title">SKILL</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/to-spec/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>to-tickets</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../to-tickets/SKILL.html">
+                                          <span class="nav-document-title">To Tickets</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/to-tickets/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>triage</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../triage/OUT-OF-SCOPE.html">
+                                          <span class="nav-document-title"
+                                            >Out-of-Scope Knowledge Base</span
+                                          >
+                                          <span class="nav-document-path"
+                                            >.agents/skills/triage/OUT-OF-SCOPE.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../triage/SKILL.html">
+                                          <span class="nav-document-title">Triage</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/triage/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../triage/AGENT-BRIEF.html">
+                                          <span class="nav-document-title"
+                                            >Writing Agent Briefs</span
+                                          >
+                                          <span class="nav-document-path"
+                                            >.agents/skills/triage/AGENT-BRIEF.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>trunk-based-development</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../trunk-based-development/SKILL.html">
+                                          <span class="nav-document-title"
+                                            >Trunk-Based Development</span
+                                          >
+                                          <span class="nav-document-path"
+                                            >.agents/skills/trunk-based-development/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>ubiquitous-language</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../ubiquitous-language/SKILL.html">
+                                          <span class="nav-document-title"
+                                            >Ubiquitous Language</span
+                                          >
+                                          <span class="nav-document-path"
+                                            >.agents/skills/ubiquitous-language/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>wayfinder</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../wayfinder/SKILL.html">
+                                          <span class="nav-document-title">SKILL</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/wayfinder/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>wizard</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../wizard/SKILL.html">
+                                          <span class="nav-document-title">Wizard</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/wizard/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>writing-beats</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../writing-beats/SKILL.html">
+                                          <span class="nav-document-title">SKILL</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/writing-beats/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>writing-fragments</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../writing-fragments/SKILL.html">
+                                          <span class="nav-document-title">Working title</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/writing-fragments/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>writing-great-skills</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../writing-great-skills/GLOSSARY.html">
+                                          <span class="nav-document-title"
+                                            >Glossary — Building Great Skills</span
+                                          >
+                                          <span class="nav-document-path"
+                                            >.agents/skills/writing-great-skills/GLOSSARY.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../writing-great-skills/SKILL.html">
+                                          <span class="nav-document-title">SKILL</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/writing-great-skills/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>writing-shape</summary>
+                                    <ul>
+                                      <li class="nav-document" data-category="agent-skill">
+                                        <a href="../writing-shape/SKILL.html">
+                                          <span class="nav-document-title">SKILL</span>
+                                          <span class="nav-document-path"
+                                            >.agents/skills/writing-shape/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                              </ul>
+                            </details>
+                          </li>
+                        </ul>
+                      </details>
+                    </li>
+                    <li class="nav-directory">
+                      <details>
+                        <summary>docs</summary>
+                        <ul>
+                          <li class="nav-directory">
+                            <details>
+                              <summary>adr</summary>
+                              <ul>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0040-audio-clip-places-exact-resource-frames.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >AudioClip coloca frames exactos de un recurso</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0040-audio-clip-places-exact-resource-frames.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a href="../../../docs/adr/0052-fresh-worker-per-variant.html">
+                                    <span class="nav-document-title"
+                                      >Cada variante se evalúa en un worker nuevo</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0052-fresh-worker-per-variant.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0034-single-deterministic-oscillator-per-voice.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Cada voz usa un oscilador determinista único</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0034-single-deterministic-oscillator-per-voice.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0062-hierarchical-ir-and-dense-execution-plan.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >CompositionIR es jerárquica y ExecutionPlan es denso</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0062-hierarchical-ir-and-dense-execution-plan.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0064-canonical-rational-time-in-composition-ir.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >CompositionIR usa tiempo racional canónico</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0064-canonical-rational-time-in-composition-ir.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0066-composition-ir-v1-header-tempo-and-pitch.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >CompositionIR v1 fija cabecera, tempo y pitch</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0066-composition-ir-v1-header-tempo-and-pitch.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0067-closed-composition-ir-v1-processor-payloads.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >CompositionIR v1 fija payloads cerrados de procesadores</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0067-closed-composition-ir-v1-processor-payloads.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0065-composition-ir-v1-structural-payloads.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >CompositionIR v1 fija sus payloads estructurales</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0065-composition-ir-v1-structural-payloads.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0068-explicit-gain-automation-lanes-in-composition-ir.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >CompositionIR v1 usa lanes explícitas para automatizar
+                                      Gain</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0068-explicit-gain-automation-lanes-in-composition-ir.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0063-closed-composition-ir-v1-vocabulary.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >CompositionIR v1 usa un vocabulario cerrado</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0063-closed-composition-ir-v1-vocabulary.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a href="../../../docs/adr/0037-fixed-integer-frame-delay.html">
+                                    <span class="nav-document-title"
+                                      >Delay usa una cantidad fija y entera de frames</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0037-fixed-integer-frame-delay.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0004-offline-determinism-and-preview-parity.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Determinismo offline exacto y paridad semántica con
+                                      Studio</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0004-offline-determinism-and-preview-parity.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a href="../../../docs/adr/0026-versioned-cli-json-protocol.html">
+                                    <span class="nav-document-title"
+                                      >El CLI ofrece un protocolo JSON versionado</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0026-versioned-cli-json-protocol.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0078-explicit-float32-audio-boundaries.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >El DSP redondea en fronteras Float32 explícitas</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0078-explicit-float32-audio-boundaries.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0015-shared-typescript-block-dsp-core.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >El MVP comparte un núcleo DSP TypeScript por bloques</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0015-shared-typescript-block-dsp-core.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0021-audio-sample-cursor-is-the-playback-clock.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >El cursor de muestras es el reloj autoritativo de
+                                      playback</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0021-audio-sample-cursor-is-the-playback-clock.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0049-author-code-evaluates-only-in-node.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >El código del autor se evalúa únicamente en Node</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0049-author-code-evaluates-only-in-node.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a href="../../../docs/adr/0039-fixed-stereo-summing-graph.html">
+                                    <span class="nav-document-title"
+                                      >El grafo del MVP es estéreo y suma sin procesamiento
+                                      oculto</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0039-fixed-stereo-summing-graph.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a href="../../../docs/adr/0025-minimal-explicit-cli.html">
+                                    <span class="nav-document-title"
+                                      >El primer corte vertical del CLI tiene cuatro comandos
+                                      explícitos</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0025-minimal-explicit-cli.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0043-optional-typed-project-config.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >El proyecto admite configuración TypeScript opcional</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0043-optional-typed-project-config.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a href="../../../docs/adr/0009-rational-musical-time.html">
+                                    <span class="nav-document-title"
+                                      >El tiempo musical normalizado es racional</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0009-rational-musical-time.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0076-complete-non-operational-execution-plan-trace.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >ExecutionPlan trace es completo, opcional y no
+                                      operativo</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0076-complete-non-operational-execution-plan-trace.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0075-frame-resolved-gain-automation-points.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >ExecutionPlan v1 conserva puntos de gain resueltos por
+                                      frame</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0075-frame-resolved-gain-automation-points.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0073-dense-instrument-attack-release-events.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >ExecutionPlan v1 expande notas a attacks y releases
+                                      densos</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0073-dense-instrument-attack-release-events.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0069-execution-plan-v1-header-and-table-boundary.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >ExecutionPlan v1 fija su cabecera y la frontera de sus
+                                      tablas</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0069-execution-plan-v1-header-and-table-boundary.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0071-content-addressed-resources-and-audio-regions.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >ExecutionPlan v1 separa recursos direccionados y regiones de
+                                      audio</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0071-content-addressed-resources-and-audio-regions.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0070-closed-execution-plan-v1-processors-and-routing.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >ExecutionPlan v1 usa procesadores cerrados y routing
+                                      topológico</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0070-closed-execution-plan-v1-processors-and-routing.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0080-canonical-render-fingerprint-and-keyed-randomness.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Fingerprint y aleatoriedad usan SHA-256 sobre JSON
+                                      canónico</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0080-canonical-render-fingerprint-and-keyed-randomness.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0036-gain-uses-a-linear-multiplier.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Gain usa un multiplicador lineal</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0036-gain-uses-a-linear-multiplier.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0079-versioned-json-schema-input-description.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >InputSchemaIR envuelve JSON Schema de forma versionada</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0079-versioned-json-schema-input-description.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0022-node-render-api-is-canonical.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >La API de render de Node es la capacidad canónica</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0022-node-render-api-is-canonical.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0027-typed-temporal-values-at-the-public-api.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >La API pública usa valores temporales tipados</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0027-typed-temporal-values-at-the-public-api.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0016-keyed-deterministic-randomness.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >La aleatoriedad es determinista y direccionada por
+                                      claves</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0016-keyed-deterministic-randomness.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0038-sample-accurate-gain-automation.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >La automatización de Gain tiene semántica por frame</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0038-sample-accurate-gain-automation.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0019-pure-declarative-react-authoring.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >La autoría React es declarativa y pura</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0019-pure-declarative-react-authoring.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0072-validate-before-pruning-execution-plan.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >La composición se valida antes de podar el plan</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0072-validate-before-pruning-execution-plan.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0007-nominal-duration-excludes-audible-tail.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >La duración nominal excluye la cola audible</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0007-nominal-duration-excludes-audible-tail.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0035-linear-absolute-adsr-envelope.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >La envolvente ADSR es lineal y usa tiempo absoluto</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0035-linear-absolute-adsr-envelope.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0074-pitch-frequency-must-be-below-nyquist.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >La frecuencia de un pitch debe ser menor que Nyquist</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0074-pitch-frequency-must-be-below-nyquist.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0057-explicit-canonical-source-boundary.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >La fuente canónica inicial tiene una frontera explícita</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0057-explicit-canonical-source-boundary.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0001-versionable-source-as-source-of-truth.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >La fuente versionable es la única fuente de verdad</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0001-versionable-source-as-source-of-truth.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0061-shallow-preparation-metadata-merge.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >La preparación aplica reemplazo por campo y merge superficial
+                                      de metadata</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0061-shallow-preparation-metadata-merge.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0012-prepare-an-immutable-resolved-variant.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >La preparación produce una variante resuelta inmutable</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0012-prepare-an-immutable-resolved-variant.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0059-mode-agnostic-public-preparation.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >La preparación pública no conoce el modo de ejecución</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0059-mode-agnostic-public-preparation.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0060-prepare-composition-public-contract.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >La preparación pública usa la prop `prepare`</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0060-prepare-composition-public-contract.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0044-explicit-stable-project-root.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >La raíz del proyecto se resuelve una vez</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0044-explicit-stable-project-root.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0056-deterministic-quality-gate-for-agent-skills.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Las Agent Skills tienen un gate de calidad determinista</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0056-deterministic-quality-gate-for-agent-skills.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0055-standard-agent-skills-distribution.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Las Agent Skills usan una distribución estándar con fuente
+                                      canónica en el monorepo</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0055-standard-agent-skills-distribution.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a href="../../../docs/adr/0010-explicit-root-registration.html">
+                                    <span class="nav-document-title"
+                                      >Las composiciones se descubren mediante un root
+                                      explícito</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0010-explicit-root-registration.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0005-explicit-temporal-coordinate-units.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Las coordenadas temporales públicas tienen unidad
+                                      explícita</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0005-explicit-temporal-coordinate-units.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0029-public-notes-are-interval-events.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Las notas públicas son eventos de intervalo</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0029-public-notes-are-interval-events.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0032-deterministic-note-occurrence-and-ordering.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Las ocurrencias y el orden de notas son deterministas</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0032-deterministic-note-occurrence-and-ordering.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0023-render-option-precedence-and-provenance.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Las opciones de render tienen precedencia y procedencia
+                                      explícitas</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0023-render-option-precedence-and-provenance.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0047-versioned-static-audio-input-reference.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Las referencias static-audio son objetos etiquetados</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0047-versioned-static-audio-input-reference.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0018-sequences-define-local-time-not-react-lifecycle.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Las secuencias definen tiempo local, no ciclos de vida
+                                      React</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0018-sequences-define-local-time-not-react-lifecycle.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0011-serializable-validated-composition-inputs.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Los inputs de composición son serializables y validados</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0011-serializable-validated-composition-inputs.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0014-explicit-stable-public-node-ids.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Los nodos públicos tienen IDs explícitos y estables</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0014-explicit-stable-public-node-ids.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0008-finite-half-open-render-ranges.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Los rangos de render son finitos y semiabiertos</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0008-finite-half-open-render-ranges.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0017-content-addressed-resolved-assets.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Los recursos resueltos se fijan por hash de contenido</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0017-content-addressed-resolved-assets.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0046-input-schemas-validate-without-transforming.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Los schemas de inputs validan sin transformar</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0046-input-schemas-validate-without-transforming.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a href="../../../docs/adr/0006-midi-is-a-boundary-format.html">
+                                    <span class="nav-document-title"
+                                      >MIDI es un formato de borde, no el modelo musical
+                                      interno</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0006-midi-is-a-boundary-format.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0077-canonical-node-paths-and-source-locations.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >NodePath es jerárquico y SourceLocation es solo
+                                      diagnóstica</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0077-canonical-node-paths-and-source-locations.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a href="../../../docs/adr/0030-typed-twelve-tone-pitch.html">
+                                    <span class="nav-document-title"
+                                      >Pitch es un valor tipado de doce tonos</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0030-typed-twelve-tone-pitch.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0033-deterministic-polyphonic-voice-stealing.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >PolySynth limita y roba voces de forma determinista</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0033-deterministic-polyphonic-voice-stealing.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0053-explicit-atomic-output-publication.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Publicar un render es atómico y sobrescribir es
+                                      explícito</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0053-explicit-atomic-output-publication.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0024-render-spec-defines-content-identity.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >RenderSpec define la identidad de contenido del render</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0024-render-spec-defines-content-identity.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0045-resona-owned-input-schema-boundary.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Resona posee la frontera de schemas de inputs</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0045-resona-owned-input-schema-boundary.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0054-versioned-agent-skills-for-coding-agents.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Resona publica Agent Skills para agentes de código</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0054-versioned-agent-skills-for-coding-agents.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0042-sha256-identifies-source-asset-bytes.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >SHA-256 identifica los bytes fuente de un asset</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0042-sha256-identifies-source-asset-bytes.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0048-explicit-minimal-input-controls.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Studio deriva un conjunto mínimo de controles
+                                      explícitos</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0048-explicit-minimal-input-controls.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0051-loopback-token-protected-studio.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Studio se limita a loopback y exige token</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0051-loopback-token-protected-studio.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0081-studio-worklet-transport-and-module-delivery.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Studio sirve un adaptador privado de AudioWorklet sobre la
+                                      seam del motor</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0081-studio-worklet-transport-and-module-delivery.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0050-versioned-local-studio-protocol.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Studio usa un protocolo local versionado</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0050-versioned-local-studio-protocol.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0003-web-studio-and-node-renderer.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Studio vive en web y el renderer en Node</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0003-web-studio-and-node-renderer.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0058-studio-render-numeric-parity-budget.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Studio y render comparten un presupuesto numérico
+                                      explícito</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0058-studio-render-numeric-parity-budget.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0028-tsx-structures-typed-musical-event-data.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >TSX estructura colecciones tipadas de eventos musicales</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0028-tsx-structures-typed-musical-event-data.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0002-tsx-as-primary-authoring-interface.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >TSX y React son la interfaz principal de autoría</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0002-tsx-as-primary-authoring-interface.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0013-versioned-ir-and-immutable-execution-plan.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Una IR versionada se compila a un plan de ejecución
+                                      inmutable</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0013-versioned-ir-and-immutable-execution-plan.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0020-single-track-with-typed-signal-slots.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Una sola Track expone slots de señal tipados</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0020-single-track-with-typed-signal-slots.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0031-normalized-linear-note-velocity.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Velocity es un escalar normalizado y lineal</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0031-normalized-linear-note-velocity.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="adr">
+                                  <a
+                                    href="../../../docs/adr/0041-static-audio-project-resource-references.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >staticAudio referencia el directorio estático del
+                                      proyecto</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/adr/0041-static-audio-project-resource-references.md</span
+                                    >
+                                  </a>
+                                </li>
+                              </ul>
+                            </details>
+                          </li>
+                          <li class="nav-directory">
+                            <details>
+                              <summary>agents</summary>
+                              <ul>
+                                <li class="nav-document" data-category="other">
+                                  <a href="../../../docs/agents/domain.html">
+                                    <span class="nav-document-title">Domain Docs</span>
+                                    <span class="nav-document-path">docs/agents/domain.md</span>
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="other">
+                                  <a href="../../../docs/agents/issue-tracker.html">
+                                    <span class="nav-document-title">Issue tracker: GitHub</span>
+                                    <span class="nav-document-path"
+                                      >docs/agents/issue-tracker.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="other">
+                                  <a href="../../../docs/agents/triage-labels.html">
+                                    <span class="nav-document-title">Triage Labels</span>
+                                    <span class="nav-document-path"
+                                      >docs/agents/triage-labels.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="other">
+                                  <a href="../../../docs/agents/trunk-based-development.html">
+                                    <span class="nav-document-title">Trunk-based development</span>
+                                    <span class="nav-document-path"
+                                      >docs/agents/trunk-based-development.md</span
+                                    >
+                                  </a>
+                                </li>
+                              </ul>
+                            </details>
+                          </li>
+                          <li class="nav-directory">
+                            <details>
+                              <summary>research</summary>
+                              <ul>
+                                <li class="nav-document" data-category="research">
+                                  <a
+                                    href="../../../docs/research/dave-farley-trunk-based-development.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Dave Farley sobre Trunk-Based Development</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/research/dave-farley-trunk-based-development.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="research">
+                                  <a href="../../../docs/research/remotion-study.html">
+                                    <span class="nav-document-title"
+                                      >Estudio de Remotion para Resona</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/research/remotion-study.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="research">
+                                  <a
+                                    href="../../../docs/research/remotion-for-music-landscape.html"
+                                  >
+                                    <span class="nav-document-title"
+                                      >Panorama de un “Remotion para música”</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/research/remotion-for-music-landscape.md</span
+                                    >
+                                  </a>
+                                </li>
+                                <li class="nav-document" data-category="research">
+                                  <a href="../../../docs/research/remotion-agent-skills.html">
+                                    <span class="nav-document-title"
+                                      >Remotion v4.0.506: Agent Skills</span
+                                    >
+                                    <span class="nav-document-path"
+                                      >docs/research/remotion-agent-skills.md</span
+                                    >
+                                  </a>
+                                </li>
+                              </ul>
+                            </details>
+                          </li>
+                          <li class="nav-document" data-category="other">
+                            <a href="../../../docs/architecture.html">
+                              <span class="nav-document-title">Arquitectura propuesta</span>
+                              <span class="nav-document-path">docs/architecture.md</span>
+                            </a>
+                          </li>
+                          <li class="nav-document" data-category="other">
+                            <a href="../../../docs/product.html">
+                              <span class="nav-document-title">Visión de producto</span>
+                              <span class="nav-document-path">docs/product.md</span>
+                            </a>
+                          </li>
+                        </ul>
+                      </details>
+                    </li>
+                    <li class="nav-directory">
+                      <details>
+                        <summary>packages</summary>
+                        <ul>
+                          <li class="nav-directory">
+                            <details>
+                              <summary>cli</summary>
+                              <ul>
+                                <li class="nav-document" data-category="package-context">
+                                  <a href="../../../packages/cli/CONTEXT.html">
+                                    <span class="nav-document-title">CLI context</span>
+                                    <span class="nav-document-path">packages/cli/CONTEXT.md</span>
+                                  </a>
+                                </li>
+                              </ul>
+                            </details>
+                          </li>
+                          <li class="nav-directory">
+                            <details>
+                              <summary>docs</summary>
+                              <ul>
+                                <li class="nav-directory">
+                                  <details>
+                                    <summary>test</summary>
+                                    <ul>
+                                      <li class="nav-directory">
+                                        <details>
+                                          <summary>fixtures</summary>
+                                          <ul>
+                                            <li class="nav-directory">
+                                              <details>
+                                                <summary>basic</summary>
+                                                <ul>
+                                                  <li class="nav-directory">
+                                                    <details>
+                                                      <summary>.agents</summary>
+                                                      <ul>
+                                                        <li
+                                                          class="nav-document"
+                                                          data-category="other"
+                                                        >
+                                                          <a
+                                                            href="../../../packages/docs/test/fixtures/basic/.agents/notes.html"
+                                                          >
+                                                            <span class="nav-document-title"
+                                                              >Fixture notes</span
+                                                            >
+                                                            <span class="nav-document-path"
+                                                              >packages/docs/test/fixtures/basic/.agents/notes.md</span
+                                                            >
+                                                          </a>
+                                                        </li>
+                                                      </ul>
+                                                    </details>
+                                                  </li>
+                                                  <li class="nav-directory">
+                                                    <details>
+                                                      <summary>docs</summary>
+                                                      <ul>
+                                                        <li
+                                                          class="nav-document"
+                                                          data-category="other"
+                                                        >
+                                                          <a
+                                                            href="../../../packages/docs/test/fixtures/basic/docs/guide.html"
+                                                          >
+                                                            <span class="nav-document-title"
+                                                              >Fixture guide</span
+                                                            >
+                                                            <span class="nav-document-path"
+                                                              >packages/docs/test/fixtures/basic/docs/guide.md</span
+                                                            >
+                                                          </a>
+                                                        </li>
+                                                      </ul>
+                                                    </details>
+                                                  </li>
+                                                  <li class="nav-document" data-category="other">
+                                                    <a
+                                                      href="../../../packages/docs/test/fixtures/basic/README.html"
+                                                    >
+                                                      <span class="nav-document-title"
+                                                        >Resona docs fixture</span
+                                                      >
+                                                      <span class="nav-document-path"
+                                                        >packages/docs/test/fixtures/basic/README.md</span
+                                                      >
+                                                    </a>
+                                                  </li>
+                                                </ul>
+                                              </details>
+                                            </li>
+                                            <li class="nav-directory">
+                                              <details>
+                                                <summary>semantics</summary>
+                                                <ul>
+                                                  <li class="nav-document" data-category="other">
+                                                    <a
+                                                      href="../../../packages/docs/test/fixtures/semantics/guide.html"
+                                                    >
+                                                      <span class="nav-document-title">Guide</span>
+                                                      <span class="nav-document-path"
+                                                        >packages/docs/test/fixtures/semantics/guide.md</span
+                                                      >
+                                                    </a>
+                                                  </li>
+                                                  <li class="nav-document" data-category="other">
+                                                    <a
+                                                      href="../../../packages/docs/test/fixtures/semantics/README.html"
+                                                    >
+                                                      <span class="nav-document-title"
+                                                        >Semantics fixture</span
+                                                      >
+                                                      <span class="nav-document-path"
+                                                        >packages/docs/test/fixtures/semantics/README.md</span
+                                                      >
+                                                    </a>
+                                                  </li>
+                                                </ul>
+                                              </details>
+                                            </li>
+                                          </ul>
+                                        </details>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                              </ul>
+                            </details>
+                          </li>
+                          <li class="nav-directory">
+                            <details>
+                              <summary>renderer</summary>
+                              <ul>
+                                <li class="nav-document" data-category="package-context">
+                                  <a href="../../../packages/renderer/CONTEXT.html">
+                                    <span class="nav-document-title">Renderer context</span>
+                                    <span class="nav-document-path"
+                                      >packages/renderer/CONTEXT.md</span
+                                    >
+                                  </a>
+                                </li>
+                              </ul>
+                            </details>
+                          </li>
+                          <li class="nav-directory">
+                            <details>
+                              <summary>zod</summary>
+                              <ul>
+                                <li class="nav-document" data-category="package-context">
+                                  <a href="../../../packages/zod/CONTEXT.html">
+                                    <span class="nav-document-title"
+                                      >Zod input adapter context</span
+                                    >
+                                    <span class="nav-document-path">packages/zod/CONTEXT.md</span>
+                                  </a>
+                                </li>
+                              </ul>
+                            </details>
+                          </li>
+                        </ul>
+                      </details>
+                    </li>
+                    <li class="nav-document" data-category="other">
+                      <a href="../../../CONTEXT-MAP.html">
+                        <span class="nav-document-title">Context Map</span>
+                        <span class="nav-document-path">CONTEXT-MAP.md</span>
+                      </a>
+                    </li>
+                    <li class="nav-document" data-category="root">
+                      <a href="../../../AGENTS.html">
+                        <span class="nav-document-title">Repository instructions</span>
+                        <span class="nav-document-path">AGENTS.md</span>
+                      </a>
+                    </li>
+                    <li class="nav-document" data-category="root">
+                      <a href="../../../CONTEXT.html">
+                        <span class="nav-document-title">Resona</span>
+                        <span class="nav-document-path">CONTEXT.md</span>
+                      </a>
+                    </li>
+                    <li class="nav-document" data-category="root">
+                      <a href="../../../README.html">
+                        <span class="nav-document-title">Resona</span>
+                        <span class="nav-document-path">README.md</span>
+                      </a>
+                    </li>
+                  </ul>
+                </details>
+              </li>
+            </ul>
+          </div>
+        </nav>
+      </aside>
+      <main id="content" class="docs-main" tabindex="-1">
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          <ol>
+            <li><a href="../../../index.html">Documentación</a></li>
+            <li><span>.agents</span></li>
+            <li><span>skills</span></li>
+            <li><span>prototype</span></li>
+            <li aria-current="page">Prototype</li>
+          </ol>
+        </nav>
+        <div class="page-heading">
+          <p class="source-path">.agents/skills/prototype/SKILL.md</p>
+          <span class="category-badge" data-category="agent-skill">Agent skill</span>
+          <a class="source-link" href="SKILL.md">Ver Markdown fuente</a>
+        </div>
+        <div class="document-layout">
+          <article class="doc-content">
+            <aside class="frontmatter">
+              <details>
+                <summary>Frontmatter</summary>
+                <pre><code>---
 name: prototype
 description: Build a throwaway prototype to answer a design question. Use when the user wants to sanity-check whether a state model or logic feels right, or explore what a UI should look like.
 ---</code></pre>
-          </details>
-        </aside>
-        <h1 id="prototype">Prototype</h1>
-        <p>
-          A prototype is <strong>throwaway code that answers a question</strong>. The question
-          decides the shape.
-        </p>
-        <h2 id="pick-a-branch">Pick a branch</h2>
-        <p>
-          Identify which question is being answered — from the user's prompt, the surrounding code,
-          or by asking if the user is around:
-        </p>
-        <ul>
-          <li>
-            <strong>&quot;Does this logic / state model feel right?&quot;</strong> →
-            <a href="LOGIC.html">LOGIC.md</a>. Build a tiny interactive terminal app that pushes the
-            state machine through cases that are hard to reason about on paper.
-          </li>
-          <li>
-            <strong>&quot;What should this look like?&quot;</strong> → <a href="UI.html">UI.md</a>.
-            Generate several radically different UI variations on a single route, switchable via a
-            URL search param and a floating bottom bar.
-          </li>
-        </ul>
-        <p>
-          The two branches produce very different artifacts — getting this wrong wastes the whole
-          prototype. If the question is genuinely ambiguous and the user isn't reachable, default to
-          whichever branch better matches the surrounding code (a backend module → logic; a page or
-          component → UI) and state the assumption at the top of the prototype.
-        </p>
-        <h2 id="rules-that-apply-to-both">Rules that apply to both</h2>
-        <ol>
-          <li>
-            <strong>Throwaway from day one, and clearly marked as such.</strong> Locate the
-            prototype code close to where it will actually be used (next to the module or page it's
-            prototyping for) so context is obvious — but name it so a casual reader can see it's a
-            prototype, not production. For throwaway UI routes, obey whatever routing convention the
-            project already uses; don't invent a new top-level structure.
-          </li>
-          <li>
-            <strong>One command to run.</strong> Whatever the project's existing task runner
-            supports — <code>pnpm &lt;name&gt;</code>, <code>python &lt;path&gt;</code>,
-            <code>bun &lt;path&gt;</code>, etc. The user must be able to start it without thinking.
-          </li>
-          <li>
-            <strong>No persistence by default.</strong> State lives in memory. Persistence is the
-            thing the prototype is <em>checking</em>, not something it should depend on. If the
-            question explicitly involves a database, hit a scratch DB or a local file with a clear
-            &quot;PROTOTYPE — wipe me&quot; name.
-          </li>
-          <li>
-            <strong>Skip the polish.</strong> No tests, no error handling beyond what makes the
-            prototype <em>runnable</em>, no abstractions. The point is to learn something fast.
-          </li>
-          <li>
-            <strong>Surface the state.</strong> After every action (logic) or on every variant
-            switch (UI), print or render the full relevant state so the user can see what changed.
-          </li>
-          <li>
-            <strong>Capture it when done.</strong> Fold any validated decision into the real code,
-            then capture the prototype itself as a <strong>primary source</strong>: commit it to a
-            throwaway branch, out of main, and leave a context pointer to that branch on the
-            implementation issue. Capture the answer too — the verdict and the question it settled —
-            in the issue or a commit. The main branch keeps only the validated decision.
-          </li>
-        </ol>
-      </article>
-    </main>
+              </details>
+            </aside>
+            <h1 id="prototype">Prototype</h1>
+            <p>
+              A prototype is <strong>throwaway code that answers a question</strong>. The question
+              decides the shape.
+            </p>
+            <h2 id="pick-a-branch">Pick a branch</h2>
+            <p>
+              Identify which question is being answered — from the user's prompt, the surrounding
+              code, or by asking if the user is around:
+            </p>
+            <ul>
+              <li>
+                <strong>&quot;Does this logic / state model feel right?&quot;</strong> →
+                <a href="LOGIC.html">LOGIC.md</a>. Build a tiny interactive terminal app that pushes
+                the state machine through cases that are hard to reason about on paper.
+              </li>
+              <li>
+                <strong>&quot;What should this look like?&quot;</strong> →
+                <a href="UI.html">UI.md</a>. Generate several radically different UI variations on a
+                single route, switchable via a URL search param and a floating bottom bar.
+              </li>
+            </ul>
+            <p>
+              The two branches produce very different artifacts — getting this wrong wastes the
+              whole prototype. If the question is genuinely ambiguous and the user isn't reachable,
+              default to whichever branch better matches the surrounding code (a backend module →
+              logic; a page or component → UI) and state the assumption at the top of the prototype.
+            </p>
+            <h2 id="rules-that-apply-to-both">Rules that apply to both</h2>
+            <ol>
+              <li>
+                <strong>Throwaway from day one, and clearly marked as such.</strong> Locate the
+                prototype code close to where it will actually be used (next to the module or page
+                it's prototyping for) so context is obvious — but name it so a casual reader can see
+                it's a prototype, not production. For throwaway UI routes, obey whatever routing
+                convention the project already uses; don't invent a new top-level structure.
+              </li>
+              <li>
+                <strong>One command to run.</strong> Whatever the project's existing task runner
+                supports — <code>pnpm &lt;name&gt;</code>, <code>python &lt;path&gt;</code>,
+                <code>bun &lt;path&gt;</code>, etc. The user must be able to start it without
+                thinking.
+              </li>
+              <li>
+                <strong>No persistence by default.</strong> State lives in memory. Persistence is
+                the thing the prototype is <em>checking</em>, not something it should depend on. If
+                the question explicitly involves a database, hit a scratch DB or a local file with a
+                clear &quot;PROTOTYPE — wipe me&quot; name.
+              </li>
+              <li>
+                <strong>Skip the polish.</strong> No tests, no error handling beyond what makes the
+                prototype <em>runnable</em>, no abstractions. The point is to learn something fast.
+              </li>
+              <li>
+                <strong>Surface the state.</strong> After every action (logic) or on every variant
+                switch (UI), print or render the full relevant state so the user can see what
+                changed.
+              </li>
+              <li>
+                <strong>Capture it when done.</strong> Fold any validated decision into the real
+                code, then capture the prototype itself as a <strong>primary source</strong>: commit
+                it to a throwaway branch, out of main, and leave a context pointer to that branch on
+                the implementation issue. Capture the answer too — the verdict and the question it
+                settled — in the issue or a commit. The main branch keeps only the validated
+                decision.
+              </li>
+            </ol>
+          </article>
+          <nav class="table-of-contents" aria-label="En esta página">
+            <h2>En esta página</h2>
+            <ol>
+              <li class="toc-level-2"><a href="#pick-a-branch">Pick a branch</a></li>
+              <li class="toc-level-2">
+                <a href="#rules-that-apply-to-both">Rules that apply to both</a>
+              </li>
+            </ol>
+          </nav>
+        </div>
+        <nav class="page-navigation" aria-label="Paginación de documentación">
+          <span class="page-nav-placeholder" aria-hidden="true"></span>
+          <span class="page-nav-placeholder" aria-hidden="true"></span>
+        </nav>
+        <a class="back-to-top" href="#top">Volver arriba</a>
+      </main>
+    </div>
+    <script>
+      (() => {
+        const key = "resona-docs-theme";
+        const root = document.documentElement;
+        const select = document.getElementById("theme-select");
+        const apply = (theme) => {
+          root.dataset.theme = theme;
+          if (select) select.value = theme;
+        };
+        let stored = "system";
+        try {
+          stored = window.localStorage.getItem(key) || "system";
+        } catch {}
+        apply(["system", "light", "dark"].includes(stored) ? stored : "system");
+        select?.addEventListener("change", () => {
+          const theme = select.value;
+          apply(theme);
+          try {
+            window.localStorage.setItem(key, theme);
+          } catch {}
+        });
+      })();
+    </script>
   </body>
 </html>
