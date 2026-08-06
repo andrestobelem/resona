@@ -102,6 +102,64 @@ describe("buildDocumentationSite", () => {
     expect(guideHtml).toContain('<h2 id="repeated">Repeated</h2>');
     expect(guideHtml).toContain('<h2 id="repeated-1">Repeated</h2>');
     expect(guideHtml).toContain('<h2 id="api_v2">API_V2</h2>');
+    expect(guideHtml).toContain("toc-current");
+  });
+
+  it("renders a navigable, accessible documentation shell", async () => {
+    const projectRoot = await mkdtemp(join(tmpdir(), "resona-docs-shell-test-"));
+    temporaryRoots.push(projectRoot);
+    await copyMarkdownFixture(projectRoot);
+
+    await runDocumentationBuild(projectRoot);
+
+    const guideHtml = await readFile(join(projectRoot, "fixture", "docs", "guide.html"), "utf8");
+    const styles = await readFile(join(projectRoot, ".resona-docs", "styles.css"), "utf8");
+    expect(guideHtml).toContain('<a class="skip-link" href="#content">Saltar al contenido</a>');
+    expect(guideHtml).toContain('<aside class="docs-sidebar"');
+    expect(guideHtml).toContain('<nav aria-label="Documentación">');
+    expect(guideHtml).toContain('aria-label="Breadcrumb"');
+    expect(guideHtml).toContain('aria-current="page"');
+    expect(guideHtml).toContain('aria-label="En esta página"');
+    expect(guideHtml).toContain('href="guide.md"');
+    expect(guideHtml).toContain('href="../README.html"');
+    expect(guideHtml).toContain("page-nav-previous");
+    expect(guideHtml).toContain("Resona docs fixture");
+    expect(guideHtml).toContain('href="#top"');
+    expect(guideHtml).toContain('id="theme-select"');
+    expect(guideHtml).toContain("localStorage");
+    expect(guideHtml).toContain("IntersectionObserver");
+    expect(styles).toContain(".docs-layout");
+    expect(styles).toContain("@media (max-width: 48rem)");
+    expect(styles).toContain(":focus-visible");
+    expect(styles).toContain("prefers-reduced-motion");
+    expect(styles).toContain("prefers-color-scheme");
+  });
+
+  it("derives navigation categories from repository paths", async () => {
+    const projectRoot = await mkdtemp(join(tmpdir(), "resona-docs-category-test-"));
+    temporaryRoots.push(projectRoot);
+    const sources = [
+      ["README.md", "# Root\n"],
+      ["misc.md", "# Other\n"],
+      ["docs/adr/decision.md", "# ADR\n"],
+      ["docs/research/note.md", "# Research\n"],
+      [".agents/skills/demo/SKILL.md", "# Agent skill\n"],
+      ["packages/foo/CONTEXT.md", "# Package context\n"],
+    ] as const;
+    await Promise.all(
+      sources.map(async ([path, source]) => {
+        const target = join(projectRoot, path);
+        await mkdir(dirname(target), { recursive: true });
+        await writeFile(target, source);
+      }),
+    );
+
+    await runDocumentationBuild(projectRoot);
+
+    const indexHtml = await readFile(join(projectRoot, "index.html"), "utf8");
+    for (const category of ["adr", "research", "agent-skill", "package-context", "root", "other"]) {
+      expect(indexHtml).toContain(`data-category="${category}"`);
+    }
   });
 
   it("rejects invalid local references", async () => {
