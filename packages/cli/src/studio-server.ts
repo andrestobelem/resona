@@ -238,7 +238,7 @@ const shell = (state: StudioState): string => {
   return `<!doctype html>
 <html lang="en">
   <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Resona Studio</title>
-    <style>body{font:15px system-ui,sans-serif;max-width:1000px;margin:2rem auto;padding:0 1rem;background:#111827;color:#e5e7eb}button,select,input,textarea{font:inherit;padding:.45rem .7rem;margin:.25rem;background:#1f2937;color:#e5e7eb;border:1px solid #4b5563;border-radius:.35rem}textarea{display:block;width:100%;box-sizing:border-box;font-family:ui-monospace,monospace}fieldset{border:1px solid #4b5563;border-radius:.35rem;margin:.5rem 0;padding:.5rem}#input-error{display:block;color:#fca5a5;min-height:1.3rem}pre{white-space:pre-wrap;background:#030712;padding:1rem;border-radius:.4rem;overflow:auto}header{display:flex;align-items:center;gap:1rem}#studio-inspection{margin-top:1.5rem}#studio-inspection h2,#studio-inspection h3{margin-bottom:.5rem}.inspection-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(18rem,1fr));gap:1rem}.inspection-card{border:1px solid #4b5563;border-radius:.35rem;padding:.75rem;margin:.75rem 0}.studio-timeline{position:relative;min-height:8rem;border:1px solid #4b5563;border-radius:.35rem;padding:2rem .75rem .75rem;overflow-x:auto}.studio-timeline-tracks{display:grid;gap:.4rem}.timeline-track{display:grid;grid-template-columns:minmax(8rem,12rem) minmax(20rem,1fr);gap:.75rem;align-items:center;min-height:2.5rem}.timeline-track-label{font-weight:600}.timeline-clips{display:flex;gap:.4rem;min-height:2rem;margin:0;padding:0;list-style:none}.timeline-clip{display:flex;align-items:center;padding:.35rem .5rem;border:1px solid #60a5fa;border-radius:.25rem;background:#1e3a5f;white-space:nowrap}.timeline-playhead{position:absolute;z-index:1;top:0;bottom:0;width:2px;background:#fbbf24;pointer-events:none;transition:left .1s linear}.meter-row{display:grid;grid-template-columns:minmax(8rem,12rem) minmax(8rem,1fr);gap:.75rem;align-items:center;margin:.4rem 0}.meter-row meter{width:100%;height:1rem}.inspection-list{margin:.25rem 0;padding-left:1.2rem}.inspection-muted{color:#9ca3af}</style>
+    <style>body{font:15px system-ui,sans-serif;max-width:1000px;margin:2rem auto;padding:0 1rem;background:#111827;color:#e5e7eb}button,select,input,textarea{font:inherit;padding:.45rem .7rem;margin:.25rem;background:#1f2937;color:#e5e7eb;border:1px solid #4b5563;border-radius:.35rem}textarea{display:block;width:100%;box-sizing:border-box;font-family:ui-monospace,monospace}fieldset{border:1px solid #4b5563;border-radius:.35rem;margin:.5rem 0;padding:.5rem}#input-error{display:block;color:#fca5a5;min-height:1.3rem}pre{white-space:pre-wrap;background:#030712;padding:1rem;border-radius:.4rem;overflow:auto}header{display:flex;align-items:center;gap:1rem}#studio-inspection{margin-top:1.5rem}#studio-inspection h2,#studio-inspection h3{margin-bottom:.5rem}.inspection-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(18rem,1fr));gap:1rem}.inspection-card{border:1px solid #4b5563;border-radius:.35rem;padding:.75rem;margin:.75rem 0}.studio-timeline{position:relative;min-height:8rem;border:1px solid #4b5563;border-radius:.35rem;padding:2rem .75rem .75rem;overflow-x:auto}.studio-timeline-sequences{display:grid;gap:.2rem;margin-bottom:.5rem;color:#9ca3af}.studio-timeline-tracks{display:grid;gap:.4rem}.timeline-track{display:grid;grid-template-columns:minmax(8rem,12rem) minmax(20rem,1fr);gap:.75rem;align-items:center;min-height:2.5rem}.timeline-track-label{font-weight:600}.timeline-clips{position:relative;display:block;min-height:2rem;margin:0;padding:0;list-style:none}.timeline-clip{position:absolute;top:0;display:flex;align-items:center;box-sizing:border-box;min-width:2rem;min-height:2rem;padding:.35rem .5rem;border:1px solid #60a5fa;border-radius:.25rem;background:#1e3a5f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.timeline-playhead{position:absolute;z-index:1;top:0;bottom:0;width:2px;background:#fbbf24;pointer-events:none;transition:left .1s linear}.meter-row{display:grid;grid-template-columns:minmax(8rem,12rem) minmax(8rem,1fr);gap:.75rem;align-items:center;margin:.4rem 0}.meter-row meter{width:100%;height:1rem}.inspection-list{margin:.25rem 0;padding-left:1.2rem}.inspection-muted{color:#9ca3af}</style>
   </head>
   <body><header><h1>Resona Studio</h1><span id="status">Loading compositions…</span><span id="cursor"></span></header>
     <label>Composition <select id="composition"></select></label><button id="inspect">Prepare variant</button><button id="play" disabled>Play</button><button id="pause" disabled>Pause</button><label>Seek <input id="seek" type="range" min="0" max="0" value="0" step="1" disabled><span id="seek-value">0</span></label><label><input id="loop" type="checkbox" disabled> Loop</label>
@@ -248,6 +248,7 @@ const shell = (state: StudioState): string => {
       <section class="inspection-card" aria-labelledby="timeline-title">
         <h3 id="timeline-title">Timeline</h3>
         <div id="studio-timeline" class="studio-timeline" aria-label="Composition timeline">
+          <div id="studio-timeline-sequences" class="studio-timeline-sequences" aria-label="Sequences"></div>
           <div id="studio-timeline-tracks" class="studio-timeline-tracks" role="list"></div>
           <div id="studio-timeline-playhead" class="timeline-playhead" aria-hidden="true"></div>
         </div>
@@ -281,6 +282,7 @@ const shell = (state: StudioState): string => {
       const inputJson = document.querySelector('#input-json');
       const inputError = document.querySelector('#input-error');
       const inspection = document.querySelector('#studio-inspection');
+      const timelineSequences = document.querySelector('#studio-timeline-sequences');
       const timelineTracks = document.querySelector('#studio-timeline-tracks');
       const timelinePlayhead = document.querySelector('#studio-timeline-playhead');
       const chain = document.querySelector('#studio-chain');
@@ -380,13 +382,35 @@ const shell = (state: StudioState): string => {
         if (value.type === 'musical-duration' && isRecord(value.quarterNotes)) return rationalLabel(value.quarterNotes) + ' qn';
         return '';
       };
+      const rationalNumber = value => isRecord(value) ? Number(value.numerator) / Number(value.denominator) : 0;
+      const positionSeconds = (value, tempo) => {
+        if (!isRecord(value)) return 0;
+        if (value.type === 'absolute-position' && isRecord(value.seconds)) return rationalNumber(value.seconds);
+        if (value.type === 'musical-position' && isRecord(value.quarterNotes)) return rationalNumber(value.quarterNotes) * 60 / Math.max(1e-9, rationalNumber(tempo));
+        return 0;
+      };
+      const durationSeconds = (value, tempo) => {
+        if (!isRecord(value)) return 0;
+        if (value.type === 'absolute-duration' && isRecord(value.seconds)) return rationalNumber(value.seconds);
+        if (value.type === 'musical-duration' && isRecord(value.quarterNotes)) return rationalNumber(value.quarterNotes) * 60 / Math.max(1e-9, rationalNumber(tempo));
+        return 0;
+      };
       const pathLabel = value => Array.isArray(value) ? value.join(' / ') : 'unknown node';
-      const collectTracks = (sequence, output = [], depth = 0) => {
+      const collectTracks = (sequence, tempo, output = [], depth = 0, parentStart = 0) => {
         if (!isRecord(sequence) || !Array.isArray(sequence.children)) return output;
+        const sequenceStart = parentStart + positionSeconds(sequence.from, tempo);
         for (const child of sequence.children) {
-          if (child?.type === 'sequence') collectTracks(child, output, depth + 1);
-          else if (child?.type === 'instrument-track' || child?.type === 'audio-track') output.push({track: child, depth});
+          if (child?.type === 'sequence') collectTracks(child, tempo, output, depth + 1, sequenceStart);
+          else if (child?.type === 'instrument-track' || child?.type === 'audio-track') output.push({track: child, depth, start: sequenceStart});
         }
+        return output;
+      };
+      const collectSequences = (sequence, tempo, output = [], depth = 0, parentStart = 0) => {
+        if (!isRecord(sequence)) return output;
+        const start = parentStart + positionSeconds(sequence.from, tempo);
+        output.push({sequence, depth, start});
+        if (!Array.isArray(sequence.children)) return output;
+        for (const child of sequence.children) if (child?.type === 'sequence') collectSequences(child, tempo, output, depth + 1, start);
         return output;
       };
       const textNode = (tag, text, className) => {
@@ -402,7 +426,7 @@ const shell = (state: StudioState): string => {
         timelinePlayhead.style.left = String(ratio * 100) + '%';
       };
       const updateMeters = levels => {
-        if (!Array.isArray(levels)) return;
+        if (!Array.isArray(levels) && !ArrayBuffer.isView(levels)) return;
         const masterIndex = Number(activePlan?.masterProcessor);
         const masterLevel = Number(levels[masterIndex]);
         if (masterMeter && Number.isFinite(masterLevel)) masterMeter.value = Math.max(0, Math.min(1, masterLevel));
@@ -415,13 +439,22 @@ const shell = (state: StudioState): string => {
         if (!isRecord(payload) || !isRecord(payload.composition) || !isRecord(payload.plan)) return;
         activePlan = payload.plan;
         inspection.hidden = false;
+        timelineSequences.replaceChildren();
         timelineTracks.replaceChildren();
         chain.replaceChildren();
         trackMeters.replaceChildren();
         diagnosticsList.replaceChildren();
         compositionIrJson.textContent = JSON.stringify(payload.composition, null, 2);
         executionPlanJson.textContent = JSON.stringify(payload.plan, null, 2);
-        const tracks = collectTracks(payload.composition.root);
+        const tempo = payload.composition.tempo?.bpm;
+        const totalSeconds = Math.max(1e-9, durationSeconds(payload.composition.duration, tempo));
+        for (const entry of collectSequences(payload.composition.root, tempo)) {
+          const sequenceNode = textNode('div', (entry.depth ? '↳ ' : '') + 'Sequence · ' + String(entry.sequence.id) + ' · from ' + temporalLabel(entry.sequence.from), 'inspection-muted');
+          sequenceNode.dataset.nodePath = pathLabel(entry.sequence.path);
+          sequenceNode.dataset.startSeconds = String(entry.start);
+          timelineSequences.append(sequenceNode);
+        }
+        const tracks = collectTracks(payload.composition.root, tempo);
         let processorIndex = 0;
         activeMeterEntries = [];
         for (const entry of tracks) {
@@ -438,6 +471,12 @@ const shell = (state: StudioState): string => {
             const clipLabel = String(clip.type || 'clip') + ' · ' + String(clip.id || 'unnamed') + ' · from ' + temporalLabel(clip.from);
             const clipNode = textNode('li', clipLabel, 'timeline-clip');
             clipNode.dataset.nodePath = pathLabel(clip.path);
+            const clipStart = entry.start + positionSeconds(clip.from, tempo);
+            const clipDuration = clip.type === 'audio-clip'
+              ? (clip.duration ? durationSeconds(clip.duration, tempo) : Math.max(0, totalSeconds - clipStart))
+              : (Array.isArray(clip.events) ? clip.events.reduce((end, event) => Math.max(end, positionSeconds(event.at, tempo) + durationSeconds(event.duration, tempo)), 0) : 0);
+            clipNode.style.left = String(Math.max(0, Math.min(100, clipStart / totalSeconds * 100))) + '%';
+            clipNode.style.width = String(Math.max(2, Math.min(100, clipDuration / totalSeconds * 100))) + '%';
             clips.append(clipNode);
           }
           if (clips.children.length === 0) clips.append(textNode('li', 'No clips', 'inspection-muted'));

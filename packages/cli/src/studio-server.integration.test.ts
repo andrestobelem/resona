@@ -115,6 +115,7 @@ describe("Studio local service", () => {
     expect(html).toContain("JSON fallback with server-side validation.");
     expect(html).toContain('id="studio-inspection"');
     expect(html).toContain('id="studio-timeline"');
+    expect(html).toContain('id="studio-timeline-sequences"');
     expect(html).toContain('id="studio-timeline-tracks"');
     expect(html).toContain('id="studio-chain"');
     expect(html).toContain('id="meter-master"');
