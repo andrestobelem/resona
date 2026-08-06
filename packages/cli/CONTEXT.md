@@ -36,5 +36,9 @@ and resource samples; it never receives or evaluates the authoring bundle.
 The first Studio shell also loads the private same-origin `/studio/audio-worklet.js` and
 `/studio/audio-engine.js` modules. It converts authorized JSON resource samples into
 `Float32Array` buffers, transfers them with the plan through the `load` command, and enables
-play/pause only after a 48 kHz stereo `AudioContext` and the worklet report `ready`. The
-worklet owns the sample cursor and reports snapshots; the shell only presents them.
+transport controls only after a 48 kHz stereo `AudioContext` and the worklet report `ready`.
+The worklet owns the authoritative sample cursor and reports snapshots; the shell exposes
+play/pause, seek, and loop controls without duplicating DSP state. A seek reconstructs the
+engine from frame zero and prerolls to the requested frame. A loop reconstructs the same state
+at each nominal boundary. If the engine cannot produce the requested quantum, playback pauses
+and the shell displays the structured `audio.underrun` diagnostic instead of advancing silently.

@@ -71,6 +71,14 @@ ejecutar.
 entre el planificador y los adaptadores de tiempo real y offline. La decisión está registrada
 en el [ADR 0013](adr/0013-versioned-ir-and-immutable-execution-plan.md).
 
+En Studio, el adaptador de `AudioWorklet` mantiene el cursor autoritativo y reutiliza el mismo
+`AudioEngine` que el renderer offline. `seek(frame)` reinicia el motor y hace preroll desde el
+origen hasta el frame solicitado; `loop` repite ese mismo procedimiento en cada límite de la
+duración nominal. Así PolySynth, automatización y efectos con memoria (como delay) no acumulan
+estado entre iteraciones. Si el motor no produce todos los frames del quantum, el transporte se
+pausa y publica el diagnóstico estructurado `audio.underrun`; la shell no avanza el playhead en
+silencio.
+
 ### Fuente canónica y artefactos derivados
 
 La fuente canónica inicial comprende módulos TypeScript/TSX, `resona.config.ts`, JSON

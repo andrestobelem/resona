@@ -72,6 +72,53 @@ const stereoPlan = {
   events: [],
 };
 
+const statefulPlan = {
+  ...plan,
+  compositionId: "worklet-stateful-test",
+  nominalDurationFrames: 8,
+  masterProcessor: 3,
+  processors: [
+    {
+      type: "poly-synth" as const,
+      maxVoices: 1,
+      oscillator: "sine" as const,
+      attackFrames: 0,
+      decayFrames: 0,
+      sustain: 1,
+      releaseFrames: 2,
+    },
+    { type: "gain" as const, gain: 1 },
+    { type: "delay" as const, delayFrames: 2, feedback: 0.5, mix: 0.5 },
+    { type: "sum" as const },
+  ],
+  routes: [
+    { from: 0, to: 1 },
+    { from: 1, to: 2 },
+    { from: 2, to: 3 },
+  ],
+  events: [
+    {
+      type: "note-attack" as const,
+      frame: 0,
+      instrument: 0,
+      occurrence: 1,
+      semitonesFromA4: 0,
+      velocity: 0.5,
+    },
+    { type: "note-release" as const, frame: 6, instrument: 0, occurrence: 1 },
+  ],
+  automation: [
+    {
+      type: "gain" as const,
+      target: 1,
+      points: [
+        { frame: 2, value: 0, interpolation: "hold" as const },
+        { frame: 4, value: 1, interpolation: "linear" as const },
+      ],
+    },
+  ],
+};
+
 class FakePort implements AudioWorkletPortLike {
   public onmessage: AudioWorkletPortLike["onmessage"] = null;
   public readonly messages: unknown[] = [];
@@ -203,5 +250,115 @@ describe("Resona AudioWorklet adapter", () => {
       type: "error",
       message: "Invalid AudioWorklet command.",
     } satisfies AudioWorkletEvent);
+  });
+
+  it("rebuilds DSP state at every loop boundary without emitting ended", () => {
+    const Processor = createResonaAudioWorkletProcessor(FakeBase);
+    const processor = new Processor();
+    const port = processor.port as FakePort;
+    port.send({ type: "load", plan, resources: [] });
+    port.send({ type: "loop", enabled: true });
+    port.send({ type: "play" });
+    const left = new Float32Array(8);
+    const right = new Float32Array(8);
+
+    processor.process([], [[left, right]]);
+
+    expect(Array.from(left.slice(0, 4))).toEqual(Array.from(left.slice(4, 8)));
+    expect(port.messages).not.toContainEqual({ type: "ended", cursorFrame: 4 });
+    expect(port.messages).toContainEqual({ type: "snapshot", cursorFrame: 4 });
+  });
+
+  it("keeps PolySynth, automation, and Delay state clean across loops", () => {
+    const rendered = renderAudio({ plan: statefulPlan, runtimeResources: [] } as never);
+    const Processor = createResonaAudioWorkletProcessor(FakeBase);
+    const processor = new Processor();
+    const port = processor.port as FakePort;
+    port.send({ type: "load", plan: statefulPlan, resources: [] });
+    port.send({ type: "loop", enabled: true });
+    port.send({ type: "play" });
+    const left = new Float32Array(16);
+    const right = new Float32Array(16);
+
+    processor.process([], [[left, right]]);
+
+    const renderedLeft = Array.from(rendered.samples).filter((_, index) => index % 2 === 0);
+    const renderedRight = Array.from(rendered.samples).filter((_, index) => index % 2 === 1);
+    expect(Array.from(left.slice(0, 8))).toEqual(renderedLeft);
+    expect(Array.from(right.slice(0, 8))).toEqual(renderedRight);
+    expect(Array.from(left.slice(8, 16))).toEqual(renderedLeft);
+    expect(Array.from(right.slice(8, 16))).toEqual(renderedRight);
+    expect(port.messages).not.toContainEqual({ type: "ended", cursorFrame: 8 });
+  });
+
+  it("reconstructs state from the origin when seeking", () => {
+    const rendered = renderAudio({ plan: statefulPlan, runtimeResources: [] } as never);
+    const Processor = createResonaAudioWorkletProcessor(FakeBase);
+    const processor = new Processor();
+    const port = processor.port as FakePort;
+    port.send({ type: "load", plan: statefulPlan, resources: [] });
+    port.send({ type: "seek", frame: 3 });
+    port.send({ type: "play" });
+    const left = new Float32Array(5);
+    const right = new Float32Array(5);
+
+    processor.process([], [[left, right]]);
+
+    expect(Array.from(left)).toEqual(
+      Array.from(rendered.samples)
+        .slice(6, 16)
+        .filter((_, index) => index % 2 === 0),
+    );
+    expect(Array.from(right)).toEqual(
+      Array.from(rendered.samples)
+        .slice(6, 16)
+        .filter((_, index) => index % 2 === 1),
+    );
+    expect(port.messages).toContainEqual({ type: "ended", cursorFrame: 8 });
+  });
+
+  it("pauses and reports a structured diagnostic when the engine underruns", () => {
+    let cursorFrame = 0;
+    const shortEngine = () => ({
+      get cursorFrame() {
+        return cursorFrame;
+      },
+      process: (_output: Float32Array, frames = 0) => {
+        const produced = Math.max(0, frames - 1);
+        cursorFrame += produced;
+        return produced;
+      },
+      reset: () => {
+        cursorFrame = 0;
+      },
+      seek: (frame: number) => {
+        cursorFrame = frame;
+      },
+      diagnostics: () => [],
+    });
+    const Processor = createResonaAudioWorkletProcessor(FakeBase, shortEngine);
+    const processor = new Processor();
+    const port = processor.port as FakePort;
+    port.send({ type: "load", plan, resources: [] });
+    port.send({ type: "play" });
+    processor.process([], [[new Float32Array(4), new Float32Array(4)]]);
+
+    expect(port.messages).toContainEqual({
+      type: "underrun",
+      cursorFrame: 3,
+      diagnostic: {
+        code: "audio.underrun",
+        phase: "render",
+        severity: "error",
+        message: "AudioWorklet could not produce the requested audio quantum.",
+        compositionId: "worklet-test",
+        cause: { requestedFrames: 4, producedFrames: 3 },
+      },
+    } satisfies AudioWorkletEvent);
+    const left = new Float32Array(4).fill(1);
+    const right = new Float32Array(4).fill(1);
+    processor.process([], [[left, right]]);
+    expect(Array.from(left)).toEqual([0, 0, 0, 0]);
+    expect(Array.from(right)).toEqual([0, 0, 0, 0]);
   });
 });

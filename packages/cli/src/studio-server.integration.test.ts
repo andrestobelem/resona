@@ -92,6 +92,11 @@ describe("Studio local service", () => {
     expect(html).toContain("resources.map(resource => resource.samples.buffer)");
     expect(html).toContain("type: 'play'");
     expect(html).toContain("type: 'pause'");
+    expect(html).toContain("type: 'seek'");
+    expect(html).toContain("type: 'loop'");
+    expect(html).toContain('id="seek"');
+    expect(html).toContain('id="loop"');
+    expect(html).toContain("audio.underrun");
     expect(html).toContain("Preview error: ");
     expect(html).toContain('id="input-controls"');
     expect(html).toContain('id="input-json"');
