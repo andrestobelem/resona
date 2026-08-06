@@ -26,6 +26,8 @@ const styles = `:root {
   --accent: #7357c7;
   --accent-soft: #e9e3ff;
   --code-bg: #eef0f6;
+  --token-string: #176b4a;
+  --token-number: #8a4b00;
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
   line-height: 1.6;
   background: var(--bg);
@@ -44,6 +46,8 @@ const styles = `:root {
   --accent: #b5a1ff;
   --accent-soft: #342a5b;
   --code-bg: #252c3a;
+  --token-string: #8be9b0;
+  --token-number: #ffd27a;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -59,6 +63,8 @@ const styles = `:root {
     --accent: #b5a1ff;
     --accent-soft: #342a5b;
     --code-bg: #252c3a;
+    --token-string: #8be9b0;
+    --token-number: #ffd27a;
   }
 }
 
@@ -500,11 +506,11 @@ summary:focus-visible {
 }
 
 .token.string {
-  color: #237a57;
+  color: var(--token-string);
 }
 
 .token.number {
-  color: #a35c00;
+  color: var(--token-number);
 }
 
 @media (max-width: 64rem) {
@@ -989,7 +995,7 @@ const adjacentDocument = (
   documents: readonly DocumentationDocument[],
   offset: -1 | 1,
 ): DocumentationDocument | null => {
-  const index = documents.indexOf(document);
+  const index = documents.findIndex(({ relativePath }) => relativePath === document.relativePath);
   return index === -1 ? null : (documents[index + offset] ?? null);
 };
 
