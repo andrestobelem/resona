@@ -474,19 +474,53 @@ const renderMarkdown = async (
 };
 
 const validateReferenceLabels = (source: string, relativePath: string): void => {
-  const withoutCode = source
-    .replace(/```[\s\S]*?```/gu, "")
-    .replace(/~~~[\s\S]*?~~~/gu, "")
-    .replace(/`[^`\r\n]*`/gu, "");
+  const markdown = new MarkdownIt({ html: true });
+  const tokens = markdown.parse(source, {});
+  const ignoredLines = new Set<number>();
+  const textSegments: string[] = [];
+  for (const token of tokens) {
+    if (token.type === "code_block" || token.type === "fence" || token.type === "html_block") {
+      if (token.map !== null) {
+        for (let line = token.map[0]; line < token.map[1]; line += 1) ignoredLines.add(line);
+      }
+      continue;
+    }
+    if (token.type !== "inline" || token.children === null || token.children === undefined) {
+      continue;
+    }
+    let htmlDepth = 0;
+    for (const child of token.children) {
+      if (child.type === "html_inline") {
+        const html = child.content.trim();
+        if (/^<\//u.test(html)) htmlDepth = Math.max(0, htmlDepth - 1);
+        else if (/^<[^!/?][^>]*>$/u.test(html) && !/\/\s*>$/u.test(html)) htmlDepth += 1;
+        continue;
+      }
+      if (child.type === "text" && htmlDepth === 0) textSegments.push(child.content);
+    }
+  }
+  const definitionSource = source
+    .split(/\r?\n/u)
+    .filter((_line, index) => !ignoredLines.has(index))
+    .join("\n");
   const definitions = new Set<string>();
   const definitionPattern = /^\s{0,3}\[([^\]]+)\]:\s+\S.*$/gmu;
-  for (const match of withoutCode.matchAll(definitionPattern)) {
+  for (const match of definitionSource.matchAll(definitionPattern)) {
     const label = match[1];
     if (label !== undefined) definitions.add(normalizeReferenceLabel(label));
   }
+  const referenceSource = textSegments.join("\n");
   const referencePattern = /(?<!\\)(!?)\[([^\]]+)\]\[([^\]]*)\]/gu;
-  for (const match of withoutCode.matchAll(referencePattern)) {
+  for (const match of referenceSource.matchAll(referencePattern)) {
     const label = normalizeReferenceLabel(match[3] === "" ? (match[2] ?? "") : (match[3] ?? ""));
+    if (!definitions.has(label)) {
+      throw new Error(`Invalid reference label in ${relativePath}: ${label}`);
+    }
+  }
+  const shortcutPattern =
+    /(?<![!\\])\[([\p{Letter}\p{Number}][\p{Letter}\p{Number}_ -]*)\](?![[(])/gu;
+  for (const match of referenceSource.matchAll(shortcutPattern)) {
+    const label = normalizeReferenceLabel(match[1] ?? "");
     if (!definitions.has(label)) {
       throw new Error(`Invalid reference label in ${relativePath}: ${label}`);
     }
