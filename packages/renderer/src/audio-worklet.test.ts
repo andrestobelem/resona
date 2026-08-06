@@ -178,6 +178,20 @@ describe("Resona AudioWorklet adapter", () => {
     const right = new Float32Array(4);
     processor.process([], [[left, right]]);
     expect(Array.from(left)).toEqual([0, 0, 0, 0]);
+
+    const resourceProcessor = new (createResonaAudioWorkletProcessor(FakeBase))();
+    const resourcePort = resourceProcessor.port as FakePort;
+    resourcePort.send({
+      type: "load",
+      plan: stereoPlan,
+      resources: [
+        { ...stereoResource, samples: new Float32Array([0, Number.NaN, 0, 0, 0, 0, 0, 0]) },
+      ],
+    });
+    expect(resourcePort.messages).toContainEqual({
+      type: "error",
+      message: "The audio resource contains a non-finite sample.",
+    } satisfies AudioWorkletEvent);
   });
 
   it("reports invalid commands without touching the audio callback", () => {
