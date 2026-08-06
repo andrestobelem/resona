@@ -218,6 +218,26 @@ const safeHtmlTags = new Set([
 
 const safeHtmlAttributes = new Set(["class", "id", "open", "role", "title"]);
 
+const htmlVoidTags = new Set([
+  "area",
+  "base",
+  "br",
+  "col",
+  "embed",
+  "hr",
+  "img",
+  "input",
+  "link",
+  "meta",
+  "param",
+  "source",
+  "track",
+  "wbr",
+]);
+
+const escapedLeftBracket = "\uE000";
+const escapedRightBracket = "\uE001";
+
 export type BuildDocumentationSiteOptions = Readonly<{
   projectRoot: string;
 }>;
@@ -475,7 +495,7 @@ const renderMarkdown = async (
 
 const validateReferenceLabels = (source: string, relativePath: string): void => {
   const markdown = new MarkdownIt({ html: true });
-  const tokens = markdown.parse(source, {});
+  const tokens = markdown.parse(maskEscapedBrackets(source), {});
   const ignoredLines = new Set<number>();
   const textSegments: string[] = [];
   for (const token of tokens) {
@@ -489,14 +509,28 @@ const validateReferenceLabels = (source: string, relativePath: string): void => 
       continue;
     }
     let htmlDepth = 0;
+    let autolinkDepth = 0;
     for (const child of token.children) {
+      if (child.type === "link_open" && child.markup === "autolink") {
+        autolinkDepth += 1;
+        continue;
+      }
+      if (child.type === "link_close" && autolinkDepth > 0) {
+        autolinkDepth -= 1;
+        continue;
+      }
       if (child.type === "html_inline") {
         const html = child.content.trim();
         if (/^<\//u.test(html)) htmlDepth = Math.max(0, htmlDepth - 1);
-        else if (/^<[^!/?][^>]*>$/u.test(html) && !/\/\s*>$/u.test(html)) htmlDepth += 1;
+        else if (/^<[^!/?][^>]*>$/u.test(html) && !/\/\s*>$/u.test(html)) {
+          const tagName = /^<\s*([a-z][\w-]*)/iu.exec(html)?.[1]?.toLowerCase();
+          if (tagName !== undefined && !htmlVoidTags.has(tagName)) htmlDepth += 1;
+        }
         continue;
       }
-      if (child.type === "text" && htmlDepth === 0) textSegments.push(child.content);
+      if (child.type === "text" && htmlDepth === 0 && autolinkDepth === 0) {
+        textSegments.push(child.content);
+      }
     }
   }
   const definitionSource = source
@@ -517,14 +551,53 @@ const validateReferenceLabels = (source: string, relativePath: string): void => 
       throw new Error(`Invalid reference label in ${relativePath}: ${label}`);
     }
   }
-  const shortcutPattern =
-    /(?<![!\\])\[([\p{Letter}\p{Number}][\p{Letter}\p{Number}_ -]*)\](?![[(])/gu;
+  const shortcutPattern = /(?<![!\\[])\[([^\u005B\u005D\n]+)\](?![[(])/gu;
   for (const match of referenceSource.matchAll(shortcutPattern)) {
     const label = normalizeReferenceLabel(match[1] ?? "");
     if (!definitions.has(label)) {
       throw new Error(`Invalid reference label in ${relativePath}: ${label}`);
     }
   }
+};
+
+const maskEscapedBrackets = (source: string): string => {
+  const characters = source.split("");
+  const isEscaped = (index: number): boolean => {
+    let slashCount = 0;
+    for (let cursor = index - 1; cursor >= 0 && source[cursor] === "\\"; cursor -= 1) {
+      slashCount += 1;
+    }
+    return slashCount % 2 === 1;
+  };
+  const mark = (index: number): void => {
+    if (source[index] === "[") characters[index] = escapedLeftBracket;
+    if (source[index] === "]") characters[index] = escapedRightBracket;
+  };
+  const findClosingBracket = (start: number): number => {
+    for (let index = start; index < source.length; index += 1) {
+      if (source[index] === "\n") return -1;
+      if (source[index] === "]" && !isEscaped(index)) return index;
+    }
+    return -1;
+  };
+
+  for (let index = 0; index < source.length; index += 1) {
+    if (source[index] !== "[" && source[index] !== "]") continue;
+    if (!isEscaped(index)) continue;
+    mark(index);
+    if (source[index] !== "[") continue;
+    const closing = findClosingBracket(index + 1);
+    if (closing === -1) continue;
+    mark(closing);
+    const adjacentOpening = closing + 1;
+    if (source[adjacentOpening] !== "[") continue;
+    const adjacentClosing = findClosingBracket(adjacentOpening + 1);
+    if (adjacentClosing !== -1) {
+      mark(adjacentOpening);
+      mark(adjacentClosing);
+    }
+  }
+  return characters.join("");
 };
 
 const normalizeReferenceLabel = (value: string): string =>
