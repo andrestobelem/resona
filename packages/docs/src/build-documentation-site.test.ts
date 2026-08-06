@@ -176,6 +176,14 @@ describe("buildDocumentationSite", () => {
     await expect(runDocumentationBuild(projectRoot)).rejects.toThrow("missing");
   });
 
+  it("preserves task-list markers", async () => {
+    const projectRoot = await mkdtemp(join(tmpdir(), "resona-docs-task-list-test-"));
+    temporaryRoots.push(projectRoot);
+    await writeFile(join(projectRoot, "README.md"), "# Checklist\n\n- [ ] Todo\n- [x] Done\n");
+
+    await expect(runDocumentationBuild(projectRoot)).resolves.toMatchObject({ sourceCount: 1 });
+  });
+
   it.each(["missing.foo", "missing!", "missing/foo"])(
     "rejects unresolved shortcut labels with punctuation: %s",
     async (label) => {
