@@ -1005,6 +1005,15 @@ El primer servicio HTTP expone `/api/v1/session`, `/api/v1/compositions`,
 paths físicos y `sourcePaths` permanecen en Node. El cliente solo puede pedir hashes que la
 variante ya autorizó.
 
+La shell del primer corte carga además los módulos privados same-origin
+`/studio/audio-worklet.js` y `/studio/audio-engine.js`. Tras obtener una variante, convierte
+los samples JSON autorizados a `Float32Array` y transfiere sus buffers junto con el plan en un
+comando `load`. Un `AudioContext` estéreo a 48 kHz y la respuesta `ready` del worklet son
+precondiciones de play/pause; un sample rate distinto falla readiness sin remuestreo. El
+worklet procesa el quantum estándar, mantiene el cursor de frames y publica snapshots/ended;
+la shell solo dibuja ese estado. Esas rutas no llevan datos del proyecto ni bundle de autoría,
+por lo que exigen Host/Origin pero no el bearer token.
+
 Studio transfiere `ExecutionPlan` al `AudioWorklet` mediante structured clone y entrega los
 buffers decodificados como `ArrayBuffer` transferibles para no copiarlos por bloque. El
 worklet nunca consulta HTTP ni WebSocket desde su callback. La decisión está registrada en

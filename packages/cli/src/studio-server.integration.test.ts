@@ -77,6 +77,26 @@ describe("Studio local service", () => {
     expect(html).toContain("Resona Studio");
     expect(html).toContain(server.token);
     expect(html).not.toContain("registerRoot");
+    expect(html).toContain("audioWorklet.addModule('/studio/audio-worklet.js')");
+    expect(html).toContain("outputChannelCount: [2]");
+    expect(html).toContain("Float32Array.from");
+    expect(html).toContain("resources.map(resource => resource.samples.buffer)");
+    expect(html).toContain("type: 'play'");
+    expect(html).toContain("type: 'pause'");
+
+    const worklet = await fetch(`${server.url}/studio/audio-worklet.js`);
+    expect(worklet.status).toBe(200);
+    expect(worklet.headers.get("content-type")).toContain("text/javascript");
+    expect(await worklet.text()).toContain("resona-audio");
+
+    const engine = await fetch(`${server.url}/studio/audio-engine.js`);
+    expect(engine.status).toBe(200);
+    expect(await engine.text()).toContain("createAudioEngine");
+
+    const foreignWorklet = await fetch(`${server.url}/studio/audio-worklet.js`, {
+      headers: { origin: "http://evil.example" },
+    });
+    expect(foreignWorklet.status).toBe(403);
 
     const foreignShell = await fetch(server.url, {
       headers: { origin: "http://evil.example" },
