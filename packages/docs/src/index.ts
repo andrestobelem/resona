@@ -497,6 +497,7 @@ const validateReferenceLabels = (source: string, relativePath: string): void => 
   const markdown = new MarkdownIt({ html: true });
   const tokens = markdown.parse(maskEscapedBrackets(source), {});
   const ignoredLines = new Set<number>();
+  const sourceLines = source.split(/\r?\n/u);
   const textSegments: string[] = [];
   for (const token of tokens) {
     if (token.type === "code_block" || token.type === "fence" || token.type === "html_block") {
@@ -510,6 +511,10 @@ const validateReferenceLabels = (source: string, relativePath: string): void => 
     }
     let htmlDepth = 0;
     let autolinkDepth = 0;
+    const firstSourceLine = token.map === null ? "" : (sourceLines[token.map[0]] ?? "");
+    const isTaskListItem = /^\s*(?:>\s*)*(?:[-+*]|\d+[.)])\s+\[[ xX]\](?=\s)/u.test(
+      firstSourceLine,
+    );
     for (const child of token.children) {
       if (child.type === "link_open" && child.markup === "autolink") {
         autolinkDepth += 1;
@@ -529,7 +534,9 @@ const validateReferenceLabels = (source: string, relativePath: string): void => 
         continue;
       }
       if (child.type === "text" && htmlDepth === 0 && autolinkDepth === 0) {
-        textSegments.push(child.content);
+        textSegments.push(
+          isTaskListItem ? child.content.replace(/^\[[ xX]\](?=\s)/u, "") : child.content,
+        );
       }
     }
   }
@@ -543,7 +550,7 @@ const validateReferenceLabels = (source: string, relativePath: string): void => 
     const label = match[1];
     if (label !== undefined) definitions.add(normalizeReferenceLabel(label));
   }
-  const referenceSource = textSegments.join("\n").replace(/(^|\n)\[[ xX]\](?=\s)/gu, "$1");
+  const referenceSource = textSegments.join("\n");
   const referencePattern = /(?<!\\)(!?)\[([^\]]+)\]\[([^\]]*)\]/gu;
   for (const match of referenceSource.matchAll(referencePattern)) {
     const label = normalizeReferenceLabel(match[3] === "" ? (match[2] ?? "") : (match[3] ?? ""));
