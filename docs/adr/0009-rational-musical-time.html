@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>El tiempo musical normalizado es racional · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">docs/adr/0009-rational-musical-time.md</p>
+      <article>
+        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <h1 id="el-tiempo-musical-normalizado-es-racional">
+          El tiempo musical normalizado es racional
+        </h1>
+        <p>
+          Después de resolver barras y pulsos, Resona representa internamente cada posición musical
+          como una fracción exacta de notas negras. La conversión a frames de muestras enteros
+          ocurre una sola vez al compilar el plan de ejecución.
+        </p>
+        <h2 id="opciones-consideradas">Opciones consideradas</h2>
+        <p>
+          - Convertir temprano a segundos en punto flotante. - Usar una grilla fija de ticks por
+          nota negra. - Conservar una fracción exacta hasta la frontera del plan de ejecución.
+        </p>
+        <p>
+          Se eligió la tercera opción para evitar error acumulado, representar tuplets sin depender
+          de una resolución fija y mantener el núcleo independiente del PPQ de archivos MIDI.
+        </p>
+        <h2 id="consecuencias">Consecuencias</h2>
+        <p>
+          - Barras, pulsos y subdivisiones se resuelven contra la métrica antes de obtener la
+          fracción normalizada. - Cada adaptador MIDI convierte desde su propia resolución hacia el
+          tiempo racional. - El plan de ejecución no recibe posiciones musicales ambiguas: recibe
+          frames de muestras enteros. - Una fracción de muestra se redondea al entero más cercano y
+          un empate exacto elige el frame par; todas las fronteras temporales usan la misma función.
+          - La forma serializable concreta de la IR se define en el [ADR
+          0064](0064-canonical-rational-time-in-composition-ir.md).
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

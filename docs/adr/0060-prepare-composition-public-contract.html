@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>La preparación pública usa la prop `prepare` · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">docs/adr/0060-prepare-composition-public-contract.md</p>
+      <article>
+        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <h1 id="la-preparacion-publica-usa-la-prop-prepare">
+          La preparación pública usa la prop `prepare`
+        </h1>
+        <p>
+          Una composición conecta preparación dinámica mediante la prop `prepare`, tipada como
+          `PrepareComposition&lt;TInputs&gt;`:
+        </p>
+        <pre><code class="language-ts">
+type PrepareComposition&lt;TInputs extends JsonObject&gt; = (
+  context: Readonly&lt;{
+    compositionId: string;
+    inputs: DeepReadonly&lt;TInputs&gt;;
+    signal: AbortSignal;
+    resources: PreparationResourceResolver;
+  }&gt;,
+) =&gt; MaybePromise&lt;
+  Readonly&lt;{
+    duration?: Duration;
+    tempo?: Tempo;
+    metadata?: JsonObject;
+  }&gt;
+&gt;;
+        </code></pre>
+        <h2 id="opciones-consideradas">Opciones consideradas</h2>
+        <p>
+          - Copiar el nombre `calculateMetadata` y el retorno amplio de Remotion. - Exponer
+          directamente la construcción de una `ResolvedVariant`. - Usar una preparación acotada y
+          dejar que Resona valide y construya la variante interna.
+        </p>
+        <p>
+          Se eligió la tercera opción porque la fase hace más que calcular metadata, pero no debe
+          permitir que el autor falsifique recursos resueltos, transforme inputs validados ni mezcle
+          opciones operativas de render con la configuración musical.
+        </p>
+        <h2 id="consecuencias">Consecuencias</h2>
+        <p>
+          - `compositionId`, `inputs`, `signal` y `resources` son las únicas capacidades del
+          contexto. - Los inputs son profundamente inmutables y no pueden reemplazarse desde el
+          retorno. - El retorno solo puede declarar `duration`, `tempo` y metadata JSON
+          serializable. - `PreparationResourceResolver.audio(reference)` devuelve metadata validada
+          y hash; no expone buffers, handles ni rutas físicas. - El resolver está ligado a la
+          cancelación y registra recursos consultados para fijarlos en la variante resuelta. - Las
+          opciones de render quedan fuera de esta API y conservan su propia precedencia. - Resona
+          valida el retorno y construye internamente la `ResolvedVariant` inmutable. - La
+          combinación de declaraciones estáticas y dinámicas se define en el [ADR
+          0061](0061-shallow-preparation-metadata-merge.md).
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

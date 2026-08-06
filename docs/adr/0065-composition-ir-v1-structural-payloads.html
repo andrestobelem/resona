@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CompositionIR v1 fija sus payloads estructurales · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">docs/adr/0065-composition-ir-v1-structural-payloads.md</p>
+      <article>
+        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <h1 id="compositionir-v1-fija-sus-payloads-estructurales">
+          CompositionIR v1 fija sus payloads estructurales
+        </h1>
+        <p>Secuencias, pistas, clips y notas usan estas formas:</p>
+        <pre><code class="language-ts">
+type SequenceIR = IRNodeBase &amp; Readonly&lt;{
+  type: &quot;sequence&quot;;
+  from: PositionIR;
+  duration?: DurationIR;
+  children: readonly (SequenceIR | TrackIR)[];
+}&gt;;
+
+type AudioTrackIR = IRNodeBase &amp; Readonly&lt;{
+  type: &quot;audio-track&quot;;
+  clips: readonly AudioClipIR[];
+  effects: readonly EffectIR[];
+  automation: readonly AutomationLaneIR[];
+}&gt;;
+
+type InstrumentTrackIR = IRNodeBase &amp; Readonly&lt;{
+  type: &quot;instrument-track&quot;;
+  clips: readonly EventClipIR[];
+  instrument: PolySynthIR;
+  effects: readonly EffectIR[];
+  automation: readonly AutomationLaneIR[];
+}&gt;;
+
+type AudioClipIR = IRNodeBase &amp; Readonly&lt;{
+  type: &quot;audio-clip&quot;;
+  from: PositionIR;
+  resource: StaticAudioReference;
+  offset: AbsoluteDurationIR;
+  duration?: DurationIR;
+  loop: boolean;
+}&gt;;
+
+type EventClipIR = IRNodeBase &amp; Readonly&lt;{
+  type: &quot;event-clip&quot;;
+  from: PositionIR;
+  events: readonly NoteIR[];
+}&gt;;
+
+type NoteIR = Readonly&lt;{
+  type: &quot;note&quot;;
+  at: PositionIR;
+  duration: DurationIR;
+  pitch: PitchIR;
+  velocity: number;
+}&gt;;
+        </code></pre>
+        <h2 id="opciones-consideradas">Opciones consideradas</h2>
+        <p>
+          - Omitir arrays vacíos y defaults para reducir el JSON. - Agregar IDs u ordinales
+          serializados a cada nota. - Materializar defaults, conservar arrays ordenados y derivar la
+          identidad densa desde el clip y el índice del evento.
+        </p>
+        <p>
+          Se eligió la tercera opción porque produce una sola forma canónica, preserva el orden que
+          afecta la ejecución y evita duplicar una identidad que ya está determinada por la
+          estructura.
+        </p>
+        <h2 id="consecuencias">Consecuencias</h2>
+        <p>
+          - Todos los arrays están presentes aunque estén vacíos y su orden es semántico. -
+          `offset`, `loop` y `velocity` materializan los defaults cero, `false` y `1`. - Solo
+          `source` y duraciones semánticamente abiertas pueden omitirse. - `AudioClipIR.offset`
+          exige una duración absoluta. - La identidad de nota deriva de la ruta del clip y su
+          índice; `NoteIR` no tiene `id`, `path`, `source` ni `ordinal`. - La raíz empieza en cero y
+          su duración coincide con la cabecera de la composición. - `AudioTrackIR` no admite
+          instrumento y `InstrumentTrackIR` exige exactamente uno. - Toda frontera que recibe una IR
+          serializada vuelve a validar estas invariantes. - Cabecera, tempo y pitch se fijan en el
+          [ADR 0066](0066-composition-ir-v1-header-tempo-and-pitch.md).
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

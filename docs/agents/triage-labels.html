@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Triage Labels · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">docs/agents/triage-labels.md</p>
+      <article>
+        <h1 id="triage-labels">Triage Labels</h1>
+        <p>
+          The skills speak in terms of five canonical triage roles. This file maps those roles to
+          the actual label strings used in this repo's issue tracker.
+        </p>
+        <p>
+          | Label in mattpocock/skills | Label in our tracker | Meaning | |
+          -------------------------- | -------------------- |
+          ---------------------------------------- | | `needs-triage` | `needs-triage` | Maintainer
+          needs to evaluate this issue | | `needs-info` | `needs-info` | Waiting on reporter for
+          more information | | `ready-for-agent` | `ready-for-agent` | Fully specified, ready for an
+          AFK agent | | `ready-for-human` | `ready-for-human` | Requires human implementation | |
+          `wontfix` | `wontfix` | Will not be actioned |
+        </p>
+        <p>
+          When a skill mentions a role (e.g. &quot;apply the AFK-ready triage label&quot;), use the
+          corresponding label string from this table.
+        </p>
+        <p>Edit the right-hand column to match whatever vocabulary you actually use.</p>
+      </article>
+    </main>
+  </body>
+</html>

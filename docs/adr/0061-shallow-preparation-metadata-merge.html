@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>
+      La preparación aplica reemplazo por campo y merge superficial de metadata · Resona
+    </title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">docs/adr/0061-shallow-preparation-metadata-merge.md</p>
+      <article>
+        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <h1 id="la-preparacion-aplica-reemplazo-por-campo-y-merge-superficial-de-metadata">
+          La preparación aplica reemplazo por campo y merge superficial de metadata
+        </h1>
+        <p>
+          La declaración estática de una composición es la base. Los campos `duration` y `tempo`
+          devueltos por `prepare` reemplazan sus valores estáticos; un campo omitido conserva la
+          declaración original. La metadata estática y dinámica se combina por claves de primer
+          nivel, con precedencia para las claves devueltas por `prepare`.
+        </p>
+        <p>
+          Objetos anidados y arrays se reemplazan completos. No hay merge profundo, valores
+          `undefined` ni sentinels especiales para borrar campos.
+        </p>
+        <h2 id="opciones-consideradas">Opciones consideradas</h2>
+        <p>
+          - Reemplazar toda la declaración estática cuando existe un resultado dinámico. - Aplicar
+          merge profundo recursivo. - Resolver campos explícitos y combinar solo la metadata por
+          claves de primer nivel.
+        </p>
+        <p>
+          Se eligió la tercera opción porque permite complementar metadata editorial sin repetirla,
+          pero evita reglas recursivas sorprendentes y conserva una precedencia fácil de explicar,
+          serializar y reproducir.
+        </p>
+        <h2 id="consecuencias">Consecuencias</h2>
+        <p>
+          - `duration` y `tempo` usan reemplazo completo cuando aparecen en el retorno. - Una clave
+          de metadata dinámica reemplaza por completo el valor estático de la misma clave. - Claves
+          estáticas no mencionadas permanecen en el resultado. - El resultado debe ser JSON
+          serializable donde corresponda y no puede contener `undefined`. - Resona valida y congela
+          la configuración final antes de evaluar TSX. - Cada campo resuelto conserva procedencia
+          estática o dinámica para diagnóstico e identidad.
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

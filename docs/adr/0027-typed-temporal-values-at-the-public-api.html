@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>La API pública usa valores temporales tipados · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">docs/adr/0027-typed-temporal-values-at-the-public-api.md</p>
+      <article>
+        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <h1 id="la-api-publica-usa-valores-temporales-tipados">
+          La API pública usa valores temporales tipados
+        </h1>
+        <p>
+          Posiciones y duraciones se representan como tipos distintos, inmutables, discriminados y
+          serializables. La API TypeScript los construye mediante helpers y no acepta números ni
+          strings crudos en props temporales.
+        </p>
+        <h2 id="opciones-consideradas">Opciones consideradas</h2>
+        <p>
+          - Usar números y documentar una unidad implícita por prop. - Usar strings musicales o
+          absolutos directamente en toda la API. - Construir valores tipados en TypeScript y parsear
+          strings solo en adaptadores de borde.
+        </p>
+        <p>
+          Se eligió la tercera opción porque mantiene una autoría legible sin permitir que posición,
+          duración o unidad se confundan silenciosamente dentro del modelo.
+        </p>
+        <h2 id="consecuencias">Consecuencias</h2>
+        <p>
+          - Helpers separados construyen posiciones y duraciones. - Ambos tipos conservan su unidad
+          y admiten serialización sin perder significado. - TSX rechaza números y strings crudos
+          para valores temporales. - CLI y configuración pueden parsear formas como `5:1:0` antes de
+          invocar el dominio. - Los nombres exactos de los helpers se ajustarán con pruebas de uso
+          del prototipo. - El planificador continúa normalizando una sola vez a frames de muestras
+          enteros.
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

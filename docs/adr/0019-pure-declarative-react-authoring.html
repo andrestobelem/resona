@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>La autoría React es declarativa y pura · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">docs/adr/0019-pure-declarative-react-authoring.md</p>
+      <article>
+        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <h1 id="la-autoria-react-es-declarativa-y-pura">La autoría React es declarativa y pura</h1>
+        <p>
+          Una variante de Resona evalúa una vez un árbol finito de componentes funcionales. La
+          autoría admite composición, fragments, condiciones, listas y hooks de solo lectura
+          provistos por Resona; no usa React como runtime con estado para producir audio.
+        </p>
+        <h2 id="opciones-consideradas">Opciones consideradas</h2>
+        <p>
+          - Admitir cualquier semántica de una aplicación React, incluidos estado y efectos. -
+          Definir una DSL TSX propia que no evalúe componentes React. - Usar un subconjunto React
+          puro y trasladar I/O a la fase de preparación.
+        </p>
+        <p>
+          Se eligió la tercera opción para conservar composición idiomática sin introducir renders
+          dependientes del scheduler, side effects o estado oculto en la `CompositionIR`.
+        </p>
+        <h2 id="consecuencias">Consecuencias</h2>
+        <p>
+          - Se admiten componentes funcionales, fragments, condiciones y listas finitas. - Los hooks
+          públicos son de solo lectura y exponen inputs o contexto musical de Resona. - `useState`,
+          `useEffect`, DOM, refs y componentes async no forman parte del contrato. - Preparación
+          concentra I/O y trabajo asíncrono antes de evaluar TSX. - Lint y diagnósticos de runtime
+          explican las construcciones no admitidas.
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ExecutionPlan trace es completo, opcional y no operativo · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">docs/adr/0076-complete-non-operational-execution-plan-trace.md</p>
+      <article>
+        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <h1 id="executionplan-trace-es-completo-opcional-y-no-operativo">
+          ExecutionPlan trace es completo, opcional y no operativo
+        </h1>
+        <p>
+          `ExecutionPlan.trace` relaciona las filas densas del plan con sus orígenes semánticos para
+          Studio y diagnósticos. Puede omitirse sin cambiar la validación ni la ejecución.
+        </p>
+        <pre><code class="language-ts">
+type PlanTrace =
+  | Readonly&lt;{
+      type: &quot;processor&quot;;
+      index: ProcessorIndex;
+      origin: NodePath;
+    }&gt;
+  | Readonly&lt;{
+      type: &quot;route&quot;;
+      index: number;
+      from: NodePath;
+      to: NodePath;
+    }&gt;
+  | Readonly&lt;{
+      type: &quot;resource&quot;;
+      index: ResourceIndex;
+      origins: readonly NodePath[];
+    }&gt;
+  | Readonly&lt;{
+      type: &quot;audio-region&quot;;
+      index: number;
+      origin: NodePath;
+    }&gt;
+  | Readonly&lt;{
+      type: &quot;instrument-event&quot;;
+      index: number;
+      origin: Readonly&lt;{
+        clipPath: NodePath;
+        eventIndex: number;
+      }&gt;;
+    }&gt;
+  | Readonly&lt;{
+      type: &quot;automation-lane&quot;;
+      index: number;
+      origin: NodePath;
+    }&gt;;
+        </code></pre>
+        <h2 id="opciones-consideradas">Opciones consideradas</h2>
+        <p>
+          - Incluir IDs y procedencia directamente en cada payload ejecutable. - Usar un diccionario
+          genérico y parcial de índices a metadata arbitraria. - Mantener una unión diagnóstica
+          separada, opcional pero completa cuando existe.
+        </p>
+        <p>
+          Se eligió la tercera opción. Preserva payloads ejecutables densos, permite validar la
+          cobertura del trace y evita que una optimización o superficie dependa accidentalmente de
+          metadata que producción puede omitir.
+        </p>
+        <h2 id="consecuencias">Consecuencias</h2>
+        <p>
+          - Ausencia de `trace` es válida y no cambia ningún comportamiento. - Cuando existe, hay
+          exactamente una entrada por fila de `processors`, `routes`, `resources`, `audioRegions`,
+          `events` y `automation`. - Cada índice es válido y único dentro de su discriminante. - Las
+          entradas se ordenan por el orden de tablas anterior y luego por índice ascendente. - El
+          master se origina en la secuencia raíz; cada sumador de pista se origina en esa pista. -
+          Una ruta conserva los paths de los procesadores conectados. - Un recurso deduplicado
+          conserva una lista no vacía, canónica y sin duplicados de los clips que originaron su
+          hash. - Una región de audio apunta a su `AudioClipIR`. - Attack y release de la misma
+          ocurrencia apuntan al mismo `EventClipIR.path` y al mismo `eventIndex` original. - Una
+          entrada de automatización apunta a `AutomationLaneIR`; los puntos sintéticos no crean un
+          origen ficticio. - `SourceLocation` permanece en `CompositionIR` y se obtiene por join con
+          `NodePath`. - La forma canónica de ambos valores se fija en el [ADR
+          0077](0077-canonical-node-paths-and-source-locations.md). - `trace` queda fuera de hashes,
+          fingerprints e identidad musical. - El motor, el routing y los medidores no pueden
+          depender de esta tabla. Un mapping operativo futuro deberá tener un contrato obligatorio
+          separado.
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

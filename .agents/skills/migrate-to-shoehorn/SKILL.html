@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Migrate to Shoehorn · Resona</title>
+    <link rel="stylesheet" href="../../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">.agents/skills/migrate-to-shoehorn/SKILL.md</p>
+      <article>
+        <p>
+          --- name: migrate-to-shoehorn description: Migrate test files from `as` type assertions to
+          @total-typescript/shoehorn. Use when user mentions shoehorn, wants to replace `as` in
+          tests, or needs partial test data. ---
+        </p>
+        <h1 id="migrate-to-shoehorn">Migrate to Shoehorn</h1>
+        <h2 id="why-shoehorn">Why shoehorn?</h2>
+        <p>
+          `shoehorn` lets you pass partial data in tests while keeping TypeScript happy. It replaces
+          `as` assertions with type-safe alternatives.
+        </p>
+        <p>**Test code only.** Never use shoehorn in production code.</p>
+        <p>Problems with `as` in tests:</p>
+        <p>
+          - Trained not to use it - Must manually specify target type - Double-as (`as unknown as
+          Type`) for intentionally wrong data
+        </p>
+        <h2 id="install">Install</h2>
+        <pre><code class="language-bash">
+npm i @total-typescript/shoehorn
+        </code></pre>
+        <h2 id="migration-patterns">Migration patterns</h2>
+        <h3 id="large-objects-with-few-needed-properties">
+          Large objects with few needed properties
+        </h3>
+        <p>Before:</p>
+        <pre><code class="language-ts">
+type Request = {
+  body: { id: string };
+  headers: Record&lt;string, string&gt;;
+  cookies: Record&lt;string, string&gt;;
+  // ...20 more properties
+};
+
+it(&quot;gets user by id&quot;, () =&gt; {
+  // Only care about body.id but must fake entire Request
+  getUser({
+    body: { id: &quot;123&quot; },
+    headers: {},
+    cookies: {},
+    // ...fake all 20 properties
+  });
+});
+        </code></pre>
+        <p>After:</p>
+        <pre><code class="language-ts">
+import { fromPartial } from &quot;@total-typescript/shoehorn&quot;;
+
+it(&quot;gets user by id&quot;, () =&gt; {
+  getUser(
+    fromPartial({
+      body: { id: &quot;123&quot; },
+    }),
+  );
+});
+        </code></pre>
+        <h3 id="as-type-frompartial">`as Type` → `fromPartial()`</h3>
+        <p>Before:</p>
+        <pre><code class="language-ts">
+getUser({ body: { id: &quot;123&quot; } } as Request);
+        </code></pre>
+        <p>After:</p>
+        <pre><code class="language-ts">
+import { fromPartial } from &quot;@total-typescript/shoehorn&quot;;
+
+getUser(fromPartial({ body: { id: &quot;123&quot; } }));
+        </code></pre>
+        <h3 id="as-unknown-as-type-fromany">`as unknown as Type` → `fromAny()`</h3>
+        <p>Before:</p>
+        <pre><code class="language-ts">
+getUser({ body: { id: 123 } } as unknown as Request); // wrong type on purpose
+        </code></pre>
+        <p>After:</p>
+        <pre><code class="language-ts">
+import { fromAny } from &quot;@total-typescript/shoehorn&quot;;
+
+getUser(fromAny({ body: { id: 123 } }));
+        </code></pre>
+        <h2 id="when-to-use-each">When to use each</h2>
+        <p>
+          | Function | Use case | | --------------- |
+          -------------------------------------------------- | | `fromPartial()` | Pass partial data
+          that still type-checks | | `fromAny()` | Pass intentionally wrong data (keeps
+          autocomplete) | | `fromExact()` | Force full object (swap with fromPartial later) |
+        </p>
+        <h2 id="workflow">Workflow</h2>
+        <p>
+          1. **Gather requirements** - ask user: - What test files have `as` assertions causing
+          problems? - Are they dealing with large objects where only some properties matter? - Do
+          they need to pass intentionally wrong data for error testing?
+        </p>
+        <p>
+          2. **Install and migrate**: - [ ] Install: `npm i @total-typescript/shoehorn` - [ ] Find
+          test files with `as` assertions: `grep -r &quot; as [A-Z]&quot;
+          --include=&quot;*.test.ts&quot; --include=&quot;*.spec.ts&quot;` - [ ] Replace `as Type`
+          with `fromPartial()` - [ ] Replace `as unknown as Type` with `fromAny()` - [ ] Add imports
+          from `@total-typescript/shoehorn` - [ ] Run type check to verify
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

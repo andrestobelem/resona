@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CompositionIR v1 usa un vocabulario cerrado · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">docs/adr/0063-closed-composition-ir-v1-vocabulary.md</p>
+      <article>
+        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <h1 id="compositionir-v1-usa-un-vocabulario-cerrado">
+          CompositionIR v1 usa un vocabulario cerrado
+        </h1>
+        <p>
+          La cabecera de `CompositionIR` v1 contiene `format`, `schemaVersion`, `compositionId`,
+          `duration`, `tempo`, `metadata` y una raíz `SequenceIR`. Todo nodo público implementa
+          `IRNodeBase` con ID, ruta canónica y ubicación fuente opcional.
+        </p>
+        <pre><code class="language-ts">
+type IRNodeBase = Readonly&lt;{
+  id: string;
+  path: NodePath;
+  source?: SourceLocation;
+}&gt;;
+
+type SequenceChildIR = SequenceIR | TrackIR;
+type TrackIR = AudioTrackIR | InstrumentTrackIR;
+type InstrumentIR = PolySynthIR;
+type EffectIR = GainIR | DelayIR;
+        </code></pre>
+        <h2 id="opciones-consideradas">Opciones consideradas</h2>
+        <p>
+          - Representar toda entidad, incluida cada nota, como un nodo público extensible. - Admitir
+          nodos genéricos con payloads arbitrarios desde v1. - Cerrar el vocabulario inicial y
+          mantener los eventos densos como datos tipados dentro de clips estructurales.
+        </p>
+        <p>
+          Se eligió la tercera opción porque mantiene inspeccionable la estructura sin inflar el
+          árbol con una entidad por evento ni permitir payloads que Studio y el planificador no
+          puedan validar exhaustivamente.
+        </p>
+        <h2 id="consecuencias">Consecuencias</h2>
+        <p>
+          - `SequenceIR` contiene otras secuencias o pistas. - `AudioTrackIR` contiene `AudioClipIR`
+          y no admite instrumento. - `InstrumentTrackIR` contiene `EventClipIR` y exactamente un
+          `PolySynthIR`. - Ambas pistas pueden contener una cadena ordenada de `GainIR | DelayIR` y
+          lanes de automatización. - Una lane apunta a un parámetro mediante `{nodePath,
+          parameterId}`. - Las notas viven como datos dentro de `EventClipIR` y no tienen ID ni
+          ubicación fuente pública individual. - `AudioClipIR` conserva una `StaticAudioReference`;
+          el hash pertenece al plan resuelto. - No existe un discriminante genérico de extensión.
+          Agregar nodos exige otra versión del schema y una migración explícita. - La representación
+          temporal se fija en el [ADR 0064](0064-canonical-rational-time-in-composition-ir.md); los
+          demás payloads se fijarán por separado. - Los payloads de secuencias, pistas, clips y
+          notas se fijan en el [ADR 0065](0065-composition-ir-v1-structural-payloads.md). -
+          `NodePath` y `SourceLocation` se fijan en el [ADR
+          0077](0077-canonical-node-paths-and-source-locations.md).
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CompositionIR v1 fija cabecera, tempo y pitch · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">docs/adr/0066-composition-ir-v1-header-tempo-and-pitch.md</p>
+      <article>
+        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <h1 id="compositionir-v1-fija-cabecera-tempo-y-pitch">
+          CompositionIR v1 fija cabecera, tempo y pitch
+        </h1>
+        <p>La cabecera y los valores musicales escalares usan estas formas:</p>
+        <pre><code class="language-ts">
+type CompositionIR = Readonly&lt;{
+  format: &quot;resona/composition-ir&quot;;
+  schemaVersion: 1;
+  compositionId: string;
+  duration: DurationIR;
+  tempo: TempoIR;
+  metadata: JsonObject;
+  root: SequenceIR;
+}&gt;;
+
+type TempoIR = Readonly&lt;{
+  type: &quot;constant-tempo&quot;;
+  bpm: RationalIR;
+  timeSignature: Readonly&lt;{
+    beatsPerBar: number;
+    beatUnit: number;
+  }&gt;;
+}&gt;;
+
+type PitchIR = Readonly&lt;{
+  type: &quot;twelve-tet&quot;;
+  semitonesFromA4: number;
+}&gt;;
+        </code></pre>
+        <h2 id="opciones-consideradas">Opciones consideradas</h2>
+        <p>
+          - Conservar BPM de punto flotante, métrica como tupla y pitch como nota MIDI. - Incorporar
+          desde v1 un mapa de tempo y afinaciones extensibles. - Usar valores semánticos explícitos,
+          exactos y cerrados para el alcance inicial.
+        </p>
+        <p>
+          Se eligió la tercera opción porque evita ambigüedad posicional en la métrica y
+          acoplamiento a MIDI, conserva exactitud temporal y deja visibles las extensiones que
+          exigirán evolución del schema.
+        </p>
+        <h2 id="consecuencias">Consecuencias</h2>
+        <p>
+          - `bpm` es una fracción racional positiva y distinta de cero. - `beatsPerBar` es un entero
+          seguro positivo. - `beatUnit` es un entero seguro positivo y potencia de dos. -
+          `semitonesFromA4` es un entero seguro con signo y no adopta el rango MIDI. - El límite
+          dependiente del sample rate se valida al planificar según el [ADR
+          0074](0074-pitch-frequency-must-be-below-nyquist.md). - `metadata` siempre es un objeto
+          JSON, aunque no contenga claves. - La raíz comienza en cero y su duración coincide con
+          `CompositionIR.duration`. - Cambios de tempo, cambios de métrica y afinaciones distintas
+          de 12-TET requieren otra versión del schema. - Los payloads de instrumento y efectos se
+          fijan en el [ADR 0067](0067-closed-composition-ir-v1-processor-payloads.md).
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

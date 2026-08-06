@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Cada voz usa un oscilador determinista único · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">docs/adr/0034-single-deterministic-oscillator-per-voice.md</p>
+      <article>
+        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <h1 id="cada-voz-usa-un-oscilador-determinista-unico">
+          Cada voz usa un oscilador determinista único
+        </h1>
+        <p>
+          Cada voz de `PolySynth` contiene un oscilador cuya fase se reinicia en cero al atacar. El
+          MVP ofrece `sine`, `saw` y `square`; saw y square usan una corrección PolyBLEP
+          implementada en el núcleo DSP compartido.
+        </p>
+        <h2 id="opciones-consideradas">Opciones consideradas</h2>
+        <p>
+          - Comenzar con una onda sinusoidal sin selector. - Ofrecer formas ingenuas sin corrección
+          de aliasing. - Ofrecer tres formas básicas con antialiasing determinista para las
+          discontinuas. - Diseñar desde el inicio un sintetizador con múltiples osciladores y
+          modulación.
+        </p>
+        <p>
+          Se eligió la tercera opción porque permite timbres básicos útiles sin aceptar el aliasing
+          más evidente ni ampliar el primer instrumento a una arquitectura completa de síntesis.
+        </p>
+        <h2 id="consecuencias">Consecuencias</h2>
+        <p>
+          - Cada ataque comienza desde fase cero. - No existe fase libre o global entre ocurrencias.
+          - La señal nominal previa a velocity y envolvente pertenece a `[-1, 1]`. - PolyBLEP forma
+          parte de la semántica compartida por Studio y render. - Unison, pulse width, ruido,
+          modulación y fase configurable quedan fuera del MVP. - `triangle` queda fuera hasta
+          definir su integración y estado.
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

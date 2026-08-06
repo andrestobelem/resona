@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Renderer context · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">packages/renderer/CONTEXT.md</p>
+      <article>
+        <h1 id="renderer-context">Renderer context</h1>
+        <p>
+          The renderer consumes an immutable `CreateRenderJobResult`; it never evaluates TSX or
+          replans musical time. It renders `PolySynth` plans through a stateful Float32 DSP loop and
+          emits an in-memory 48 kHz, stereo, IEEE-float32 WAV.
+        </p>
+        <p>
+          The DSP loop is intentionally block-size independent. Parameters, accumulated samples and
+          WAV payloads cross explicit Float32 boundaries; oscillator phase and envelope calculations
+          remain Float64 locally. No normalization, limiting or implicit clipping occurs.
+        </p>
+        <p>
+          Each instrument owns stable voice slots. Attacks use the lowest free slot; exhaustion
+          steals the releasing voice with the lowest envelope-scaled amplitude, or otherwise the
+          oldest active voice, with slot index as the final tie-breaker. Releases address
+          occurrences, so a stale release cannot affect a reassigned slot. Voice-steal diagnostics
+          are aggregated once per instrument and render execution.
+        </p>
+        <p>
+          Sine, saw and square reset phase at attack. Saw and square use the same deterministic
+          PolyBLEP correction around their discontinuities.
+        </p>
+        <p>
+          `renderAudioToFile()` is the filesystem adapter over the same renderer. It writes a
+          validated float32 WAV to a same-directory temporary, publishes it atomically, refuses
+          existing outputs unless `overwrite: true`, and removes temporary state on cancellation or
+          failure. It never introduces a second interpretation of the execution plan.
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

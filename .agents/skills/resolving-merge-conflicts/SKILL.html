@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SKILL · Resona</title>
+    <link rel="stylesheet" href="../../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">.agents/skills/resolving-merge-conflicts/SKILL.md</p>
+      <article>
+        <p>
+          --- name: resolving-merge-conflicts description: &quot;Use when you need to resolve an
+          in-progress git merge/rebase conflict.&quot; ---
+        </p>
+        <p>
+          1. **See the current state** of the merge/rebase. Check git history, and the conflicting
+          files.
+        </p>
+        <p>
+          2. **Find the primary sources** for each conflict. Understand deeply why each change was
+          made, and what the original intent was. Read the commit messages, check the PRs, check
+          original issues/tickets.
+        </p>
+        <p>
+          3. **Resolve each hunk.** Preserve both intents where possible. Where incompatible, pick
+          the one matching the merge's stated goal and note the trade-off. Do **not** invent new
+          behaviour. Always resolve; never `--abort`.
+        </p>
+        <p>
+          4. Discover the project's **automated checks** and run them — typically typecheck, then
+          tests, then format. Fix anything the merge broke.
+        </p>
+        <p>
+          5. **Finish the merge/rebase.** Stage everything and commit. If rebasing, continue the
+          rebase process until all commits are rebased.
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

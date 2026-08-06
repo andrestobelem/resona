@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Issue tracker: Local Markdown · Resona</title>
+    <link rel="stylesheet" href="../../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">.agents/skills/setup-matt-pocock-skills/issue-tracker-local.md</p>
+      <article>
+        <h1 id="issue-tracker-local-markdown">Issue tracker: Local Markdown</h1>
+        <p>
+          Issues and specs (you may know a spec as a PRD) for this repo live as markdown files in
+          `.scratch/`.
+        </p>
+        <h2 id="conventions">Conventions</h2>
+        <p>
+          - One feature per directory: `.scratch/&lt;feature-slug&gt;/` - The spec is
+          `.scratch/&lt;feature-slug&gt;/spec.md` - Implementation issues are one file per ticket at
+          `.scratch/&lt;feature-slug&gt;/issues/&lt;NN&gt;-&lt;slug&gt;.md`, numbered from `01` —
+          never a single combined tickets file - Triage state is recorded as a `Status:` line near
+          the top of each issue file (see `triage-labels.md` for the role strings) - Comments and
+          conversation history append to the bottom of the file under a `## Comments` heading
+        </p>
+        <h2 id="when-a-skill-says-publish-to-the-issue-tracker">
+          When a skill says &quot;publish to the issue tracker&quot;
+        </h2>
+        <p>
+          Create a new file under `.scratch/&lt;feature-slug&gt;/` (creating the directory if
+          needed).
+        </p>
+        <h2 id="when-a-skill-says-fetch-the-relevant-ticket">
+          When a skill says &quot;fetch the relevant ticket&quot;
+        </h2>
+        <p>
+          Read the file at the referenced path. The user will normally pass the path or the issue
+          number directly.
+        </p>
+        <h2 id="wayfinding-operations">Wayfinding operations</h2>
+        <p>Used by `/wayfinder`. The **map** is a file with one **child** file per ticket.</p>
+        <p>
+          - **Map**: `.scratch/&lt;effort&gt;/map.md` — the Notes / Decisions-so-far / Fog body. -
+          **Child ticket**: `.scratch/&lt;effort&gt;/issues/NN-&lt;slug&gt;.md`, numbered from `01`,
+          with the question in the body. A `Type:` line records the ticket type
+          (`research`/`prototype`/`grilling`/`task`); a `Status:` line records `claimed`/`resolved`.
+          - **Blocking**: a `Blocked by: NN, NN` line near the top. A ticket is unblocked when every
+          file it lists is `resolved`. - **Frontier**: scan `.scratch/&lt;effort&gt;/issues/` for
+          files that are open, unblocked, and unclaimed; first by number wins. - **Claim**: set
+          `Status: claimed` and save before any work. - **Resolve**: append the answer under an `##
+          Answer` heading, set `Status: resolved`, then append a context pointer (gist + link) to
+          the map's Decisions-so-far in `map.md`.
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

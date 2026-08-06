@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Fingerprint y aleatoriedad usan SHA-256 sobre JSON canónico · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">docs/adr/0080-canonical-render-fingerprint-and-keyed-randomness.md</p>
+      <article>
+        <p>--- status: accepted date: 2026-08-05 ---</p>
+        <h1 id="fingerprint-y-aleatoriedad-usan-sha-256-sobre-json-canonico">
+          Fingerprint y aleatoriedad usan SHA-256 sobre JSON canónico
+        </h1>
+        <p>
+          `RenderSpec` versión 1 se serializa recursivamente como JSON sin espacios: las claves de
+          objetos se ordenan lexicográficamente, el orden de arrays se conserva y los primitivos
+          usan la representación de `JSON.stringify`. El fingerprint es SHA-256 sobre esos bytes
+          UTF-8 y se expresa como `sha256:&lt;hex minúsculo&gt;`.
+        </p>
+        <p>
+          La aleatoriedad direccionada versión 1 calcula SHA-256 sobre el array JSON
+          `[&quot;resona/random&quot;, 1, seed, path, key]`. Los primeros 53 bits del digest forman
+          un entero sin signo que se divide por `2^53`, produciendo un valor en `[0, 1)`.
+        </p>
+        <h2 id="opciones-consideradas">Opciones consideradas</h2>
+        <p>
+          - Depender del orden de inserción de objetos y del PRNG global de JavaScript. - Adoptar
+          una serialización binaria propia y un generador secuencial con estado. - Usar JSON
+          canónico explícito, SHA-256 y valores aleatorios puros por dirección.
+        </p>
+        <p>
+          Se eligió la tercera opción porque los artefactos siguen siendo inspeccionables, el hash
+          es portable y agregar una consulta aleatoria no desplaza resultados con otras claves.
+        </p>
+        <h2 id="consecuencias">Consecuencias</h2>
+        <p>
+          - `RenderSpec` incluye build, versiones, inputs, seed, configuración y metadata resueltas,
+          hashes de recursos, IR y plan, rango, cola, opciones efectivas, plataforma y backend. -
+          Ruta de salida, callbacks, progreso, cancelación y tamaño de bloque no cruzan a la spec. -
+          Cambiar el formato canónico, el dominio del hash o la extracción de bits exige aumentar la
+          versión correspondiente. - Las claves aleatorias son explícitas y no vacías; seed, path o
+          clave distintos producen direcciones independientes. - El lint rechaza `Math.random()`
+          dentro de los paquetes de Resona.
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

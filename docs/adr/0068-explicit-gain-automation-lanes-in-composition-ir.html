@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CompositionIR v1 usa lanes explícitas para automatizar Gain · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">docs/adr/0068-explicit-gain-automation-lanes-in-composition-ir.md</p>
+      <article>
+        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <h1 id="compositionir-v1-usa-lanes-explicitas-para-automatizar-gain">
+          CompositionIR v1 usa lanes explícitas para automatizar Gain
+        </h1>
+        <p>La automatización usa estas formas:</p>
+        <pre><code class="language-ts">
+type AutomationLaneIR = IRNodeBase &amp; Readonly&lt;{
+  type: &quot;automation-lane&quot;;
+  target: Readonly&lt;{
+    nodePath: NodePath;
+    parameterId: &quot;gain&quot;;
+  }&gt;;
+  points: readonly AutomationPointIR[];
+}&gt;;
+
+type AutomationPointIR = Readonly&lt;{
+  at: PositionIR;
+  value: number;
+  interpolation: &quot;hold&quot; | &quot;linear&quot;;
+}&gt;;
+        </code></pre>
+        <h2 id="opciones-consideradas">Opciones consideradas</h2>
+        <p>
+          - Permitir funciones o expresiones arbitrarias evaluadas durante el procesamiento. -
+          Guardar curvas genéricas sin restringir target ni semántica. - Definir lanes cerradas, con
+          target explícito y puntos serializables que el planificador compila.
+        </p>
+        <p>
+          Se eligió la tercera opción porque hace inspeccionable la automatización, permite
+          validarla antes del motor y conserva semántica independiente del tamaño de bloque.
+        </p>
+        <h2 id="consecuencias">Consecuencias</h2>
+        <p>
+          - Una lane solo apunta al parámetro `&quot;gain&quot;` de un `GainIR` de su propia pista.
+          - Existe como máximo una lane por `{nodePath, parameterId}`. - Una lane contiene al menos
+          un punto. - Los puntos conservan el orden declarado en la IR y el planificador los ordena
+          por tiempo exacto. - Tiempos exactos duplicados son inválidos; tiempos distintos que
+          producen el mismo frame también fallan al compilar. - Antes del primer punto se usa el
+          gain base y después del último se conserva su valor. - `interpolation` describe el
+          segmento desde un punto hacia el siguiente y solo admite `hold` o `linear`. - Los valores
+          son finitos, no negativos y su conversión a `Float32` debe ser finita. - Callbacks,
+          expresiones y curvas arbitrarias quedan fuera de la IR. - La compilación a puntos por
+          frame e índice de procesador se fija en el [ADR
+          0075](0075-frame-resolved-gain-automation-points.md). - La canonización numérica durante
+          esa compilación se fija en el [ADR 0078](0078-explicit-float32-audio-boundaries.md).
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

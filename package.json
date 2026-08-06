@@ -13,6 +13,7 @@
     "build": "pnpm --recursive --fail-if-no-match run build",
     "check:fast": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test:unit",
     "check:full": "pnpm check:fast && pnpm build && pnpm test:integration",
+    "docs:build": "pnpm --filter @resona/docs docs:build",
     "format": "prettier --write . --ignore-unknown",
     "format:check": "prettier --check . --ignore-unknown",
     "lint": "pnpm lint:code && pnpm lint:docs",

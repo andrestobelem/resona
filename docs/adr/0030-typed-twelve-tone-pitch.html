@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pitch es un valor tipado de doce tonos · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">docs/adr/0030-typed-twelve-tone-pitch.md</p>
+      <article>
+        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <h1 id="pitch-es-un-valor-tipado-de-doce-tonos">Pitch es un valor tipado de doce tonos</h1>
+        <p>
+          El MVP representa pitch mediante un valor discriminado cuya forma canónica es una cantidad
+          entera de semitonos respecto de `A4 = 440 Hz`. Usa afinación temperada de doce tonos.
+        </p>
+        <h2 id="opciones-consideradas">Opciones consideradas</h2>
+        <p>
+          - Usar directamente números de nota MIDI. - Usar strings con nombres de notas como
+          representación interna. - Usar un valor propio de pitch y adaptar nombres científicos y
+          MIDI en el borde. - Diseñar desde el inicio un sistema general de afinaciones y
+          microtonalidad.
+        </p>
+        <p>
+          Se eligió la tercera opción para no acoplar el dominio a MIDI ni al parsing de strings,
+          sin incorporar todavía la complejidad de afinaciones arbitrarias.
+        </p>
+        <h2 id="consecuencias">Consecuencias</h2>
+        <p>
+          - `pitch.note(&quot;C4&quot;)` y `pitch.midi(60)` producen el mismo `Pitch`. - La notación
+          textual usa el convenio científico en el borde. - El motor convierte semitonos a
+          frecuencia bajo `A4 = 440 Hz`. - La representación rechaza fracciones de semitono en el
+          MVP. - Frecuencias arbitrarias, detune y afinaciones microtonales quedan fuera de alcance.
+          - Incorporar otra afinación exigirá un contrato explícito y no reinterpretará valores
+          existentes silenciosamente. - La validación de la frecuencia ejecutable se fija en el [ADR
+          0074](0074-pitch-frequency-must-be-below-nyquist.md).
+        </p>
+      </article>
+    </main>
+  </body>
+</html>
