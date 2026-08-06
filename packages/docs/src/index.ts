@@ -466,11 +466,35 @@ const renderMarkdown = async (
   document: Omit<MarkdownDocument, "body">,
   context: DocumentationContext,
 ): Promise<string> => {
+  validateReferenceLabels(source, document.relativePath);
   const markdown = createMarkdownIt();
   const tokens = markdown.parse(source, {});
   await validateAndRewriteReferences(tokens, document, context);
   return markdown.renderer.render(tokens, markdown.options, {});
 };
+
+const validateReferenceLabels = (source: string, relativePath: string): void => {
+  const withoutCode = source
+    .replace(/```[\s\S]*?```/gu, "")
+    .replace(/~~~[\s\S]*?~~~/gu, "")
+    .replace(/`[^`\r\n]*`/gu, "");
+  const definitions = new Set<string>();
+  const definitionPattern = /^\s{0,3}\[([^\]]+)\]:\s+\S.*$/gmu;
+  for (const match of withoutCode.matchAll(definitionPattern)) {
+    const label = match[1];
+    if (label !== undefined) definitions.add(normalizeReferenceLabel(label));
+  }
+  const referencePattern = /(?<!\\)(!?)\[([^\]]+)\]\[([^\]]*)\]/gu;
+  for (const match of withoutCode.matchAll(referencePattern)) {
+    const label = normalizeReferenceLabel(match[3] === "" ? (match[2] ?? "") : (match[3] ?? ""));
+    if (!definitions.has(label)) {
+      throw new Error(`Invalid reference label in ${relativePath}: ${label}`);
+    }
+  }
+};
+
+const normalizeReferenceLabel = (value: string): string =>
+  value.trim().replace(/\s+/gu, " ").toLowerCase();
 
 const createMarkdownIt = (): MarkdownIt => {
   const markdown = new MarkdownIt({ html: true, highlight: highlightCode });
@@ -714,7 +738,7 @@ const slugify = (value: string): string =>
     .normalize("NFKD")
     .replace(/\p{Mark}/gu, "")
     .toLowerCase()
-    .replace(/[^\p{Letter}\p{Number}\s-]+/gu, "")
+    .replace(/[^\p{Letter}\p{Number}_\s-]+/gu, "")
     .trim()
     .replace(/\s+/gu, "-")
     .replace(/-+/gu, "-");
