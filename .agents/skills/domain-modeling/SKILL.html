@@ -2316,11 +2316,16 @@
             <div class="document-meta">
               <details class="frontmatter">
                 <summary>Frontmatter</summary>
-                <pre><code class="language-yaml">---
+                <div class="code-block">
+                  <button type="button" class="copy-code-button" data-copy-code="true">
+                    Copy code
+                  </button>
+                  <pre><code class="language-yaml">---
 name: domain-modeling
 description: Build and sharpen a project's domain model. Use when the user wants to pin down domain terminology or a ubiquitous language, record an architectural decision, or when another skill needs to maintain the domain model.
 ---
 </code></pre>
+                </div>
               </details>
             </div>
             <div class="markdown-body">
@@ -2335,18 +2340,27 @@ description: Build and sharpen a project's domain model. Use when the user wants
               </p>
               <h2 id="file-structure">File structure</h2>
               <p>Most repos have a single context:</p>
-              <pre><code>/
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code>/
           ├── CONTEXT.md
           ├── docs/
           │   └── adr/
           │       ├── 0001-event-sourced-orders.md
           │       └── 0002-postgres-for-write-model.md
           └── src/</code></pre>
+              </div>
               <p>
                 If a <code>CONTEXT-MAP.md</code> exists at the root, the repo has multiple contexts.
                 The map points to where each one lives:
               </p>
-              <pre><code>/
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code>/
           ├── CONTEXT-MAP.md
           ├── docs/
           │   └── adr/                          ← system-wide decisions
@@ -2357,6 +2371,7 @@ description: Build and sharpen a project's domain model. Use when the user wants
           │   └── billing/
           │       ├── CONTEXT.md
           │       └── docs/adr/</code></pre>
+              </div>
               <p>
                 Create files lazily — only when you have something to write. If no
                 <code>CONTEXT.md</code> exists, create one when the first term is resolved. If no

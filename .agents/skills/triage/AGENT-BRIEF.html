@@ -2399,7 +2399,11 @@
                 assumptions about adjacent features.
               </p>
               <h2 id="template">Template</h2>
-              <pre><code class="hljs language-markdown"><span class="hljs-section">## Agent Brief</span>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-markdown"><span class="hljs-section">## Agent Brief</span>
 
           <span class="hljs-strong">**Category:**</span> bug / enhancement
           <span class="hljs-strong">**Summary:**</span> one-line description of what needs to happen
@@ -2425,9 +2429,14 @@
           <span class="hljs-strong">**Out of scope:**</span>
           <span class="hljs-bullet">-</span> Thing that should NOT be changed or addressed in this issue
           <span class="hljs-bullet">-</span> Adjacent feature that might seem related but is separate</code></pre>
+              </div>
               <h2 id="examples">Examples</h2>
               <h3 id="good-agent-brief-bug">Good agent brief (bug)</h3>
-              <pre><code class="hljs language-markdown"><span class="hljs-section">## Agent Brief</span>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-markdown"><span class="hljs-section">## Agent Brief</span>
 
           <span class="hljs-strong">**Category:**</span> bug
           <span class="hljs-strong">**Summary:**</span> Skill description truncation drops mid-word, producing broken output
@@ -2457,8 +2466,13 @@
           <span class="hljs-strong">**Out of scope:**</span>
           <span class="hljs-bullet">-</span> Changing the 1024 char limit itself
           <span class="hljs-bullet">-</span> Multi-line description support</code></pre>
+              </div>
               <h3 id="good-agent-brief-enhancement">Good agent brief (enhancement)</h3>
-              <pre><code class="hljs language-markdown"><span class="hljs-section">## Agent Brief</span>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-markdown"><span class="hljs-section">## Agent Brief</span>
 
           <span class="hljs-strong">**Category:**</span> enhancement
           <span class="hljs-strong">**Summary:**</span> Add <span class="hljs-code">`.out-of-scope/`</span> directory support for tracking rejected feature requests
@@ -2494,12 +2508,17 @@
           <span class="hljs-bullet">-</span> Automated matching (human confirms the match)
           <span class="hljs-bullet">-</span> Reopening previously rejected features
           <span class="hljs-bullet">-</span> Bug reports (only enhancement rejections go to <span class="hljs-code">`.out-of-scope/`</span>)</code></pre>
+              </div>
               <h3 id="good-agent-brief-pr">Good agent brief (PR)</h3>
               <p>
                 For a PR, &quot;Current behavior&quot; describes the state of the diff, and the
                 brief asks the agent to finish or fix it rather than build from scratch.
               </p>
-              <pre><code class="hljs language-markdown"><span class="hljs-section">## Agent Brief</span>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-markdown"><span class="hljs-section">## Agent Brief</span>
 
           <span class="hljs-strong">**Category:**</span> enhancement
           <span class="hljs-strong">**Summary:**</span> Finish the contributor&#x27;s <span class="hljs-code">`--json`</span> output flag for <span class="hljs-code">`triage list`</span>
@@ -2529,8 +2548,13 @@
           <span class="hljs-strong">**Out of scope:**</span>
           <span class="hljs-bullet">-</span> Adding <span class="hljs-code">`--json`</span> to any other command
           <span class="hljs-bullet">-</span> Changing the JSON shape of the success payload the PR already defined</code></pre>
+              </div>
               <h3 id="bad-agent-brief">Bad agent brief</h3>
-              <pre><code class="hljs language-markdown"><span class="hljs-section">## Agent Brief</span>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-markdown"><span class="hljs-section">## Agent Brief</span>
 
           <span class="hljs-strong">**Summary:**</span> Fix the triage bug
 
@@ -2541,6 +2565,7 @@
           <span class="hljs-strong">**Files to change:**</span>
           <span class="hljs-bullet">-</span> src/triage/handler.ts (line 150)
           <span class="hljs-bullet">-</span> src/types.ts (line 42)</code></pre>
+              </div>
               <p>This is bad because:</p>
               <ul>
                 <li>No category</li>

@@ -2319,12 +2319,17 @@
             <div class="document-meta">
               <details class="frontmatter">
                 <summary>Frontmatter</summary>
-                <pre><code class="language-yaml">---
+                <div class="code-block">
+                  <button type="button" class="copy-code-button" data-copy-code="true">
+                    Copy code
+                  </button>
+                  <pre><code class="language-yaml">---
 name: writing-fragments
 description: Writing, explore — mine raw fragments, no structure yet.
 disable-model-invocation: true
 ---
 </code></pre>
+                </div>
               </details>
             </div>
             <div class="markdown-body">
@@ -2392,7 +2397,11 @@ disable-model-invocation: true
                 get mined for raw material. Fragments are noticings.
               </p>
               <h2 id="file-format">File format</h2>
-              <pre><code class="hljs language-markdown"><span class="hljs-section"># Working title</span>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-markdown"><span class="hljs-section"># Working title</span>
 
           A first fragment lives here.
 
@@ -2414,6 +2423,7 @@ disable-model-invocation: true
           <span class="hljs-bullet">-</span> A cluster of related observations
           <span class="hljs-bullet">-</span> That hang together by feel
           <span class="hljs-bullet">-</span> And want to be near each other</code></pre>
+              </div>
               <p>
                 Fragments are separated by a horizontal rule (<code>\n---\n</code>). No headings
                 inside the body. No tags. No order beyond the order they were added.

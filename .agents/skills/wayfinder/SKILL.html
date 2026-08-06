@@ -2319,12 +2319,17 @@
             <div class="document-meta">
               <details class="frontmatter">
                 <summary>Frontmatter</summary>
-                <pre><code class="language-yaml">---
+                <div class="code-block">
+                  <button type="button" class="copy-code-button" data-copy-code="true">
+                    Copy code
+                  </button>
+                  <pre><code class="language-yaml">---
 name: wayfinder
 description: Plan a huge chunk of work — more than one agent session can hold — as a shared map of decision tickets on your issue tracker, and resolve them one at a time until the way to the destination is clear.
 disable-model-invocation: true
 ---
 </code></pre>
+                </div>
               </details>
             </div>
             <div class="markdown-body">
@@ -2387,7 +2392,11 @@ disable-model-invocation: true
                 The whole map at low resolution, loaded once per session. Open tickets are
                 <strong>not</strong> listed — they are open child issues, found by query.
               </p>
-              <pre><code class="hljs language-markdown"><span class="hljs-section">## Destination</span>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-markdown"><span class="hljs-section">## Destination</span>
 
           <span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">what</span> <span class="hljs-attr">reaching</span> <span class="hljs-attr">the</span> <span class="hljs-attr">end</span> <span class="hljs-attr">of</span> <span class="hljs-attr">this</span> <span class="hljs-attr">map</span> <span class="hljs-attr">looks</span> <span class="hljs-attr">like</span> — <span class="hljs-attr">the</span> <span class="hljs-attr">spec</span>, <span class="hljs-attr">decision</span>, <span class="hljs-attr">or</span> <span class="hljs-attr">change</span> <span class="hljs-attr">this</span> <span class="hljs-attr">effort</span> <span class="hljs-attr">is</span> <span class="hljs-attr">finding</span> <span class="hljs-attr">its</span> <span class="hljs-attr">way</span> <span class="hljs-attr">to.</span> <span class="hljs-attr">One</span> <span class="hljs-attr">or</span> <span class="hljs-attr">two</span> <span class="hljs-attr">lines</span>; <span class="hljs-attr">every</span> <span class="hljs-attr">session</span> <span class="hljs-attr">orients</span> <span class="hljs-attr">to</span> <span class="hljs-attr">it</span> <span class="hljs-attr">before</span> <span class="hljs-attr">choosing</span> <span class="hljs-attr">a</span> <span class="hljs-attr">ticket.</span>&gt;</span></span>
 
@@ -2408,14 +2417,20 @@ disable-model-invocation: true
           <span class="hljs-section">## Out of scope</span>
 
           &lt;!-- see &quot;Out of scope&quot;: work ruled beyond the destination; closed, never graduates --&gt;</code></pre>
+              </div>
               <h3 id="tickets">Tickets</h3>
               <p>
                 Each ticket is a <strong>child issue</strong> of the map; the tracker&#39;s issue id
                 is its identity. Its body is the question, sized to one 100K token agent session:
               </p>
-              <pre><code class="hljs language-markdown"><span class="hljs-section">## Question</span>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-markdown"><span class="hljs-section">## Question</span>
 
           <span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">the</span> <span class="hljs-attr">decision</span> <span class="hljs-attr">or</span> <span class="hljs-attr">investigation</span> <span class="hljs-attr">this</span> <span class="hljs-attr">ticket</span> <span class="hljs-attr">resolves</span>&gt;</span></span></code></pre>
+              </div>
               <p>
                 Each ticket carries a <code>wayfinder:&lt;type&gt;</code> label — one of
                 <code>research</code>, <code>prototype</code>, <code>grilling</code>,

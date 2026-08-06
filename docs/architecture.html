@@ -2459,7 +2459,11 @@
                 audio.
               </p>
               <h2 id="flujo-de-datos-propuesto">Flujo de datos propuesto</h2>
-              <pre><code class="hljs language-text">Código + datos declarativos + referencias de recursos
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-text">Código + datos declarativos + referencias de recursos
                                    │
                                    ▼
                          Build / bundle del proyecto
@@ -2484,6 +2488,7 @@
                      │                       Mezcla / artefactos
                      ▼
                AudioWorklet en navegador</code></pre>
+              </div>
               <p>
                 El bundle, <code>CompositionIR</code> y <code>ExecutionPlan</code> son artefactos
                 distintos. El primero empaqueta código y dependencias; la IR serializable y
@@ -2631,7 +2636,11 @@
               </p>
               <h3 id="resolución-de-inputs-y-metadata">Resolución de inputs y metadata</h3>
               <p>El patrón de referencia es:</p>
-              <pre><code class="hljs language-text">defaults + inputs provistos
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-text">defaults + inputs provistos
                     │
                     ▼
            merge superficial y validación
@@ -2644,6 +2653,7 @@
                     │
                     ▼
           evaluación de la composición</code></pre>
+              </div>
               <p>
                 Los inputs se limitan a valores JSON serializables y referencias explícitas a
                 recursos. Una composición parametrizada declara un schema de runtime que valida
@@ -2738,7 +2748,11 @@
                 necesariamente mediante la misma API.
               </p>
               <p>La prop opcional se llama <code>prepare</code> y usa esta interfaz pública:</p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">PrepareComposition</span>&lt;<span class="hljs-title class_">TInputs</span> <span class="hljs-keyword">extends</span> <span class="hljs-title class_">JsonObject</span>&gt; = <span class="hljs-function">(<span class="hljs-params">
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">PrepareComposition</span>&lt;<span class="hljs-title class_">TInputs</span> <span class="hljs-keyword">extends</span> <span class="hljs-title class_">JsonObject</span>&gt; = <span class="hljs-function">(<span class="hljs-params">
             <span class="hljs-attr">context</span>: <span class="hljs-title class_">Readonly</span>&lt;{
               compositionId: <span class="hljs-built_in">string</span>;
               inputs: DeepReadonly&lt;TInputs&gt;;
@@ -2752,6 +2766,7 @@
               <span class="hljs-attr">metadata</span>?: <span class="hljs-title class_">JsonObject</span>;
             }&gt;
           &gt;;</code></pre>
+              </div>
               <p>
                 <code>PreparationResourceResolver</code> ofrece inicialmente
                 <code>audio(reference)</code>, que devuelve metadata serializable validada y el hash
@@ -2807,7 +2822,11 @@
                 diagnóstico.
               </p>
               <p>El vocabulario v1 es una unión discriminada cerrada:</p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">NodePath</span> = <span class="hljs-keyword">readonly</span> [
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">NodePath</span> = <span class="hljs-keyword">readonly</span> [
             <span class="hljs-attr">compositionId</span>: <span class="hljs-built_in">string</span>,
             <span class="hljs-attr">rootNodeId</span>: <span class="hljs-built_in">string</span>,
             ...<span class="hljs-attr">descendantNodeIds</span>: <span class="hljs-built_in">string</span>[],
@@ -2829,6 +2848,7 @@
           <span class="hljs-keyword">type</span> <span class="hljs-title class_">TrackIR</span> = <span class="hljs-title class_">AudioTrackIR</span> | <span class="hljs-title class_">InstrumentTrackIR</span>;
           <span class="hljs-keyword">type</span> <span class="hljs-title class_">InstrumentIR</span> = <span class="hljs-title class_">PolySynthIR</span>;
           <span class="hljs-keyword">type</span> <span class="hljs-title class_">EffectIR</span> = <span class="hljs-title class_">GainIR</span> | <span class="hljs-title class_">DelayIR</span>;</code></pre>
+              </div>
               <p>
                 Los IDs públicos distinguen mayúsculas y cumplen
                 <code>^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$</code>. El primer segmento de todo
@@ -2877,7 +2897,11 @@
                 <a href="adr/0063-closed-composition-ir-v1-vocabulary.html">ADR 0063</a>.
               </p>
               <p>La IR normaliza las formas temporales públicas a este contrato JSON canónico:</p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">RationalIR</span> = <span class="hljs-title class_">Readonly</span>&lt;{
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">RationalIR</span> = <span class="hljs-title class_">Readonly</span>&lt;{
             <span class="hljs-attr">numerator</span>: <span class="hljs-built_in">string</span>;
             <span class="hljs-attr">denominator</span>: <span class="hljs-built_in">string</span>;
           }&gt;;
@@ -2889,6 +2913,7 @@
           <span class="hljs-keyword">type</span> <span class="hljs-title class_">DurationIR</span> =
             | <span class="hljs-title class_">Readonly</span>&lt;{<span class="hljs-attr">type</span>: <span class="hljs-string">&quot;musical-duration&quot;</span>; <span class="hljs-attr">quarterNotes</span>: <span class="hljs-title class_">RationalIR</span>}&gt;
             | <span class="hljs-title class_">Readonly</span>&lt;{<span class="hljs-attr">type</span>: <span class="hljs-string">&quot;absolute-duration&quot;</span>; <span class="hljs-attr">seconds</span>: <span class="hljs-title class_">RationalIR</span>}&gt;;</code></pre>
+              </div>
               <p>
                 Numerador y denominador son enteros decimales canónicos sin signo, el denominador es
                 positivo y cada fracción está reducida. Cero se serializa como
@@ -2905,7 +2930,11 @@
                 <a href="adr/0064-canonical-rational-time-in-composition-ir.html">ADR 0064</a>.
               </p>
               <p>Los nodos estructurales v1 tienen estos payloads:</p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">SequenceIR</span> = <span class="hljs-title class_">IRNodeBase</span> &amp; <span class="hljs-title class_">Readonly</span>&lt;{
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">SequenceIR</span> = <span class="hljs-title class_">IRNodeBase</span> &amp; <span class="hljs-title class_">Readonly</span>&lt;{
             <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;sequence&quot;</span>;
             <span class="hljs-attr">from</span>: <span class="hljs-title class_">PositionIR</span>;
             <span class="hljs-attr">duration</span>?: <span class="hljs-title class_">DurationIR</span>;
@@ -2949,6 +2978,7 @@
             <span class="hljs-attr">pitch</span>: <span class="hljs-title class_">PitchIR</span>;
             <span class="hljs-attr">velocity</span>: <span class="hljs-built_in">number</span>;
           }&gt;;</code></pre>
+              </div>
               <p>
                 Todos los arrays están presentes aunque estén vacíos y conservan orden canónico y
                 semántico. <code>offset</code>, <code>loop</code> y <code>velocity</code> ya
@@ -2965,7 +2995,11 @@
                 <a href="adr/0065-composition-ir-v1-structural-payloads.html">ADR 0065</a>.
               </p>
               <p>La cabecera y los valores escalares musicales usan estas formas:</p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">CompositionIR</span> = <span class="hljs-title class_">Readonly</span>&lt;{
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">CompositionIR</span> = <span class="hljs-title class_">Readonly</span>&lt;{
             <span class="hljs-attr">format</span>: <span class="hljs-string">&quot;resona/composition-ir&quot;</span>;
             <span class="hljs-attr">schemaVersion</span>: <span class="hljs-number">1</span>;
             <span class="hljs-attr">compositionId</span>: <span class="hljs-built_in">string</span>;
@@ -2988,6 +3022,7 @@
             <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;twelve-tet&quot;</span>;
             <span class="hljs-attr">semitonesFromA4</span>: <span class="hljs-built_in">number</span>;
           }&gt;;</code></pre>
+              </div>
               <p>
                 <code>bpm</code> es positivo y distinto de cero. <code>beatsPerBar</code> es un
                 entero seguro positivo y <code>beatUnit</code> es además potencia de dos.
@@ -3009,7 +3044,11 @@
                 <a href="adr/0074-pitch-frequency-must-be-below-nyquist.html">ADR 0074</a>.
               </p>
               <p>Instrumento y efectos usan payloads cerrados y resueltos:</p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">PolySynthIR</span> = <span class="hljs-title class_">IRNodeBase</span> &amp; <span class="hljs-title class_">Readonly</span>&lt;{
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">PolySynthIR</span> = <span class="hljs-title class_">IRNodeBase</span> &amp; <span class="hljs-title class_">Readonly</span>&lt;{
             <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;poly-synth&quot;</span>;
             <span class="hljs-attr">maxVoices</span>: <span class="hljs-built_in">number</span>;
             <span class="hljs-attr">oscillator</span>: <span class="hljs-string">&quot;sine&quot;</span> | <span class="hljs-string">&quot;saw&quot;</span> | <span class="hljs-string">&quot;square&quot;</span>;
@@ -3032,6 +3071,7 @@
             <span class="hljs-attr">feedback</span>: <span class="hljs-built_in">number</span>;
             <span class="hljs-attr">mix</span>: <span class="hljs-built_in">number</span>;
           }&gt;;</code></pre>
+              </div>
               <p>
                 <code>maxVoices</code> es un entero seguro positivo. Attack, decay y release son no
                 negativos; <code>sustain</code> pertenece a <code>[0, 1]</code>.
@@ -3048,7 +3088,11 @@
                 <a href="adr/0067-closed-composition-ir-v1-processor-payloads.html">ADR 0067</a>.
               </p>
               <p>La automatización v1 usa estas formas:</p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">AutomationLaneIR</span> = <span class="hljs-title class_">IRNodeBase</span> &amp; <span class="hljs-title class_">Readonly</span>&lt;{
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">AutomationLaneIR</span> = <span class="hljs-title class_">IRNodeBase</span> &amp; <span class="hljs-title class_">Readonly</span>&lt;{
             <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;automation-lane&quot;</span>;
             <span class="hljs-attr">target</span>: <span class="hljs-title class_">Readonly</span>&lt;{
               <span class="hljs-attr">nodePath</span>: <span class="hljs-title class_">NodePath</span>;
@@ -3062,6 +3106,7 @@
             <span class="hljs-attr">value</span>: <span class="hljs-built_in">number</span>;
             <span class="hljs-attr">interpolation</span>: <span class="hljs-string">&quot;hold&quot;</span> | <span class="hljs-string">&quot;linear&quot;</span>;
           }&gt;;</code></pre>
+              </div>
               <p>
                 Una lane pertenece a una pista y solo puede apuntar a un <code>GainIR</code> de su
                 propia cadena. Existe como máximo una lane por target y toda lane contiene al menos
@@ -3115,7 +3160,11 @@
                 La cabecera v1 del plan fija el formato ejecutable compartido por Studio y render
                 offline:
               </p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">ProcessorIndex</span> = <span class="hljs-built_in">number</span>;
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">ProcessorIndex</span> = <span class="hljs-built_in">number</span>;
 
           <span class="hljs-keyword">type</span> <span class="hljs-title class_">ExecutionPlan</span> = <span class="hljs-title class_">Readonly</span>&lt;{
             <span class="hljs-attr">format</span>: <span class="hljs-string">&quot;resona/execution-plan&quot;</span>;
@@ -3135,6 +3184,7 @@
 
             <span class="hljs-attr">trace</span>?: <span class="hljs-keyword">readonly</span> <span class="hljs-title class_">PlanTrace</span>[];
           }&gt;;</code></pre>
+              </div>
               <p>
                 Todos los frames e índices son enteros seguros no negativos y cada array ejecutable
                 está presente aunque esté vacío. Un índice de procesador es exclusivamente su
@@ -3151,7 +3201,11 @@
                 <a href="adr/0069-execution-plan-v1-header-and-table-boundary.html">ADR 0069</a>.
               </p>
               <p>Los procesadores y las rutas v1 usan payloads cerrados:</p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">ProcessorPlan</span> =
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">ProcessorPlan</span> =
             | <span class="hljs-title class_">Readonly</span>&lt;{<span class="hljs-attr">type</span>: <span class="hljs-string">&quot;sum&quot;</span>}&gt;
             | <span class="hljs-title class_">Readonly</span>&lt;{
                 <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;poly-synth&quot;</span>;
@@ -3174,6 +3228,7 @@
             <span class="hljs-attr">from</span>: <span class="hljs-title class_">ProcessorIndex</span>;
             <span class="hljs-attr">to</span>: <span class="hljs-title class_">ProcessorIndex</span>;
           }&gt;;</code></pre>
+              </div>
               <p>
                 <code>processors</code> está en orden topológico, toda ruta cumple
                 <code>from &lt; to</code> y no existen rutas duplicadas. Un
@@ -3205,7 +3260,11 @@
                 >.
               </p>
               <p>Los recursos resueltos y sus colocaciones usan estas formas:</p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">Sha256Hash</span> = <span class="hljs-string">`sha256:<span class="hljs-subst">${<span class="hljs-built_in">string</span>}</span>`</span>;
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">Sha256Hash</span> = <span class="hljs-string">`sha256:<span class="hljs-subst">${<span class="hljs-built_in">string</span>}</span>`</span>;
           <span class="hljs-keyword">type</span> <span class="hljs-title class_">ResourceIndex</span> = <span class="hljs-built_in">number</span>;
 
           <span class="hljs-keyword">type</span> <span class="hljs-title class_">ResolvedResourcePlan</span> = <span class="hljs-title class_">Readonly</span>&lt;{
@@ -3225,6 +3284,7 @@
             <span class="hljs-attr">sourceOffsetFrame</span>: <span class="hljs-built_in">number</span>;
             <span class="hljs-attr">loop</span>: <span class="hljs-built_in">boolean</span>;
           }&gt;;</code></pre>
+              </div>
               <p>
                 Antes de recortar, el planificador valida la <code>CompositionIR</code> completa y
                 resuelve todas sus referencias de audio. Un WAV faltante o incompatible, un offset
@@ -3280,7 +3340,11 @@
                 Las notas se expanden a este stream interno, cuyos nombres evitan confundirlo con
                 mensajes MIDI de borde:
               </p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">NoteOccurrenceIndex</span> = <span class="hljs-built_in">number</span>;
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">NoteOccurrenceIndex</span> = <span class="hljs-built_in">number</span>;
 
           <span class="hljs-keyword">type</span> <span class="hljs-title class_">InstrumentEventPlan</span> =
             | <span class="hljs-title class_">Readonly</span>&lt;{
@@ -3297,6 +3361,7 @@
                 <span class="hljs-attr">semitonesFromA4</span>: <span class="hljs-built_in">number</span>;
                 <span class="hljs-attr">velocity</span>: <span class="hljs-built_in">number</span>;
               }&gt;;</code></pre>
+              </div>
               <p>
                 Toda <code>NoteIR</code> tiene duración racional estrictamente positiva y se valida
                 antes de podarla. El planificador calcula su intervalo absoluto y recorta la
@@ -3334,7 +3399,11 @@
               <p>
                 La automatización ejecutable conserva puntos resueltos, no segmentos serializados:
               </p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">AutomationPointPlan</span> = <span class="hljs-title class_">Readonly</span>&lt;{
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">AutomationPointPlan</span> = <span class="hljs-title class_">Readonly</span>&lt;{
             <span class="hljs-attr">frame</span>: <span class="hljs-built_in">number</span>;
             <span class="hljs-attr">value</span>: <span class="hljs-built_in">number</span>;
             <span class="hljs-attr">interpolation</span>: <span class="hljs-string">&quot;hold&quot;</span> | <span class="hljs-string">&quot;linear&quot;</span>;
@@ -3345,6 +3414,7 @@
             <span class="hljs-attr">target</span>: <span class="hljs-title class_">ProcessorIndex</span>;
             <span class="hljs-attr">points</span>: <span class="hljs-keyword">readonly</span> <span class="hljs-title class_">AutomationPointPlan</span>[];
           }&gt;;</code></pre>
+              </div>
               <p>
                 Cada <code>target</code> referencia un procesador <code>gain</code> y aparece como
                 máximo en una lane. El valor anterior al primer punto se obtiene de
@@ -3373,8 +3443,13 @@
                 Entre dos puntos consecutivos, <code>hold</code> conserva el valor izquierdo.
                 <code>linear</code> evalúa esta expresión:
               </p>
-              <pre><code class="hljs language-text">left.value + (right.value - left.value)
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-text">left.value + (right.value - left.value)
             * (frame - left.frame) / (right.frame - left.frame)</code></pre>
+              </div>
               <p>
                 El cálculo parte siempre del frame absoluto: no acumula una pendiente por bloque. Un
                 motor puede derivar segmentos al cargar el plan, pero no forman parte del contrato
@@ -3382,7 +3457,11 @@
                 <a href="adr/0075-frame-resolved-gain-automation-points.html">ADR 0075</a>.
               </p>
               <p>La procedencia diagnóstica opcional usa una unión cerrada por tabla:</p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">PlanTrace</span> =
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">PlanTrace</span> =
             | <span class="hljs-title class_">Readonly</span>&lt;{
                 <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;processor&quot;</span>;
                 <span class="hljs-attr">index</span>: <span class="hljs-title class_">ProcessorIndex</span>;
@@ -3417,6 +3496,7 @@
                 <span class="hljs-attr">index</span>: <span class="hljs-built_in">number</span>;
                 <span class="hljs-attr">origin</span>: <span class="hljs-title class_">NodePath</span>;
               }&gt;;</code></pre>
+              </div>
               <p>
                 <code>trace</code> puede omitirse por completo. Cuando está presente, contiene
                 exactamente una entrada por cada fila de <code>processors</code>,
@@ -3492,13 +3572,18 @@
                 <code>gain</code>, <code>sustain</code>, <code>feedback</code>, <code>mix</code>,
                 velocity y los valores de automatización mediante una única operación:
               </p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">const</span> canonicalF32 = (<span class="hljs-attr">value</span>: <span class="hljs-built_in">number</span>): <span class="hljs-function"><span class="hljs-params">number</span> =&gt;</span> {
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">const</span> canonicalF32 = (<span class="hljs-attr">value</span>: <span class="hljs-built_in">number</span>): <span class="hljs-function"><span class="hljs-params">number</span> =&gt;</span> {
             <span class="hljs-keyword">const</span> rounded = <span class="hljs-title class_">Math</span>.<span class="hljs-title function_">fround</span>(value);
             <span class="hljs-keyword">return</span> <span class="hljs-title class_">Object</span>.<span class="hljs-title function_">is</span>(rounded, -<span class="hljs-number">0</span>) ? <span class="hljs-number">0</span> : rounded;
           };
 
           <span class="hljs-keyword">const</span> isCanonicalF32 = (<span class="hljs-attr">value</span>: <span class="hljs-built_in">number</span>): <span class="hljs-function"><span class="hljs-params">boolean</span> =&gt;</span>
             <span class="hljs-title class_">Number</span>.<span class="hljs-built_in">isFinite</span>(value) &amp;&amp; <span class="hljs-title class_">Object</span>.<span class="hljs-title function_">is</span>(value, <span class="hljs-title function_">canonicalF32</span>(value));</code></pre>
+              </div>
               <p>
                 Después de convertirlos vuelve a validar que sean finitos y satisfagan su rango
                 semántico. Por ejemplo, un <code>feedback</code> menor que uno en
@@ -3735,10 +3820,15 @@
               </p>
               <h3 id="cli-y-api-programática">CLI y API programática</h3>
               <p>El CLI del primer corte vertical expone solo estas operaciones de producto:</p>
-              <pre><code class="hljs language-text">resona studio [entry]
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-text">resona studio [entry]
           resona compositions [entry]
           resona validate [entry] --composition &lt;id&gt;
           resona render &lt;entry&gt; &lt;composition-id&gt; &lt;output.wav&gt;</code></pre>
+              </div>
               <p>
                 <code>studio</code> inicia el entorno local; <code>compositions</code> evalúa el
                 registro y enumera sus descripciones; <code>validate</code> construye y verifica una
@@ -3912,11 +4002,16 @@
                 Un <code>RenderJob</code> inmutable separa la descripción que determina el audio de
                 los recursos operativos necesarios para ejecutarlo:
               </p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">RenderJob</span> = <span class="hljs-title class_">Readonly</span>&lt;{
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">RenderJob</span> = <span class="hljs-title class_">Readonly</span>&lt;{
             <span class="hljs-attr">spec</span>: <span class="hljs-title class_">RenderSpec</span>;
             <span class="hljs-attr">plan</span>: <span class="hljs-title class_">ExecutionPlan</span>;
             <span class="hljs-attr">resources</span>: <span class="hljs-title class_">PreparedResources</span>;
           }&gt;;</code></pre>
+              </div>
               <p>
                 <code>RenderSpec</code> es serializable y versionada. Contiene el ID de composición,
                 las versiones del motor y de <code>CompositionIR</code>, los inputs validados, la
@@ -3954,10 +4049,15 @@
                 números o strings crudos en las props temporales. Esta forma es ilustrativa y los
                 nombres pueden ajustarse durante el prototipo:
               </p>
-              <pre><code class="hljs language-tsx">&lt;<span class="hljs-title class_">Sequence</span>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-tsx">&lt;<span class="hljs-title class_">Sequence</span>
             <span class="hljs-keyword">from</span>={position.<span class="hljs-title function_">musical</span>({<span class="hljs-attr">bar</span>: <span class="hljs-number">5</span>, <span class="hljs-attr">beat</span>: <span class="hljs-number">1</span>, <span class="hljs-attr">subdivision</span>: <span class="hljs-number">0</span>})}
             duration={duration.<span class="hljs-title function_">beats</span>(<span class="hljs-number">8</span>)}
           /&gt;</code></pre>
+              </div>
               <p>
                 Las familias incluyen posiciones musicales, en segundos y en frames, y duraciones en
                 unidades musicales, segundos y frames. CLI y archivos de configuración pueden
@@ -4167,9 +4267,14 @@
               </p>
               <h2 id="grafo-de-audio-y-enrutamiento">Grafo de audio y enrutamiento</h2>
               <p>El flujo mínimo es:</p>
-              <pre><code class="hljs language-text">AudioClip ────────────────────────┐
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-text">AudioClip ────────────────────────┐
                                            ▼
           EventClip → Eventos musicales → Instrumento → Efectos → Pista → Master</code></pre>
+              </div>
               <p>
                 En el primer corte, cada pista atraviesa una cadena lineal de efectos y llega
                 directamente a un master implícito. Se aplican estas reglas:
@@ -4505,8 +4610,13 @@
                 que protegen la frontera entre autoría, ejecución y superficies de usuario.
               </p>
               <p>La separación conceptual de la API programática adopta esta forma:</p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">const</span> job = <span class="hljs-keyword">await</span> <span class="hljs-title function_">createRenderJob</span>(request);
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">const</span> job = <span class="hljs-keyword">await</span> <span class="hljs-title function_">createRenderJob</span>(request);
           <span class="hljs-keyword">await</span> <span class="hljs-title function_">renderAudio</span>(job);</code></pre>
+              </div>
               <p>
                 <code>createRenderJob()</code> concentra descubrimiento, validación, preparación,
                 evaluación TSX y planificación. <code>renderAudio()</code> solo ejecuta el trabajo

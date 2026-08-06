@@ -2404,11 +2404,16 @@
               </div>
               <details class="frontmatter">
                 <summary>Frontmatter</summary>
-                <pre><code class="language-yaml">---
+                <div class="code-block">
+                  <button type="button" class="copy-code-button" data-copy-code="true">
+                    Copy code
+                  </button>
+                  <pre><code class="language-yaml">---
 status: accepted
 date: 2026-08-04
 ---
 </code></pre>
+                </div>
               </details>
             </div>
             <div class="markdown-body">
@@ -2416,7 +2421,11 @@ date: 2026-08-04
                 CompositionIR v1 usa lanes explícitas para automatizar Gain
               </h1>
               <p>La automatización usa estas formas:</p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">AutomationLaneIR</span> = <span class="hljs-title class_">IRNodeBase</span> &amp; <span class="hljs-title class_">Readonly</span>&lt;{
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">AutomationLaneIR</span> = <span class="hljs-title class_">IRNodeBase</span> &amp; <span class="hljs-title class_">Readonly</span>&lt;{
             <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;automation-lane&quot;</span>;
             <span class="hljs-attr">target</span>: <span class="hljs-title class_">Readonly</span>&lt;{
               <span class="hljs-attr">nodePath</span>: <span class="hljs-title class_">NodePath</span>;
@@ -2430,6 +2439,7 @@ date: 2026-08-04
             <span class="hljs-attr">value</span>: <span class="hljs-built_in">number</span>;
             <span class="hljs-attr">interpolation</span>: <span class="hljs-string">&quot;hold&quot;</span> | <span class="hljs-string">&quot;linear&quot;</span>;
           }&gt;;</code></pre>
+              </div>
               <h2 id="opciones-consideradas">Opciones consideradas</h2>
               <ul>
                 <li>

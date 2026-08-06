@@ -2336,7 +2336,11 @@
               <p>At system boundaries, design interfaces that are easy to mock:</p>
               <p><strong>1. Use dependency injection</strong></p>
               <p>Pass external dependencies in rather than creating them internally:</p>
-              <pre><code class="hljs language-typescript"><span class="hljs-comment">// Easy to mock</span>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-typescript"><span class="hljs-comment">// Easy to mock</span>
           <span class="hljs-keyword">function</span> <span class="hljs-title function_">processPayment</span>(<span class="hljs-params">order, paymentClient</span>) {
             <span class="hljs-keyword">return</span> paymentClient.<span class="hljs-title function_">charge</span>(order.<span class="hljs-property">total</span>);
           }
@@ -2346,12 +2350,17 @@
             <span class="hljs-keyword">const</span> client = <span class="hljs-keyword">new</span> <span class="hljs-title class_">StripeClient</span>(process.<span class="hljs-property">env</span>.<span class="hljs-property">STRIPE_KEY</span>);
             <span class="hljs-keyword">return</span> client.<span class="hljs-title function_">charge</span>(order.<span class="hljs-property">total</span>);
           }</code></pre>
+              </div>
               <p><strong>2. Prefer SDK-style interfaces over generic fetchers</strong></p>
               <p>
                 Create specific functions for each external operation instead of one generic
                 function with conditional logic:
               </p>
-              <pre><code class="hljs language-typescript"><span class="hljs-comment">// GOOD: Each function is independently mockable</span>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-typescript"><span class="hljs-comment">// GOOD: Each function is independently mockable</span>
           <span class="hljs-keyword">const</span> api = {
             <span class="hljs-attr">getUser</span>: <span class="hljs-function">(<span class="hljs-params">id</span>) =&gt;</span> <span class="hljs-title function_">fetch</span>(<span class="hljs-string">`/users/<span class="hljs-subst">${id}</span>`</span>),
             <span class="hljs-attr">getOrders</span>: <span class="hljs-function">(<span class="hljs-params">userId</span>) =&gt;</span> <span class="hljs-title function_">fetch</span>(<span class="hljs-string">`/users/<span class="hljs-subst">${userId}</span>/orders`</span>),
@@ -2362,6 +2371,7 @@
           <span class="hljs-keyword">const</span> api = {
             <span class="hljs-attr">fetch</span>: <span class="hljs-function">(<span class="hljs-params">endpoint, options</span>) =&gt;</span> <span class="hljs-title function_">fetch</span>(endpoint, options),
           };</code></pre>
+              </div>
               <p>The SDK approach means:</p>
               <ul>
                 <li>Each mock returns one specific shape</li>

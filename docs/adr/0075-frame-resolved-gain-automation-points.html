@@ -2402,11 +2402,16 @@
               </div>
               <details class="frontmatter">
                 <summary>Frontmatter</summary>
-                <pre><code class="language-yaml">---
+                <div class="code-block">
+                  <button type="button" class="copy-code-button" data-copy-code="true">
+                    Copy code
+                  </button>
+                  <pre><code class="language-yaml">---
 status: accepted
 date: 2026-08-04
 ---
 </code></pre>
+                </div>
               </details>
             </div>
             <div class="markdown-body">
@@ -2418,7 +2423,11 @@ date: 2026-08-04
                 puntos ya convertidos a frames. Los segmentos que un motor use para optimizar su
                 recorrido son estado derivado y no forman parte del plan serializado.
               </p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">AutomationPointPlan</span> = <span class="hljs-title class_">Readonly</span>&lt;{
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">AutomationPointPlan</span> = <span class="hljs-title class_">Readonly</span>&lt;{
             <span class="hljs-attr">frame</span>: <span class="hljs-built_in">number</span>;
             <span class="hljs-attr">value</span>: <span class="hljs-built_in">number</span>;
             <span class="hljs-attr">interpolation</span>: <span class="hljs-string">&quot;hold&quot;</span> | <span class="hljs-string">&quot;linear&quot;</span>;
@@ -2429,6 +2438,7 @@ date: 2026-08-04
             <span class="hljs-attr">target</span>: <span class="hljs-title class_">ProcessorIndex</span>;
             <span class="hljs-attr">points</span>: <span class="hljs-keyword">readonly</span> <span class="hljs-title class_">AutomationPointPlan</span>[];
           }&gt;;</code></pre>
+              </div>
               <h2 id="opciones-consideradas">Opciones consideradas</h2>
               <ul>
                 <li>
@@ -2496,8 +2506,13 @@ date: 2026-08-04
                     Para dos puntos consecutivos, <code>linear</code> evalúa desde el frame
                     absoluto:
                   </p>
-                  <pre><code class="hljs language-text">left.value + (right.value - left.value)
+                  <div class="code-block">
+                    <button type="button" class="copy-code-button" data-copy-code="true">
+                      Copy code
+                    </button>
+                    <pre><code class="hljs language-text">left.value + (right.value - left.value)
             * (frame - left.frame) / (right.frame - left.frame)</code></pre>
+                  </div>
                 </li>
                 <li><p>El resultado no depende del comienzo ni del tamaño del bloque DSP.</p></li>
                 <li>

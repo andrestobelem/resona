@@ -2319,11 +2319,16 @@
             <div class="document-meta">
               <details class="frontmatter">
                 <summary>Frontmatter</summary>
-                <pre><code class="language-yaml">---
+                <div class="code-block">
+                  <button type="button" class="copy-code-button" data-copy-code="true">
+                    Copy code
+                  </button>
+                  <pre><code class="language-yaml">---
 name: scaffold-exercises
 description: Create exercise directory structures with sections, problems, solutions, and explainers that pass linting. Use when user wants to scaffold exercises, create exercise stubs, or set up a new course section.
 ---
 </code></pre>
+                </div>
               </details>
             </div>
             <div class="markdown-body">
@@ -2370,9 +2375,14 @@ description: Create exercise directory structures with sections, problems, solut
                 <li>Has no broken links</li>
               </ul>
               <p>When stubbing, create a minimal readme with a title and a description:</p>
-              <pre><code class="hljs language-md"><span class="hljs-section"># Exercise Title</span>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-md"><span class="hljs-section"># Exercise Title</span>
 
           Description here</code></pre>
+              </div>
               <p>
                 If the subfolder has code, it also needs a <code>main.ts</code> (&gt;1 line). But
                 for stubs, a readme-only exercise is fine.
@@ -2423,23 +2433,43 @@ description: Create exercise directory structures with sections, problems, solut
                 <li>Re-run lint after moves</li>
               </ol>
               <p>Example:</p>
-              <pre><code class="hljs language-bash">git <span class="hljs-built_in">mv</span> exercises/01-retrieval/01.03-embeddings exercises/01-retrieval/01.04-embeddings</code></pre>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-bash">git <span class="hljs-built_in">mv</span> exercises/01-retrieval/01.03-embeddings exercises/01-retrieval/01.04-embeddings</code></pre>
+              </div>
               <h2 id="example-stubbing-from-a-plan">Example: stubbing from a plan</h2>
               <p>Given a plan like:</p>
-              <pre><code>Section 05: Memory Skill Building
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code>Section 05: Memory Skill Building
           - 05.01 Introduction to Memory
           - 05.02 Short-term Memory (explainer + problem + solution)
           - 05.03 Long-term Memory</code></pre>
+              </div>
               <p>Create:</p>
-              <pre><code class="hljs language-bash"><span class="hljs-built_in">mkdir</span> -p exercises/05-memory-skill-building/05.01-introduction-to-memory/explainer
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-bash"><span class="hljs-built_in">mkdir</span> -p exercises/05-memory-skill-building/05.01-introduction-to-memory/explainer
           <span class="hljs-built_in">mkdir</span> -p exercises/05-memory-skill-building/05.02-short-term-memory/{explainer,problem,solution}
           <span class="hljs-built_in">mkdir</span> -p exercises/05-memory-skill-building/05.03-long-term-memory/explainer</code></pre>
+              </div>
               <p>Then create readme stubs:</p>
-              <pre><code>exercises/05-memory-skill-building/05.01-introduction-to-memory/explainer/readme.md -&gt; &quot;# Introduction to Memory&quot;
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code>exercises/05-memory-skill-building/05.01-introduction-to-memory/explainer/readme.md -&gt; &quot;# Introduction to Memory&quot;
           exercises/05-memory-skill-building/05.02-short-term-memory/explainer/readme.md -&gt; &quot;# Short-term Memory&quot;
           exercises/05-memory-skill-building/05.02-short-term-memory/problem/readme.md -&gt; &quot;# Short-term Memory&quot;
           exercises/05-memory-skill-building/05.02-short-term-memory/solution/readme.md -&gt; &quot;# Short-term Memory&quot;
           exercises/05-memory-skill-building/05.03-long-term-memory/explainer/readme.md -&gt; &quot;# Long-term Memory&quot;</code></pre>
+              </div>
             </div>
 
             <nav class="page-navigation" aria-label="Document navigation">

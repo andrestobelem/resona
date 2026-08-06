@@ -2319,11 +2319,16 @@
             <div class="document-meta">
               <details class="frontmatter">
                 <summary>Frontmatter</summary>
-                <pre><code class="language-yaml">---
+                <div class="code-block">
+                  <button type="button" class="copy-code-button" data-copy-code="true">
+                    Copy code
+                  </button>
+                  <pre><code class="language-yaml">---
 name: setup-pre-commit
 description: Set up Husky pre-commit hooks with lint-staged (Prettier), type checking, and tests in the current repo. Use when user wants to add pre-commit hooks, set up Husky, configure lint-staged, or add commit-time formatting/typechecking/testing.
 ---
 </code></pre>
+                </div>
               </details>
             </div>
             <div class="markdown-body">
@@ -2347,32 +2352,56 @@ description: Set up Husky pre-commit hooks with lint-staged (Prettier), type che
               </p>
               <h3 id="2-install-dependencies">2. Install dependencies</h3>
               <p>Install as devDependencies:</p>
-              <pre><code>husky lint-staged prettier</code></pre>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code>husky lint-staged prettier</code></pre>
+              </div>
               <h3 id="3-initialize-husky">3. Initialize Husky</h3>
-              <pre><code class="hljs language-bash">npx husky init</code></pre>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-bash">npx husky init</code></pre>
+              </div>
               <p>
                 This creates <code>.husky/</code> dir and adds
                 <code>prepare: &quot;husky&quot;</code> to package.json.
               </p>
               <h3 id="4-create-huskypre-commit">4. Create <code>.husky/pre-commit</code></h3>
               <p>Write this file (no shebang needed for Husky v9+):</p>
-              <pre><code>npx lint-staged
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code>npx lint-staged
           npm run typecheck
           npm run test</code></pre>
+              </div>
               <p>
                 <strong>Adapt</strong>: Replace <code>npm</code> with detected package manager. If
                 repo has no <code>typecheck</code> or <code>test</code> script in package.json, omit
                 those lines and tell the user.
               </p>
               <h3 id="5-create-lintstagedrc">5. Create <code>.lintstagedrc</code></h3>
-              <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
             <span class="hljs-attr">&quot;*&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;prettier --ignore-unknown --write&quot;</span>
           <span class="hljs-punctuation">}</span></code></pre>
+              </div>
               <h3 id="6-create-prettierrc-if-missing">
                 6. Create <code>.prettierrc</code> (if missing)
               </h3>
               <p>Only create if no Prettier config exists. Use these defaults:</p>
-              <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
             <span class="hljs-attr">&quot;useTabs&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">false</span></span><span class="hljs-punctuation">,</span>
             <span class="hljs-attr">&quot;tabWidth&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">2</span><span class="hljs-punctuation">,</span>
             <span class="hljs-attr">&quot;printWidth&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-number">80</span><span class="hljs-punctuation">,</span>
@@ -2381,6 +2410,7 @@ description: Set up Husky pre-commit hooks with lint-staged (Prettier), type che
             <span class="hljs-attr">&quot;semi&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-literal"><span class="hljs-keyword">true</span></span><span class="hljs-punctuation">,</span>
             <span class="hljs-attr">&quot;arrowParens&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;always&quot;</span>
           <span class="hljs-punctuation">}</span></code></pre>
+              </div>
               <h3 id="7-verify">7. Verify</h3>
               <ul>
                 <li>

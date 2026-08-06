@@ -2316,12 +2316,17 @@
             <div class="document-meta">
               <details class="frontmatter">
                 <summary>Frontmatter</summary>
-                <pre><code class="language-yaml">---
+                <div class="code-block">
+                  <button type="button" class="copy-code-button" data-copy-code="true">
+                    Copy code
+                  </button>
+                  <pre><code class="language-yaml">---
 name: setup-ts-deep-modules
 description: Wire dependency-cruiser into a TypeScript repo so each package is a deep module — implementation hidden in subfolders, reachable only through its entry-point files. User-invoked.
 disable-model-invocation: true
 ---
 </code></pre>
+                </div>
               </details>
             </div>
             <div class="markdown-body">
@@ -2345,12 +2350,17 @@ disable-model-invocation: true
                 <code>/codebase-design</code> skill — use its language throughout.
               </p>
               <h2 id="the-shape-this-enforces">The shape this enforces</h2>
-              <pre><code>src/packages/
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code>src/packages/
             &lt;name&gt;/
               index.ts        ← an entry point (public). Import this from outside.
               client.ts       ← another entry point. Packages may expose SEVERAL.
               lib/            ← implementation: hidden from outside, free to import each other.
               tests/          ← co-located tests + fixtures (a subfolder, so private).</code></pre>
+              </div>
               <p>
                 The public surface is the package&#39;s <strong>root files</strong> — not one
                 designated <code>index.ts</code>. By convention implementation lives in

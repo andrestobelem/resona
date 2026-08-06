@@ -2400,11 +2400,16 @@
               </div>
               <details class="frontmatter">
                 <summary>Frontmatter</summary>
-                <pre><code class="language-yaml">---
+                <div class="code-block">
+                  <button type="button" class="copy-code-button" data-copy-code="true">
+                    Copy code
+                  </button>
+                  <pre><code class="language-yaml">---
 status: accepted
 date: 2026-08-04
 ---
 </code></pre>
+                </div>
               </details>
             </div>
             <div class="markdown-body">
@@ -2416,7 +2421,11 @@ date: 2026-08-04
                 tiempo absoluto. El tiempo musical se expresa como una fracción exacta de notas
                 negras y el absoluto como una fracción exacta de segundos.
               </p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">RationalIR</span> = <span class="hljs-title class_">Readonly</span>&lt;{
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">RationalIR</span> = <span class="hljs-title class_">Readonly</span>&lt;{
             <span class="hljs-attr">numerator</span>: <span class="hljs-built_in">string</span>;
             <span class="hljs-attr">denominator</span>: <span class="hljs-built_in">string</span>;
           }&gt;;
@@ -2428,6 +2437,7 @@ date: 2026-08-04
           <span class="hljs-keyword">type</span> <span class="hljs-title class_">DurationIR</span> =
             | <span class="hljs-title class_">Readonly</span>&lt;{<span class="hljs-attr">type</span>: <span class="hljs-string">&quot;musical-duration&quot;</span>; <span class="hljs-attr">quarterNotes</span>: <span class="hljs-title class_">RationalIR</span>}&gt;
             | <span class="hljs-title class_">Readonly</span>&lt;{<span class="hljs-attr">type</span>: <span class="hljs-string">&quot;absolute-duration&quot;</span>; <span class="hljs-attr">seconds</span>: <span class="hljs-title class_">RationalIR</span>}&gt;;</code></pre>
+              </div>
               <h2 id="opciones-consideradas">Opciones consideradas</h2>
               <ul>
                 <li>

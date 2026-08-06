@@ -2460,7 +2460,12 @@
                     <strong>List issues</strong>: use appropriate <code>--label</code> and
                     <code>--state</code> filters:
                   </p>
-                  <pre><code class="hljs language-bash">gh issue list --state open --json number,title,body,labels,comments --jq <span class="hljs-string">&#x27;[.[] | {number, title, body, labels: [.labels[].name], comments: [.comments[].body]}]&#x27;</span></code></pre>
+                  <div class="code-block">
+                    <button type="button" class="copy-code-button" data-copy-code="true">
+                      Copy code
+                    </button>
+                    <pre><code class="hljs language-bash">gh issue list --state open --json number,title,body,labels,comments --jq <span class="hljs-string">&#x27;[.[] | {number, title, body, labels: [.labels[].name], comments: [.comments[].body]}]&#x27;</span></code></pre>
+                  </div>
                 </li>
                 <li>
                   <p>

@@ -2400,11 +2400,16 @@
               </div>
               <details class="frontmatter">
                 <summary>Frontmatter</summary>
-                <pre><code class="language-yaml">---
+                <div class="code-block">
+                  <button type="button" class="copy-code-button" data-copy-code="true">
+                    Copy code
+                  </button>
+                  <pre><code class="language-yaml">---
 status: accepted
 date: 2026-08-04
 ---
 </code></pre>
+                </div>
               </details>
             </div>
             <div class="markdown-body">
@@ -2412,7 +2417,11 @@ date: 2026-08-04
                 CompositionIR v1 fija payloads cerrados de procesadores
               </h1>
               <p>Instrumento y efectos usan estas formas:</p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">PolySynthIR</span> = <span class="hljs-title class_">IRNodeBase</span> &amp; <span class="hljs-title class_">Readonly</span>&lt;{
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">PolySynthIR</span> = <span class="hljs-title class_">IRNodeBase</span> &amp; <span class="hljs-title class_">Readonly</span>&lt;{
             <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;poly-synth&quot;</span>;
             <span class="hljs-attr">maxVoices</span>: <span class="hljs-built_in">number</span>;
             <span class="hljs-attr">oscillator</span>: <span class="hljs-string">&quot;sine&quot;</span> | <span class="hljs-string">&quot;saw&quot;</span> | <span class="hljs-string">&quot;square&quot;</span>;
@@ -2435,6 +2444,7 @@ date: 2026-08-04
             <span class="hljs-attr">feedback</span>: <span class="hljs-built_in">number</span>;
             <span class="hljs-attr">mix</span>: <span class="hljs-built_in">number</span>;
           }&gt;;</code></pre>
+              </div>
               <h2 id="opciones-consideradas">Opciones consideradas</h2>
               <ul>
                 <li>

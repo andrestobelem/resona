@@ -665,19 +665,19 @@
   "outputs": [
     {
       "path": ".agents/skills/ask-matt/SKILL.html",
-      "sha256": "066635271192ff64f9e69820fdddd379adbda2aeba14849422238b0fc29b3789"
+      "sha256": "df329864dd745cf62f17dbb6e19aba7cf64e2ffa891c634f8652499df235f9c6"
     },
     {
       "path": ".agents/skills/batch-grill-me/SKILL.html",
-      "sha256": "80da04b0f41c99596eb97eb69a78e9f62cbddfa49b7f13bda6828d86bc0c0c3f"
+      "sha256": "b6ce7f7f004b914b86cd2e89b9915cd7f018ce3dc090ebda2fc13ceed05f4821"
     },
     {
       "path": ".agents/skills/claude-handoff/SKILL.html",
-      "sha256": "38982a5cea1302aa0efbc1bc2d0a0fe954cd061b85878217769227659becee9e"
+      "sha256": "c76d0c227dd46378004e39fcf2316ba51782082c8b08a23168b8ce06456ddfce"
     },
     {
       "path": ".agents/skills/code-review/SKILL.html",
-      "sha256": "0a7dc2610fd2a8abd3c3e50c7cf78547e18e446e340bf76b7697784931c56a2b"
+      "sha256": "92024627dbd91e9be35b12f781ca038c3cd8b6b819868bf5dce21c768e4b5bd6"
     },
     {
       "path": ".agents/skills/codebase-design/DEEPENING.html",
@@ -689,75 +689,75 @@
     },
     {
       "path": ".agents/skills/codebase-design/SKILL.html",
-      "sha256": "48a4cc19a3bc240362cb8f27e9b8465cb732a0aa099dcadd485a057ca9537af5"
+      "sha256": "fcad6374d9e0a1164708fc5ab2f5cbc0cd2f1a63a4d08893c5c31748370c5fa8"
     },
     {
       "path": ".agents/skills/design-an-interface/SKILL.html",
-      "sha256": "5fbe0d508b56dd94305b6c84197b59c908800be366678b622e286b1b8e880486"
+      "sha256": "293a9b0bb4d87adf4772fd3d08f40a07c58a58aaa792358cc836828ca82b89a1"
     },
     {
       "path": ".agents/skills/diagnosing-bugs/SKILL.html",
-      "sha256": "c96dfb2ec0d2b710851db7daf5bda3810c7c9ff027e1dee30bbcb38e20729aeb"
+      "sha256": "78c00b2b1a0afe7875ab4d0feb972fb4e5024f9a7a5b4e252c696ba0c6c55cd2"
     },
     {
       "path": ".agents/skills/domain-modeling/ADR-FORMAT.html",
-      "sha256": "835a797bd126c971638fb26e5a9d14ae2bd72f901c2ee95d1de4ccc6b34e2300"
+      "sha256": "06151776d7bd47d84c5c6f183cbaf3c945f5c28afe42653cc2548f479eff40e2"
     },
     {
       "path": ".agents/skills/domain-modeling/CONTEXT-FORMAT.html",
-      "sha256": "5dbba301cff564736526f1afbb2a1416116d1a121b725c33deeabe1ec5149516"
+      "sha256": "e20ae23c5e1259651927e995127444a91319675c31efaf58c3c3b444691ec770"
     },
     {
       "path": ".agents/skills/domain-modeling/SKILL.html",
-      "sha256": "84db7c22bb3e66087697bf466b049a5213edd28da3b052ce2933cd54b74f137b"
+      "sha256": "3c063a9b5c79b2433f155ea01ea9e4bfb4fa146baf4badb3a56f04ba29a4e3a6"
     },
     {
       "path": ".agents/skills/edit-article/SKILL.html",
-      "sha256": "0f49c7b4e617fa2e1ee0abb44c2270e1b71a1f226024a9ff2f27f48f94268bdf"
+      "sha256": "b0d062e66bf9673c1ecc6dddad9752a020fbf64083694d8e867edd089a77f75d"
     },
     {
       "path": ".agents/skills/git-guardrails-claude-code/SKILL.html",
-      "sha256": "447a2815f2ea432cb1130b656b0f0c1a6fa84f520bc83fb4452a8fa6a46ed91b"
+      "sha256": "1e5e878fbe089ea0a2e105c28c9f65b39daf7ef494b2e80213bda1f013379689"
     },
     {
       "path": ".agents/skills/grill-me/SKILL.html",
-      "sha256": "8234a5849dcba9a68c3c4db6c704eb824a2e7bf6fa61f831f9ae957c295ffafd"
+      "sha256": "7a068eafcd8721cc87a768ab68ec11a1601184709c4392cfe6542eed4b964548"
     },
     {
       "path": ".agents/skills/grill-with-docs/SKILL.html",
-      "sha256": "89f566b93b38544a4ae3bef843ef8bb6d34286c43084a9a63a63e5f92cc510d9"
+      "sha256": "ed368d5b5f151fa63907631016fbb3f6651c6f8fa413a0862cc25ee2054965a1"
     },
     {
       "path": ".agents/skills/grilling/SKILL.html",
-      "sha256": "136da170664bc530bb7cdb912fe95026a8df14a917dbfee1e84f7a1ebefe70df"
+      "sha256": "cd419d4a0b1d97cc27ca8f2ed9a56ca9502cfd11ef74ea8ccbac7e18b2e8d15c"
     },
     {
       "path": ".agents/skills/handoff/SKILL.html",
-      "sha256": "253910fa5f2b550119be039d71d9323ee783394a7212caf5eb96ffd6c778665e"
+      "sha256": "66631a6fcade4cf15949ee540b50ed9f4d1a0fb8454b5ed70d9851c24eb5d7c1"
     },
     {
       "path": ".agents/skills/implement/SKILL.html",
-      "sha256": "c5f54e1a1bd38ca430070b22a9c0d2741ee5dab44f88779acec1430a9a24550b"
+      "sha256": "0dfd89982a6dfe979af822a7317b081e216b3bde2ef9271491c17f9dd749ae05"
     },
     {
       "path": ".agents/skills/improve-codebase-architecture/HTML-REPORT.html",
-      "sha256": "675da5baac49ba937d390eddef934f0d65a374dd5c25bdc64f63fcf421fb1127"
+      "sha256": "2aa95fa90dd6f0b160cce4149c1bbbfcf38446e3c7c670199da61c7083dba13f"
     },
     {
       "path": ".agents/skills/improve-codebase-architecture/SKILL.html",
-      "sha256": "2a8f9e3dbd33d24a8ccee3ba729de2f2fa68888dba8e51dd04626fa8c75b9682"
+      "sha256": "69a637aaacb00a73e02527a7c31161bf2f85e221eaa849651e1e4c035e40a145"
     },
     {
       "path": ".agents/skills/loop-me/SKILL.html",
-      "sha256": "a5d66ca485d8f1ae4b32b4a8b06483b2f20a5125982a291d2162f286afc40396"
+      "sha256": "be907a7a5e0cf04fdb577408f0f72522c961e6094d84a75e414ae79715e2f09b"
     },
     {
       "path": ".agents/skills/migrate-to-shoehorn/SKILL.html",
-      "sha256": "3afe341b01ef9226756062acf0b83e34082ef5b32154511c07d9084311851dc4"
+      "sha256": "6c2caa08d1eb73f9f53f019de4245b6998334e873e95491566033a7ec3cea450"
     },
     {
       "path": ".agents/skills/obsidian-vault/SKILL.html",
-      "sha256": "f1a5d4cb4e2bf78212401255051b5e957357bb8d84a36d62c44e9ed24dbf5243"
+      "sha256": "a5ea2939bbabfdf9a3e3460ec879cac14cbf5b78db908f733b62a3a884df337b"
     },
     {
       "path": ".agents/skills/prototype/LOGIC.html",
@@ -765,39 +765,39 @@
     },
     {
       "path": ".agents/skills/prototype/SKILL.html",
-      "sha256": "cd666b978357620a7df33f7b9eb55949bea7bc27baafa2aec3d1d0064ad49a0c"
+      "sha256": "78a4f97775c10a499e71143a2d8f3cc81260dd6b7b2b0640b90597ca141520f5"
     },
     {
       "path": ".agents/skills/prototype/UI.html",
-      "sha256": "4d9624d5aa1ec7f1090872d9b438ea79965f9a88034ec68c362cb1c14e8fabf5"
+      "sha256": "4d32136df8e0fc4c88c14976984b80e3dc652dfe705e1c1b01d9eb58568376ad"
     },
     {
       "path": ".agents/skills/qa/SKILL.html",
-      "sha256": "1eb396788a5691c36c09639e0775ef4e6aca0fa858a9aa5283406de2264a556a"
+      "sha256": "a5ea1a6fc027d9eb9b644035681bd5735fc67e7ad1a0738ca8f34d42939023c3"
     },
     {
       "path": ".agents/skills/request-refactor-plan/SKILL.html",
-      "sha256": "cad4bb2c761d03ca59befd47f09c9a04e04a0ddddc05b506173243217a63342d"
+      "sha256": "e2e2e0402256d9ee01771514e797fc1aa1d25a7fdb4f00b53814d923ad0bcfc1"
     },
     {
       "path": ".agents/skills/research/SKILL.html",
-      "sha256": "c848252ee347cfa1863a50029e3787a43fec254d61d5a8a850cdd06676907edf"
+      "sha256": "720bdd9881469f0dbb72209c84ac18edde0b5d721957d0d70f7290b07fa10b0d"
     },
     {
       "path": ".agents/skills/resolving-merge-conflicts/SKILL.html",
-      "sha256": "a51b3c25a6bbe1830ffb2d3e1e2bdd1de2f2a14be8de88c49057427dd759d4ff"
+      "sha256": "d33b6724e316f56852f451c06338f62ed835b8c15fe4950f3ff0d47e185d66c9"
     },
     {
       "path": ".agents/skills/scaffold-exercises/SKILL.html",
-      "sha256": "31b1dc808e109ad02d579bbac8e60728e354025d0c051cab8b3fe4acc36805dd"
+      "sha256": "4d6faa5e183d3e2e3835d546d884264a7ff3bf12192d37bad984f762118c6c2c"
     },
     {
       "path": ".agents/skills/setup-matt-pocock-skills/SKILL.html",
-      "sha256": "a7e727f7fbaa7c4992491f6d15bf2a516ede72374a11835412ce670df708d8ca"
+      "sha256": "28cff3a2dfe8b416cb10d247d67298c7fa00dd783c133c89fec12a2d0ee5b484"
     },
     {
       "path": ".agents/skills/setup-matt-pocock-skills/domain.html",
-      "sha256": "ecc27aa546318e9e313216c2f324211b8f1dd15a86299ccaceb187368f77c6a8"
+      "sha256": "526b6830814f7d7245a1aca89249b855a671fc9bb13e4dc234b40a3a32813989"
     },
     {
       "path": ".agents/skills/setup-matt-pocock-skills/issue-tracker-github.html",
@@ -817,95 +817,95 @@
     },
     {
       "path": ".agents/skills/setup-pre-commit/SKILL.html",
-      "sha256": "f5d796e34da4029abb0f7458e9a92bf147e42c91402cda1f1f3def6ef1b9d830"
+      "sha256": "070e999fd3826fb44a47d5696da05927a8434f474870d1142ad1237fd58208a8"
     },
     {
       "path": ".agents/skills/setup-trunk-based-development/SKILL.html",
-      "sha256": "a96430b9e8bdf10e941f3684098c06c2fc959c8af221a45633572f9ecaf7983b"
+      "sha256": "c1dcf6b4e11189d12961c7783335f80128d1110387093f96c296913fdbb7ea94"
     },
     {
       "path": ".agents/skills/setup-ts-deep-modules/SKILL.html",
-      "sha256": "974e34e65443853468faca0d46712e6b898b3e2293f7dfe17b28f2730e164b7d"
+      "sha256": "95c11a65d9d0ee0023f56649c33ba400a1428c5df7e153802526e08c2ba7bd33"
     },
     {
       "path": ".agents/skills/tdd/SKILL.html",
-      "sha256": "b10177faf1a844c46f3c4ee95e64d857946112cc1355517cbc79216db0c1f621"
+      "sha256": "d4c9b7c48ed5f889b3861a39faf2ece4c66b148506dcb2f1e79150b181f0aa5c"
     },
     {
       "path": ".agents/skills/tdd/mocking.html",
-      "sha256": "80764282fb824cf103a262559b0a1bcf1462908b6acbfcdbbb09b1963647be2b"
+      "sha256": "405e30c854d34781cb07a33abea308038bc11e8abb0382d08395e9c4fdb4d776"
     },
     {
       "path": ".agents/skills/tdd/tests.html",
-      "sha256": "bd5c48324d2f92c68ea90d46ca2e6173d61e1e6f1f243855a5798bb8775bbec5"
+      "sha256": "0a085a49e6b18996774cf9178ff02862f88f6d3dd68dcbf06b14a926aafc129e"
     },
     {
       "path": ".agents/skills/teach/GLOSSARY-FORMAT.html",
-      "sha256": "1e6cdf73f1f4b7650a71fc8964d21b6b4298d991ca755bb09965638bc3fc2155"
+      "sha256": "cf3c0046b6c760b479ddd57b4d8a3fa9e5feffcc7b69dc52ae2a268ba8f8c8fb"
     },
     {
       "path": ".agents/skills/teach/LEARNING-RECORD-FORMAT.html",
-      "sha256": "f2d9e97b77e541459fe35360a86e3ffc86942ddd757f2cb8a29dc2405eb6e95e"
+      "sha256": "7fdeee4c48327dd6865c3d8e8a321766946a4197db7824b43921ded4d37ed259"
     },
     {
       "path": ".agents/skills/teach/MISSION-FORMAT.html",
-      "sha256": "24feab4517aaa947747ff3accdb87f5419d10d8ff17fb71d0ff41f03421b7472"
+      "sha256": "130f073f55951d11c83e895a96099b19e60d1a315fcad3e6b4477d0ee835bf12"
     },
     {
       "path": ".agents/skills/teach/RESOURCES-FORMAT.html",
-      "sha256": "19270aacb48d52d16ff36d9a1eb235940c022584a938da48cd0f973e13769d84"
+      "sha256": "be7c1c8cf2172a92b3c981b111ced9e5ebaf4093a6172cf599147f03160c1e64"
     },
     {
       "path": ".agents/skills/teach/SKILL.html",
-      "sha256": "abea5667157b8d925f0657787a91397ceeb496bec800e034924d90020104501d"
+      "sha256": "0babc79f1538bf04b90a722aa1f974a1563be720f1fc0d09710169e89027c13b"
     },
     {
       "path": ".agents/skills/to-questionnaire/SKILL.html",
-      "sha256": "0476c62291bf85dafba65255ef7d9bfb6761e052d0c758adb71de7a191354582"
+      "sha256": "7ee6e853d0a2ed97a8f90cb12b37f67fe29520755dd842001bed78f86d3771a5"
     },
     {
       "path": ".agents/skills/to-spec/SKILL.html",
-      "sha256": "122bdec87575ecab04dbf2c070fb1589c203dac8f93b65f696ded1fc874e8ebb"
+      "sha256": "0cb70d2fe12d203f9f93c9c41f2a5d1d05b048aa34793a095f3912abdce113bd"
     },
     {
       "path": ".agents/skills/to-tickets/SKILL.html",
-      "sha256": "0a303e085b32e1dd9780dde885c882367ac6d0b0c576502267f63e470ef19b8e"
+      "sha256": "3d99eb3285dda58e0e283de938d9001ccba10d21ca049e6c9214c2cd1ec5349d"
     },
     {
       "path": ".agents/skills/triage/AGENT-BRIEF.html",
-      "sha256": "02bd28d8a1bd57111f03bab7d11058efcfe63cd020031b99d8f6bf5d8394b619"
+      "sha256": "95036f24f51fa77b3b8d561d78ec9baa255077ec68b916ccbfc4fed6f5392c2d"
     },
     {
       "path": ".agents/skills/triage/OUT-OF-SCOPE.html",
-      "sha256": "ff18038b0444a9f410c7c7e4acdd3aa3766fdde4a98547b4d29c0776d91654da"
+      "sha256": "78147ccdbada7e4073bb83be4e875a7d28d15a223aacad5332146917e976d119"
     },
     {
       "path": ".agents/skills/triage/SKILL.html",
-      "sha256": "c9ee770b9a47b8c2ddae96345d233347259e501f1116ec8ac6b67a38d186759d"
+      "sha256": "ab2d533d40f46ba5520002c8d53a77576a53bd0bcfa16e4acf91afc74c115349"
     },
     {
       "path": ".agents/skills/trunk-based-development/SKILL.html",
-      "sha256": "eb980abb775718fd19c63fe5a6a1d2beac88a5095b46c53edddfe87ef621324f"
+      "sha256": "279cd8a9ba35e5f138ebb9b61df4e000ee0389813c9e130028b402d16d8f55de"
     },
     {
       "path": ".agents/skills/ubiquitous-language/SKILL.html",
-      "sha256": "e2a5fc035387a7060f8d91cc3da696b7f05eca7be21ad383ed6a594464020700"
+      "sha256": "9f95ae1b6acd457b62a44abc3e2c10a351510dd749a4ef83fc4b0111361bbe50"
     },
     {
       "path": ".agents/skills/wayfinder/SKILL.html",
-      "sha256": "dc11e03b7f1583df4b06014c943c46f318dc4af24f3e88ea388c607d1cf23d79"
+      "sha256": "04674c8074c167a19a3656a7f7413bfeeb569105d9673011445e86f88655f89d"
     },
     {
       "path": ".agents/skills/wizard/SKILL.html",
-      "sha256": "4e409962041576b6f645e85f9db566dec06214e3fb437b9b109b74315e5d8847"
+      "sha256": "92584f6417ddf23bb31b95b5aa9d2b06907e7739a01aa6814101108fce8ae6ba"
     },
     {
       "path": ".agents/skills/writing-beats/SKILL.html",
-      "sha256": "e14c707554904ad44f10b1ab5b25cc0584b81bc65f2faf1ce5f3a1898687c384"
+      "sha256": "4b4cca2ab178d2c9a5edf443d496c0a0fb575c9553bbe43b9c9e8827e55cde2f"
     },
     {
       "path": ".agents/skills/writing-fragments/SKILL.html",
-      "sha256": "74092769fda91264b3012fda253f71da37ea5ca14bf289a11de8ff0dce2ba453"
+      "sha256": "9e50d430e34ef0d85c70e765c111dc74463ddd89215dfdcf3803e45c33baed77"
     },
     {
       "path": ".agents/skills/writing-great-skills/GLOSSARY.html",
@@ -913,15 +913,15 @@
     },
     {
       "path": ".agents/skills/writing-great-skills/SKILL.html",
-      "sha256": "df3a2c5234cab4026d7d5da5b922395d5a2cb5d7def8c60e84cf7620fe16369f"
+      "sha256": "1fef480590782d9e95968475c8e7f3f29fc0d4455b1f6edd29380bd527ae3185"
     },
     {
       "path": ".agents/skills/writing-shape/SKILL.html",
-      "sha256": "c533fee4238416f03eef520247603fce212b89279d5ff7c9b573b3d629027f75"
+      "sha256": "2b7ecdbcf11b6263502abd1ec5c067bdbe9e4ca72df273193ae1262250736b2b"
     },
     {
       "path": ".resona-docs/docs.js",
-      "sha256": "6ebf9b289c10ae87694adee0dea253dc15d6450d3f8b0c220f08931c45bc7269"
+      "sha256": "53b00cd594c5582f4a839330a6eaeb0ea0cc1d22163d8c23e9c38fe8890919ad"
     },
     {
       "path": ".resona-docs/search-index.js",
@@ -929,11 +929,11 @@
     },
     {
       "path": ".resona-docs/styles.css",
-      "sha256": "ab4ee7005b7dd951d8d11ce07a0ebf645051023d65c2fc5f44e0666755b4810d"
+      "sha256": "d66ed29af75a3d86a051a0529171f57cd2aeeecc6be00bb7a51d3ee3c2b25c47"
     },
     {
       "path": "AGENTS.html",
-      "sha256": "99a79c232b47c7d0d9bd24d5bb4191ab5c2775bf1199df783bbe964d7050049c"
+      "sha256": "a026dba13f7c114096d054c01e44b0e25e5b6e76622d7cf7d717c22f978cfee1"
     },
     {
       "path": "CONTEXT-MAP.html",
@@ -945,339 +945,339 @@
     },
     {
       "path": "README.html",
-      "sha256": "b49151184908c93c1f6afa02592dfbb66e02dbef118986835ad2bdc41403fb79"
+      "sha256": "0b145376771aa414ec6b7b3a830518cec7a72d861086186f1413e0a7b6aab989"
     },
     {
       "path": "docs/adr/0001-versionable-source-as-source-of-truth.html",
-      "sha256": "1dacf8d783f3eb3915552ab6d87eb2b02a6e0898d38cdcb6e505a37e4fc4a35d"
+      "sha256": "2166709dd0f47ab603303bf86c44bec974f27277ffe625051511be255cd5cc65"
     },
     {
       "path": "docs/adr/0002-tsx-as-primary-authoring-interface.html",
-      "sha256": "69c763dea66a39e0628f18368a285b6bb913a2c6ce56a79a69eab544f0c027a1"
+      "sha256": "f4f5de0e8116dcfd067ca32e37b15a0bf0fba7780764d303045c8d0057727cbe"
     },
     {
       "path": "docs/adr/0003-web-studio-and-node-renderer.html",
-      "sha256": "1854a95edf7bd8018c851304df6dcbc9be0432e4aa93c2fd7d9eaf28e7991a16"
+      "sha256": "be22b8872da147f1ce1e4c99a62fd5f41a74a51b4c4d7dcb1c1e7e4abad0a1b5"
     },
     {
       "path": "docs/adr/0004-offline-determinism-and-preview-parity.html",
-      "sha256": "0ec43b7c3c86e3ad619d3c9cdb383a7655bd5b59465b0d16e1757cece790613e"
+      "sha256": "b2c0ee80e1376666f52786139839aeef202631894584e79b5cf1930f0413118c"
     },
     {
       "path": "docs/adr/0005-explicit-temporal-coordinate-units.html",
-      "sha256": "4e77709e5966e9e5e3195a76779ad69c6ad4b3eb7026190aec1e734947b041da"
+      "sha256": "d5c5b892678caac4413e4b2136fbd0143396929e62bceebdb7d55cbd1bf85024"
     },
     {
       "path": "docs/adr/0006-midi-is-a-boundary-format.html",
-      "sha256": "4b32fed56777c374003c0dcb277f5e598c2efec4a492e022ae897053f13568b1"
+      "sha256": "3c92eaa6aebf7f4b87780f4495089d74f57be8ef164a8f3877e2160526eef6fb"
     },
     {
       "path": "docs/adr/0007-nominal-duration-excludes-audible-tail.html",
-      "sha256": "1c6c2ea556c29cffe4604c0b89210d8e5f902cd4294a4aec581600a9bc8bed5d"
+      "sha256": "f549744a64ab1bb6d07ee3bb3920e3cc1e193715d8a33ebd194c28896632fcb1"
     },
     {
       "path": "docs/adr/0008-finite-half-open-render-ranges.html",
-      "sha256": "5aae706b5cfb15916f327c81251749f5f8519ad3d3fca8407251e8513e1fb599"
+      "sha256": "4a58f940af71cf39eb7e7e099278c530b54677f858400ee2e6c480506cc5d024"
     },
     {
       "path": "docs/adr/0009-rational-musical-time.html",
-      "sha256": "62ec32a3e94bd76d044edbef753063d5ce1b91fe22eed8861ba34da24d65efa7"
+      "sha256": "c410b7c6c8cf667bbdda211f3c2fdbb7bbe8ba70d648f22dd071c10458b72627"
     },
     {
       "path": "docs/adr/0010-explicit-root-registration.html",
-      "sha256": "2b0e2e89af6dbfaa5444ff345493d188760ac81ad956f01b02f95de5276ac296"
+      "sha256": "6edac39ab997baebb4b7a461a52f14041d71562a11f920849cf4496555e7fd38"
     },
     {
       "path": "docs/adr/0011-serializable-validated-composition-inputs.html",
-      "sha256": "f0cf1a0f6f18f279de44aa148d9d3d99eb71d0c0c7f9610a25cd68875bb79922"
+      "sha256": "2ceb40c62fa583cf6bb71a691b747881489a7a12fda3409095ed393b6b0ffb70"
     },
     {
       "path": "docs/adr/0012-prepare-an-immutable-resolved-variant.html",
-      "sha256": "e33d3aa26f2006c76e00968b86aed26bfaf4393ebe116498d0f2d204e9171595"
+      "sha256": "c57253fe7baf05cbe6ed3ba5170d6e0bfc5b649ae25e4b7360b64c1a34da82ff"
     },
     {
       "path": "docs/adr/0013-versioned-ir-and-immutable-execution-plan.html",
-      "sha256": "2f38a582826732f34014a73373ca002372b3f9d8197650e0601eb1932c1566a3"
+      "sha256": "85e8c0bdb5a4bb3f3a5c389e0590b0f5cee834e04991529748e7141b125cae32"
     },
     {
       "path": "docs/adr/0014-explicit-stable-public-node-ids.html",
-      "sha256": "86b23c80300f07a68fd2c99e05b5a0cc0089cd29e2d38a1a4a2fb4c1d712a9e1"
+      "sha256": "1d64b880dec6c9330d8ba7d8b64b0d2cf3d43c40d6f9ee8eee5195f533dfd6aa"
     },
     {
       "path": "docs/adr/0015-shared-typescript-block-dsp-core.html",
-      "sha256": "39724efa4d12ef5d482c562e9242a71b81b60b96c0a6ddb410aa2d8c81b1330e"
+      "sha256": "77083819df9fba7f8da1c449824e651df3557bdcae3a34820d941784f105ee70"
     },
     {
       "path": "docs/adr/0016-keyed-deterministic-randomness.html",
-      "sha256": "9bc3b8e169447e171e8d53d60bcf3f87091812e4bec75f74c9593fa7fabb251a"
+      "sha256": "3dc323e9721378c1a2c7d89e9d7794ac224d4b7590008f75cb3ec1b2646b4739"
     },
     {
       "path": "docs/adr/0017-content-addressed-resolved-assets.html",
-      "sha256": "a8d61fc83ec473a6b5ff8f515224bfd95ca7f490c9e0441870c5bc26607abd29"
+      "sha256": "b3feddc1a50b9e343a956f7f6decbe6afc348dc3288acb5a43e1c504930aa69f"
     },
     {
       "path": "docs/adr/0018-sequences-define-local-time-not-react-lifecycle.html",
-      "sha256": "fa77cbc84afc099ed23975422315c71ae95a0997714c2759400d6e3554b386ce"
+      "sha256": "ceed3d238acccf6869eb5a939d20d85966cde5494557237b26297aa7fe7ba6b1"
     },
     {
       "path": "docs/adr/0019-pure-declarative-react-authoring.html",
-      "sha256": "17e72ad68474c1500fe36c6fb2c79439a8496c64d29ef9911e2657bae0539cf9"
+      "sha256": "97814966b57412019dacf8fb5e96a46f28bf0ed41c4852c6f8fe835398cd1071"
     },
     {
       "path": "docs/adr/0020-single-track-with-typed-signal-slots.html",
-      "sha256": "bff349aa84dede237005ef81a453facdf148f2a4d003911481025aed7ad66663"
+      "sha256": "c35407202c109c41dc61c0b352669c42a52c5f96a174ceecb9ece6dc74e64ac0"
     },
     {
       "path": "docs/adr/0021-audio-sample-cursor-is-the-playback-clock.html",
-      "sha256": "a6d6c2693d0d7faf42c54c89e1403e7d71da04668c5622d5bdc9bfcd1e8612f0"
+      "sha256": "0877d04d883adde723ce0cdf108a814e34573e4bb18ee9d84eca77b2332e3006"
     },
     {
       "path": "docs/adr/0022-node-render-api-is-canonical.html",
-      "sha256": "6a214cc1efed99d6ce147eefa85dde576c05230f43a05d538f48f93d6e1f0de8"
+      "sha256": "cbca56e2486046c3aa7d8754a74b69e694e8c9842ae61aa429f83195bed239f1"
     },
     {
       "path": "docs/adr/0023-render-option-precedence-and-provenance.html",
-      "sha256": "fcb7ccf2caff643e159a3ff80b5221b9fcf3e9f5fbc8540c1b529a90e2058350"
+      "sha256": "dcb3ccf15b8c679ed8add7b37d8a3541fcaf2fd2d3e80cb042928058844f5eea"
     },
     {
       "path": "docs/adr/0024-render-spec-defines-content-identity.html",
-      "sha256": "abec41c1639010caa2c0b670dedf447875df5cbb163a929eeb43728772b08b06"
+      "sha256": "9ae84f92734918e265e93091893047a4d89117fae5b2158981457852bd8cc078"
     },
     {
       "path": "docs/adr/0025-minimal-explicit-cli.html",
-      "sha256": "559e8ad875315ae156e9d00714f7716baac24e0b631aa9f0e52df3f1d17917d0"
+      "sha256": "ec6158449853e85ae9efd45410a4c76e153adb6a5f699faf4385561c5de3431c"
     },
     {
       "path": "docs/adr/0026-versioned-cli-json-protocol.html",
-      "sha256": "468db2aea3ab61390aa23ee6ca496014273faaa6df552fa6ddd9ea0f22a1ca2c"
+      "sha256": "2f37c445413dddf84696c022c99f710b4c5ca365ba58f1cbeadbb0f3544f8dcb"
     },
     {
       "path": "docs/adr/0027-typed-temporal-values-at-the-public-api.html",
-      "sha256": "a912b7a376afcddd9ca5813e0de872082d8c20d6ac43277dbfffae73a4f68b64"
+      "sha256": "a8dc3ce35b68aa80e35d4ce7fce61e6475b231c3417f9059e17d8a14e4ac72ef"
     },
     {
       "path": "docs/adr/0028-tsx-structures-typed-musical-event-data.html",
-      "sha256": "7f5821b35f6a83f7667427ca070de64b57bfad3d83779aebabeae28a3332edf3"
+      "sha256": "499d6b603d00f28f7fee70758f39e9acb7b58f42c49e8a7620adec905851a9c4"
     },
     {
       "path": "docs/adr/0029-public-notes-are-interval-events.html",
-      "sha256": "8953ec0b0e7aa715558e877fe421bede002978b785f6399f461c4686d5818402"
+      "sha256": "6bb7cc485cd4972caba0929c768be6d91fa73024a4b21ee4ff9a25224b84c89d"
     },
     {
       "path": "docs/adr/0030-typed-twelve-tone-pitch.html",
-      "sha256": "bed8edaf717e7d1a34b546b7ea625e8b152d665edd4a17e4790d0b2ab835833f"
+      "sha256": "57835b46efee369bc4ce8b30d91327d7ad423c89132d3bec70b484e016fc96d9"
     },
     {
       "path": "docs/adr/0031-normalized-linear-note-velocity.html",
-      "sha256": "e4b5a0c9e8b8b492c939e9c7706386e6058108625b1e23950c0cf36da84d379c"
+      "sha256": "7b3405f0177cae4afc2e523f3b40f4e213614d47c1aa99de73bb7507c1c25488"
     },
     {
       "path": "docs/adr/0032-deterministic-note-occurrence-and-ordering.html",
-      "sha256": "0739c3488742fb2644c990f8d7ad0b1884f8acefb79d23990d318a6efc3c371e"
+      "sha256": "8cc6381f1c0b2f74865b3cc3983a7f4c1a59a11481ea0ef8c3d56daf4dc87994"
     },
     {
       "path": "docs/adr/0033-deterministic-polyphonic-voice-stealing.html",
-      "sha256": "c24bf2260c57b10aeb67b686ca3424c274d84f7b609952741a3be9b048deb8b3"
+      "sha256": "17d7e31a6d9e23d21e887f97a7fa2b6391cef28b09aad7816110db884b502674"
     },
     {
       "path": "docs/adr/0034-single-deterministic-oscillator-per-voice.html",
-      "sha256": "7fb336fb2a0efdae395057bab451e4922b628f4eedd86a20563d9bc9cd8df894"
+      "sha256": "a2dcd177e416081a1b7b42c7ec8e9b6ea880cc02b9867eff173cbcb655d06972"
     },
     {
       "path": "docs/adr/0035-linear-absolute-adsr-envelope.html",
-      "sha256": "65f379432dac73f0f01b1b6360e2b96b87f1bd2c262a9ab8b86e014fc2981b50"
+      "sha256": "45842fa85608e11fc15325f8b4e9d6a90478da4b315ec7d27203f1d2ebd84d8d"
     },
     {
       "path": "docs/adr/0036-gain-uses-a-linear-multiplier.html",
-      "sha256": "b0afaf7c57530bc47100910defc7665c1d745a78b864b31bccf3a98e6d005dcc"
+      "sha256": "4f0b7cfcda0603c2f252976bbddea85af56e0d1412b86d8251d600549d8e70ff"
     },
     {
       "path": "docs/adr/0037-fixed-integer-frame-delay.html",
-      "sha256": "2e182a52713af745b2664bdd3b8c6531e5b2eeb56cc2ae16086e0a6a711c7503"
+      "sha256": "03d5b165192f2646ef2c5a5d52866140f75eedde8c8c630829df2efe10cf091c"
     },
     {
       "path": "docs/adr/0038-sample-accurate-gain-automation.html",
-      "sha256": "452be5dabbd887b3b35226e8c44ba24b41c30fa0525a133842422affdb7f7826"
+      "sha256": "7ec2b7f2f22033202737d74ecbb91eedc3fd06a69f42fbd3a6d706b59d2074b1"
     },
     {
       "path": "docs/adr/0039-fixed-stereo-summing-graph.html",
-      "sha256": "69d64f45af88a4d7c98c177c0df44e0803147073b8a781fe9f4347497dbfc10c"
+      "sha256": "110d08ae8b84ab672c3c50d049f411b240cdf8b7abb8aa233c9cd41f76f80eff"
     },
     {
       "path": "docs/adr/0040-audio-clip-places-exact-resource-frames.html",
-      "sha256": "4f1ee9b7f22ff41e346d56de44bc670c2ae1fed45373fcbd5046f4957e626aca"
+      "sha256": "442d013db4722312ec58eec3d68a20287a80361150ea809bdf5166e79af9c2d1"
     },
     {
       "path": "docs/adr/0041-static-audio-project-resource-references.html",
-      "sha256": "7257ed3907941c788ef7bb7c2e61d88ca15b0be9d3db0c339424d7908cc9854d"
+      "sha256": "26aa6e5e968f4be8dbbab016475ed76c13da92737d262593f6c1cbecf62a71ad"
     },
     {
       "path": "docs/adr/0042-sha256-identifies-source-asset-bytes.html",
-      "sha256": "7d570a6c15c02639de5b094dbaa162e37e4d306a888b43d9254c8937dd68301b"
+      "sha256": "72625460d87c812f7576c579569c54482e541bf435f3e95eeaa61f69af5542ab"
     },
     {
       "path": "docs/adr/0043-optional-typed-project-config.html",
-      "sha256": "6804c3edc145494f538dd8231389540c026c3e381b679e1ef1f14341d52ff4bf"
+      "sha256": "e639d55c8f1cf174c8618089e7bb917ffc97c704bc428bcb63e0b76c3cdfba35"
     },
     {
       "path": "docs/adr/0044-explicit-stable-project-root.html",
-      "sha256": "e268bc925bf7230d8943d329e209656dae9fd8a3e8cfb665d5d6b472698705a6"
+      "sha256": "1d73cc9954ebdd53d714693313c0232cb4535f3bdb7d8bd77aee6de3f15234cd"
     },
     {
       "path": "docs/adr/0045-resona-owned-input-schema-boundary.html",
-      "sha256": "5d88390b3e50006296dec3c38740594efc733dd237ccfc2128d960462fa3fa01"
+      "sha256": "b15d66e7163e37cea555b13088924034955eb7cad76768d2d75361776751a978"
     },
     {
       "path": "docs/adr/0046-input-schemas-validate-without-transforming.html",
-      "sha256": "365cbd612e70037b9f46429f15f5d00998c72c53ad8bf864c30cc5343225cdbb"
+      "sha256": "9e080d5a0110d520e0ab9c15670898d7453cde9b78d407689c7b9fbb4ddb8761"
     },
     {
       "path": "docs/adr/0047-versioned-static-audio-input-reference.html",
-      "sha256": "3684d87dde0b172244eb42b1ac98ca430367e41e70a4ba69b4817c07641c0091"
+      "sha256": "75803f689319ddbd27c82e2b1e1a3dc3fa8ad306cfd3ede5a59a0ec22b6db5d3"
     },
     {
       "path": "docs/adr/0048-explicit-minimal-input-controls.html",
-      "sha256": "ea9c7c55f447ad4af8d1b10dba71a72cbe6da44ee283aefaee906afd9b6c0ddf"
+      "sha256": "065ad021210d7659ab8c7f22179f975d98b53eeba7dd96d3f4715a41af3e193e"
     },
     {
       "path": "docs/adr/0049-author-code-evaluates-only-in-node.html",
-      "sha256": "a8e0259b3fca2ca0eccd4462e27ec9539b1017c7ce3d1bc85c4a3c38f61d2370"
+      "sha256": "366743916eec506d2c377cb24de3a7267f43fbfd9da262d6ed3745fd3f2e35d2"
     },
     {
       "path": "docs/adr/0050-versioned-local-studio-protocol.html",
-      "sha256": "62fa533c51799fb6a82c30877dac5f76ff2502b63374489b2bb80f2e239333f6"
+      "sha256": "7b96723508d9c1f1c408812897b316e89a46d61ef9e82c28f035c9062f3d19e1"
     },
     {
       "path": "docs/adr/0051-loopback-token-protected-studio.html",
-      "sha256": "823953d5c1aa7e8109f1b9a89f345318abae3b80f11fef2f0910c4836fa18e7a"
+      "sha256": "0c98c10abc2bd2d71088ee30da07f633ffc462739077df74e05e18e14e55a6c0"
     },
     {
       "path": "docs/adr/0052-fresh-worker-per-variant.html",
-      "sha256": "4566a8908920cdcd8665306b416c86d294658ec2057e2492a645de4aa150d535"
+      "sha256": "8271de0ccc621a9539c22e8095b4fc52af0870a4e583d19712fc6e30c73e7ee6"
     },
     {
       "path": "docs/adr/0053-explicit-atomic-output-publication.html",
-      "sha256": "8cfbac52abf2183168b0864a548099b386660ca1451356d0c2393b13d33b9de6"
+      "sha256": "6eac04e4e35d6b395d61996c08091058b6c874a2ebf4eceba44b7dc2e614845f"
     },
     {
       "path": "docs/adr/0054-versioned-agent-skills-for-coding-agents.html",
-      "sha256": "935d98464fc94630f9f43452529a62c65f4e756fc83ac559caecf93c5965f96b"
+      "sha256": "6f3673fb4cf8f722cdc36c979813c85fd1272d583769cecad989691c75d48636"
     },
     {
       "path": "docs/adr/0055-standard-agent-skills-distribution.html",
-      "sha256": "70cf6aa0c63e6985d95ecdf94a7e628f18514868ea36d7b252d5978638fa96fd"
+      "sha256": "51bf0c4017b79675817b76a652f9adf460c0eac2505d78dbcf56f27155f5f1ce"
     },
     {
       "path": "docs/adr/0056-deterministic-quality-gate-for-agent-skills.html",
-      "sha256": "6d6745cb83fcd191751e4fdd3a2ee0603895b075628dcff0e54b4a7b3b91ac3a"
+      "sha256": "0ed378bb678e9d5f5b7ac38bbd877bb6091406dc8f64a40096b0e4347c7ec89b"
     },
     {
       "path": "docs/adr/0057-explicit-canonical-source-boundary.html",
-      "sha256": "6574ab75a630396487fddf4e39cd76d5f5c07b257efafe72f642117749c3a8a4"
+      "sha256": "ba26966c7f4ce726bd08c7d9a9bc011ef2af02188b0142735c28e1d4850c19db"
     },
     {
       "path": "docs/adr/0058-studio-render-numeric-parity-budget.html",
-      "sha256": "95d994d4251b83703ab46baef25298296c86ab51815b56229ce4a922a7078515"
+      "sha256": "63bb3ae1f64ba946b55a020ce8c7bad9d97e0e5cc3605293d60f904d460f06ce"
     },
     {
       "path": "docs/adr/0059-mode-agnostic-public-preparation.html",
-      "sha256": "29694f2a6b2a65cf74ae642f182c2748376083300a876fde67d14e5f4eec9add"
+      "sha256": "ab4103f64059c15307b56e0022272b47667c41f1eb7180ca65a338a22e98d8dc"
     },
     {
       "path": "docs/adr/0060-prepare-composition-public-contract.html",
-      "sha256": "b7c95421327cfce892ef0080db5ff70e6b78864938f7195a237d710b97ad5820"
+      "sha256": "cb8ef84feeddb5bf60ad42dc4d8f1db5fbab00e47989d7e5868d43fff378b7ae"
     },
     {
       "path": "docs/adr/0061-shallow-preparation-metadata-merge.html",
-      "sha256": "26e2bfab305f164115089cb5a967950c0bfa6ce6fd83de53a99856f8f5bf9bf8"
+      "sha256": "848de4fd6d52d4f86bac7367877e69b2eea21583b01b56606571f8d77087d32e"
     },
     {
       "path": "docs/adr/0062-hierarchical-ir-and-dense-execution-plan.html",
-      "sha256": "1286d2575e1e4f070a5ace90e0677299ae658df04fabb4742d023c7e68f7c281"
+      "sha256": "9e54ea88c4e7077afe1195774e52c2e3e08013b768e9b3146e9a342c75cd5d46"
     },
     {
       "path": "docs/adr/0063-closed-composition-ir-v1-vocabulary.html",
-      "sha256": "cb62c301f5a939a2b887868e4e6f4e9c13828ac9d905bcdacba6c51d56f538e6"
+      "sha256": "2ef104cc2206dd761e67fa842f2988010644d1578324d97e157d3744042a4f29"
     },
     {
       "path": "docs/adr/0064-canonical-rational-time-in-composition-ir.html",
-      "sha256": "ddb79d7962e52b212b2fe93e6af06222c5e56bb11aadf2a8415fec053ad36c43"
+      "sha256": "10a8d95a49fd00c353f43777326523135f1519faf8cbec568f0124f9de43c1dc"
     },
     {
       "path": "docs/adr/0065-composition-ir-v1-structural-payloads.html",
-      "sha256": "53aa274f1d55b1cb4a48a6aef4d87377d7104643e2d11fabc3be255b5d94c55d"
+      "sha256": "ff6363cb2afc77c343af6baa086dc06152e01276c0e321b0b4c59e6efd0640ec"
     },
     {
       "path": "docs/adr/0066-composition-ir-v1-header-tempo-and-pitch.html",
-      "sha256": "6a140554094ce401ec946d9404c6fb888251de12999f34e89dd070ca7506e726"
+      "sha256": "10fe520c3394ce57acbbb21f8bfc37a6a1412d9bf0ca57a9b9d63932cbf17cf6"
     },
     {
       "path": "docs/adr/0067-closed-composition-ir-v1-processor-payloads.html",
-      "sha256": "cf58b5ffab577b70fe3a0af26ebb500efa9de52ad01492b0a0c81f4ebbcd0c83"
+      "sha256": "480c26827997ed76b8cacddbca32b3e56113f221c2b50f091980df9e9d896ace"
     },
     {
       "path": "docs/adr/0068-explicit-gain-automation-lanes-in-composition-ir.html",
-      "sha256": "ed0bddd3be6e9e52a395a5e54563d2d9bc71459e64e74d9de019f4a7af65513d"
+      "sha256": "9604fb09c47c3bc7850fc8816b7ea038d1387076a69b3c55fa577e01ae29c268"
     },
     {
       "path": "docs/adr/0069-execution-plan-v1-header-and-table-boundary.html",
-      "sha256": "43479e14af9e7987093178e8dbcec205aa75de8b1a61be112993cf5f76c546f9"
+      "sha256": "043d6f608bb65916f2feb06183a50cdab1709cbc8ede7b1a93fee6967a0f6eb5"
     },
     {
       "path": "docs/adr/0070-closed-execution-plan-v1-processors-and-routing.html",
-      "sha256": "43a4717aed0c69030d7ca677e69d3baf8518241a9667b2d89f437a1d8d42e902"
+      "sha256": "3eaf88cd6193ea1219f91474b79453d6d092ffe56304a11c0dd10a4fe7962cc9"
     },
     {
       "path": "docs/adr/0071-content-addressed-resources-and-audio-regions.html",
-      "sha256": "7ea1d2ffdbf42a5f8fbcf04a7fddd6b6253a46449be9ef7a8339c74e99100da9"
+      "sha256": "7a1915c23748078d4586ac1bcdb5695caa6690b533ec9dd3f88299ed3186c034"
     },
     {
       "path": "docs/adr/0072-validate-before-pruning-execution-plan.html",
-      "sha256": "58a61f9a4fc4d55b4bdbef8962504847af9507214d0427d7f4bb56a36f5ec4c6"
+      "sha256": "f62e0e48bc52941de5bf0083a93d76bfb7c7ab0ddc71a91bfd8b5b1f33d0f5f6"
     },
     {
       "path": "docs/adr/0073-dense-instrument-attack-release-events.html",
-      "sha256": "f7661516301e71e07148e1ef9665d17440870a80a60856d3a770c5d45da20ad6"
+      "sha256": "9bc2430344aa270676662ef71da106451d13f573a45a8390ff5522ed3743ac43"
     },
     {
       "path": "docs/adr/0074-pitch-frequency-must-be-below-nyquist.html",
-      "sha256": "accc476fe256dfc636339377635a14930754f2f38bc62cdeaa2b9545a25f4773"
+      "sha256": "61784100d3be9389833fae07eb43fb925899251d93432964577b11e1f77b95ba"
     },
     {
       "path": "docs/adr/0075-frame-resolved-gain-automation-points.html",
-      "sha256": "d56e3317fde89292bcdb5d1f647681e292f8f347ae5a0d25f5a3f633412732a4"
+      "sha256": "e21a0842aff7ba945da86c16c63aaffc645038c8761b6c09eaa7ebbf85ecb2c1"
     },
     {
       "path": "docs/adr/0076-complete-non-operational-execution-plan-trace.html",
-      "sha256": "627b93469df836e5d22a7f052f148a717d8355207564b64d6cd18f959b6a9599"
+      "sha256": "617b15fb0c75e76b16690da24ffaf1972ab853d26953f277110150e88afb49e8"
     },
     {
       "path": "docs/adr/0077-canonical-node-paths-and-source-locations.html",
-      "sha256": "3c534174a7eba5d0c5482b1cb1b905088d938b49b07433e24e4176c4584de127"
+      "sha256": "e0033307cb2584e748e001ab2dd98cd1f133b39fe11efed7be5c2296a2cae38c"
     },
     {
       "path": "docs/adr/0078-explicit-float32-audio-boundaries.html",
-      "sha256": "a9fee677e19647cc1252c4e5f66b796a8853c7159f55b1bcd8aa2a25bdcaee84"
+      "sha256": "c0c523dde3594e62ccf6f9571b2be8d9163ef246bf6a5c2c8504dd16fc9c77dc"
     },
     {
       "path": "docs/adr/0079-versioned-json-schema-input-description.html",
-      "sha256": "97e5aeddcea0bb77dbbad423c042b41954598dadc31bc37d4f1065facaa3a1b7"
+      "sha256": "c8b095ed02db2d8f90c0cb93cf1d54285ad0347afd343a2034ea920dc0045b80"
     },
     {
       "path": "docs/adr/0080-canonical-render-fingerprint-and-keyed-randomness.html",
-      "sha256": "1357d61341ede15241e74c82968bda2bf0fdbb09c61070292cdcb30d3207d27e"
+      "sha256": "97a5ece3816bdee867b8698326aba2c2429f62d92eb31c8861b69f2155393d63"
     },
     {
       "path": "docs/adr/0081-studio-worklet-transport-and-module-delivery.html",
-      "sha256": "22cacf9c43d9c75510cabde18aa7cc213d7274e0ef1a42e23fd9ce8a1fe4b6de"
+      "sha256": "7d29dc7d52781e20b5c6a3b447d08f47753b23f7996266fc3195e537c909446a"
     },
     {
       "path": "docs/agents/domain.html",
-      "sha256": "6ab0c385a747344be1047ad60c23864db15b2c886d06301099fb46b1d6c42102"
+      "sha256": "ffa045892a6040fa19c7f7e16ee93168ba502b6f8bfa5b305153dc5a8c88d640"
     },
     {
       "path": "docs/agents/issue-tracker.html",
-      "sha256": "e7f957fbe1aeecce118d61ae17c4cf175bf90dfaa169fc30da2b7e682c688bed"
+      "sha256": "b61b8e51a4bcf33ee58ad540f95f911dc797f959a0516798f29e574fb128e66f"
     },
     {
       "path": "docs/agents/triage-labels.html",
@@ -1285,15 +1285,15 @@
     },
     {
       "path": "docs/agents/trunk-based-development.html",
-      "sha256": "d2222be94764bb66b4ae0276e5b7effad6a2c19b166688d708e3a3213f08f7a1"
+      "sha256": "cf963e085cd65817c732ee1a784242ccdb08817a1d5472a53f88cdf49b308480"
     },
     {
       "path": "docs/architecture.html",
-      "sha256": "c1d7efe0fc4b6d0e5349c20a32accd5516a6ba07377f653197f9aba3a34a8f32"
+      "sha256": "7e6e74539b9e2d590ca960756409cf82f301879d52956fe800e290f5a2791ce6"
     },
     {
       "path": "docs/product.html",
-      "sha256": "9e2922e9850610501cdb4604d5a7a332554ab3ccf6433e9d2ca2b93771fec87a"
+      "sha256": "cc718efc2034fb57831624c2d419ec17d867d05bfb5c19f0b0b452a27fa5e9a4"
     },
     {
       "path": "docs/research/dave-farley-trunk-based-development.html",
@@ -1305,11 +1305,11 @@
     },
     {
       "path": "docs/research/remotion-for-music-landscape.html",
-      "sha256": "54e7db3bc350f6ddc75c799134854404c81821217e3a51f02c8aed3391e693d1"
+      "sha256": "4ff7a5a48c0da9040a0e17eeea117d6561086f99e9b7e4c3f8b2ad3753086cd6"
     },
     {
       "path": "docs/research/remotion-study.html",
-      "sha256": "962bd596c81cf1254aa750c739c469a7c7fdb03cdd478f113e31c788ebb39c38"
+      "sha256": "9f4e79ddfc60b2feed22408aa5f4b6251031f92975cabe9aa7d6c2dc6e402454"
     },
     {
       "path": "index.html",

@@ -63,6 +63,49 @@
     storeTheme(theme);
   });
 
+  const copyText = async (text) => {
+    if (window.navigator.clipboard?.writeText) {
+      await window.navigator.clipboard.writeText(text);
+      return;
+    }
+    if (typeof document.execCommand !== "function") {
+      throw new Error("Clipboard access is unavailable");
+    }
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.append(textarea);
+    textarea.select();
+    try {
+      if (!document.execCommand("copy")) throw new Error("Copy command failed");
+    } finally {
+      textarea.remove();
+    }
+  };
+
+  const copyCode = async (button) => {
+    const code = button.closest(".code-block")?.querySelector("code");
+    if (!code) return;
+    try {
+      await copyText(code.textContent ?? "");
+      button.textContent = "Copied";
+      button.dataset.copyState = "copied";
+    } catch {
+      button.textContent = "Copy unavailable";
+      button.dataset.copyState = "failed";
+    }
+    window.setTimeout(() => {
+      button.textContent = "Copy code";
+      delete button.dataset.copyState;
+    }, 1600);
+  };
+
+  document.querySelectorAll('[data-copy-code="true"]').forEach((button) => {
+    button.addEventListener("click", () => void copyCode(button));
+  });
+
   const searchInput = document.querySelector("#docs-search");
   const categoryFilter = document.querySelector("#search-category");
   const directoryFilter = document.querySelector("#search-directory");

@@ -2462,7 +2462,11 @@
                 >).
               </p>
               <p>La idea principal que Resona debería adoptar es esa continuidad:</p>
-              <pre><code class="hljs language-text">fuente versionable
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-text">fuente versionable
                   ↓
           composición + inputs + metadata
                   ↓
@@ -2470,17 +2474,23 @@
              ┌────┴────────┐
              ↓             ↓
           Studio/Player    renderer offline</code></pre>
+              </div>
               <p>
                 La implementación central de Remotion, en cambio, no se puede trasladar
                 literalmente. Remotion puede evaluar y renderizar cuadros independientes en
                 paralelo; audio, MIDI, instrumentos y efectos forman un sistema continuo y con
                 estado. El equivalente correcto no es <code>frame -&gt; muestra</code>, sino:
               </p>
-              <pre><code class="hljs language-text">programa de composición
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-text">programa de composición
                   ↓
           eventos + grafo + automatizaciones
                   ↓
           motor stateful que procesa bloques de muestras</code></pre>
+              </div>
               <p>
                 El propio pipeline de audio de Remotion confirma la diferencia: durante el render
                 registra por cuadro referencias a assets, posición y volumen; después reconstruye
@@ -3016,13 +3026,18 @@
                 >).
               </p>
               <p><strong>Decisión para Resona:</strong> adaptar el pipeline a:</p>
-              <pre><code class="hljs language-text">entry TS/TSX + assets
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-text">entry TS/TSX + assets
                   ↓
           bundle evaluable
                   ↓
           registro + resolución de variante
                   ↓
           ProjectIR normalizado y versionado</code></pre>
+              </div>
               <p>
                 El bundle es el artefacto de código; el IR es el contrato musical; el plan DSP es el
                 artefacto ejecutable. No conviene confundirlos ni soportar dos bundlers en el MVP.
@@ -3061,13 +3076,18 @@
                 <strong>Decisión para Resona:</strong> copiar la orquestación y sus
                 responsabilidades:
               </p>
-              <pre><code class="hljs language-text">compile/evaluate
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-text">compile/evaluate
               → resolve composition
               → validate plan
               → create clean engine
               → process offline blocks
               → encode mix/stems
               → cleanup</code></pre>
+              </div>
               <p>
                 Progreso, cancelación, ownership de recursos y cleanup no deberían agregarse
                 después; son parte del contrato inicial del renderer.
@@ -3218,9 +3238,14 @@
                 >).
               </p>
               <p><strong>Decisión para Resona:</strong> comenzar con tres comandos:</p>
-              <pre><code class="hljs language-text">resona studio &lt;entry&gt;
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-text">resona studio &lt;entry&gt;
           resona compositions &lt;entry&gt;
           resona render &lt;entry&gt; &lt;composition-id&gt; &lt;output&gt;</code></pre>
+              </div>
               <p>
                 La API programática debe existir primero; la CLI sólo resuelve archivos/flags,
                 muestra progreso y traduce errores a exit codes.
@@ -3338,9 +3363,14 @@
                 >).
               </p>
               <p><strong>Decisión para Resona:</strong> copiar la separación:</p>
-              <pre><code class="hljs language-text">@resona/studio          frontend
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-text">@resona/studio          frontend
           @resona/studio-server   filesystem, build, engine y render jobs
           @resona/studio-shared   contratos de API y eventos</code></pre>
+              </div>
               <p>
                 SSE basta para HMR, progreso y eventos de baja frecuencia. Meters, waveform
                 streaming o datos de transporte de alta frecuencia pueden necesitar WebSocket,
@@ -3627,12 +3657,17 @@
                 <strong>Decisión para Resona:</strong> copiar seams, no cantidad. Una forma inicial
                 razonable es:
               </p>
-              <pre><code class="hljs language-text">resona                 DSL pública, tipos y registro
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-text">resona                 DSL pública, tipos y registro
           @resona/engine         IR, scheduler, grafo y contrato DSP sin React
           @resona/renderer       ejecución offline y encoders
           @resona/player         transporte embebible
           @resona/studio         UI de desarrollo
           @resona/cli            adapter de comandos</code></pre>
+              </div>
               <p>
                 <code>studio-server</code> y <code>studio-shared</code> pueden empezar como límites
                 internos y separarse cuando exista consumo independiente.
@@ -3956,7 +3991,11 @@
               </table>
               <h2 id="14-arquitectura-objetivo-derivada">14. Arquitectura objetivo derivada</h2>
               <p>La síntesis recomendada es:</p>
-              <pre><code class="hljs language-text">┌──────────────────────────────────────────────────────────────┐
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-text">┌──────────────────────────────────────────────────────────────┐
           │ Fuente del autor: TS/TSX + datos + assets                    │
           └──────────────────────────────┬───────────────────────────────┘
                                          ↓
@@ -3979,6 +4018,7 @@
                         realtime engine          offline renderer
                                  ↓                       ↓
                           Studio / Player           mix / stems</code></pre>
+              </div>
               <p>Propiedades importantes de esta frontera:</p>
               <ul>
                 <li>La capa declarativa no procesa muestras.</li>

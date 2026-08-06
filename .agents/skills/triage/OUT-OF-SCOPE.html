@@ -2338,10 +2338,15 @@
                 </li>
               </ol>
               <h2 id="directory-structure">Directory structure</h2>
-              <pre><code>.out-of-scope/
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code>.out-of-scope/
           ├── dark-mode.md
           ├── plugin-system.md
           └── graphql-api.md</code></pre>
+              </div>
               <p>
                 One file per <strong>concept</strong>, not per issue. Multiple issues requesting the
                 same thing are grouped under one file.
@@ -2352,7 +2357,11 @@
                 document than a database entry. Use paragraphs, code samples, and examples to make
                 the reasoning clear and useful to someone encountering it for the first time.
               </p>
-              <pre><code class="hljs language-markdown"><span class="hljs-section"># Dark Mode</span>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-markdown"><span class="hljs-section"># Dark Mode</span>
 
           This project does not support dark mode or user-facing theming.
 
@@ -2375,13 +2384,18 @@
             colors: ColorPalette; // single palette, resolved at build time
             fonts: FontStack;
           }</span></code></pre>
+              </div>
               <h2 id="prior-requests">Prior requests</h2>
               <ul>
                 <li>#42 — &quot;Add dark mode support&quot;</li>
                 <li>#87 — &quot;Night theme for accessibility&quot;</li>
                 <li>#134 — &quot;Dark theme option&quot;</li>
               </ul>
-              <pre><code>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code>
           ### Naming the file
 
           Use a short, descriptive kebab-case name for the concept: `dark-mode.md`, `plugin-system.md`, `graphql-api.md`. The name should be recognizable enough that someone browsing the directory understands what was rejected without opening the file.
@@ -2432,6 +2446,7 @@
           - Delete the `.out-of-scope/` file
           - The skill does not need to reopen old issues — they're historical records
           - The new issue that triggered the reconsideration proceeds through normal triage</code></pre>
+              </div>
             </div>
             <section class="backlinks" aria-labelledby="backlinks">
               <h2 id="backlinks">Referenced by</h2>

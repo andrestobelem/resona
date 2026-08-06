@@ -2301,12 +2301,17 @@
             <div class="document-meta">
               <details class="frontmatter">
                 <summary>Frontmatter</summary>
-                <pre><code class="language-yaml">---
+                <div class="code-block">
+                  <button type="button" class="copy-code-button" data-copy-code="true">
+                    Copy code
+                  </button>
+                  <pre><code class="language-yaml">---
 name: setup-matt-pocock-skills
 description: Configure this repo for the engineering skills — set up its issue tracker, triage label vocabulary, and domain doc layout. Run once before first use of the other engineering skills.
 disable-model-invocation: true
 ---
 </code></pre>
+                </div>
               </details>
             </div>
             <div class="markdown-body">
@@ -2492,7 +2497,11 @@ disable-model-invocation: true
                 edits to the surrounding sections.
               </p>
               <p>The block:</p>
-              <pre><code class="hljs language-markdown"><span class="hljs-section">## Agent skills</span>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-markdown"><span class="hljs-section">## Agent skills</span>
 
           <span class="hljs-section">### Issue tracker</span>
 
@@ -2505,6 +2514,7 @@ disable-model-invocation: true
           <span class="hljs-section">### Domain docs</span>
 
           [one-line summary of layout — &quot;single-context&quot; or &quot;multi-context&quot;]. See <span class="hljs-code">`docs/agents/domain.md`</span>.</code></pre>
+              </div>
               <p>
                 Include the <code>### Triage labels</code> sub-block, and write
                 <code>docs/agents/triage-labels.md</code>, only when <code>triage</code> is

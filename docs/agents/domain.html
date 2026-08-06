@@ -2469,13 +2469,18 @@
                 monorepo configuration rather than assumed to live under a particular root
                 directory.
               </p>
-              <pre><code class="hljs language-text">/
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-text">/
           ├── CONTEXT-MAP.md
           ├── CONTEXT.md                         ← shared Resona vocabulary during the transition
           ├── docs/adr/                          ← system-wide decisions
           └── &lt;workspace&gt;/
               ├── CONTEXT.md
               └── docs/adr/                      ← context-specific decisions</code></pre>
+              </div>
               <p>
                 As workspaces are introduced, add each context and its domain-documentation path to
                 <code>CONTEXT-MAP.md</code>. A workspace needs its own context files only when it

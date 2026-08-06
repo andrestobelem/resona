@@ -2400,11 +2400,16 @@
               </div>
               <details class="frontmatter">
                 <summary>Frontmatter</summary>
-                <pre><code class="language-yaml">---
+                <div class="code-block">
+                  <button type="button" class="copy-code-button" data-copy-code="true">
+                    Copy code
+                  </button>
+                  <pre><code class="language-yaml">---
 status: accepted
 date: 2026-08-04
 ---
 </code></pre>
+                </div>
               </details>
             </div>
             <div class="markdown-body">
@@ -2412,7 +2417,11 @@ date: 2026-08-04
                 CompositionIR v1 fija sus payloads estructurales
               </h1>
               <p>Secuencias, pistas, clips y notas usan estas formas:</p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">SequenceIR</span> = <span class="hljs-title class_">IRNodeBase</span> &amp; <span class="hljs-title class_">Readonly</span>&lt;{
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">SequenceIR</span> = <span class="hljs-title class_">IRNodeBase</span> &amp; <span class="hljs-title class_">Readonly</span>&lt;{
             <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;sequence&quot;</span>;
             <span class="hljs-attr">from</span>: <span class="hljs-title class_">PositionIR</span>;
             <span class="hljs-attr">duration</span>?: <span class="hljs-title class_">DurationIR</span>;
@@ -2456,6 +2465,7 @@ date: 2026-08-04
             <span class="hljs-attr">pitch</span>: <span class="hljs-title class_">PitchIR</span>;
             <span class="hljs-attr">velocity</span>: <span class="hljs-built_in">number</span>;
           }&gt;;</code></pre>
+              </div>
               <h2 id="opciones-consideradas">Opciones consideradas</h2>
               <ul>
                 <li>Omitir arrays vacíos y defaults para reducir el JSON.</li>

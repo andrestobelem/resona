@@ -2400,11 +2400,16 @@
               </div>
               <details class="frontmatter">
                 <summary>Frontmatter</summary>
-                <pre><code class="language-yaml">---
+                <div class="code-block">
+                  <button type="button" class="copy-code-button" data-copy-code="true">
+                    Copy code
+                  </button>
+                  <pre><code class="language-yaml">---
 status: accepted
 date: 2026-08-04
 ---
 </code></pre>
+                </div>
               </details>
             </div>
             <div class="markdown-body">
@@ -2415,7 +2420,11 @@ date: 2026-08-04
                 Una composición conecta preparación dinámica mediante la prop <code>prepare</code>,
                 tipada como <code>PrepareComposition&lt;TInputs&gt;</code>:
               </p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">PrepareComposition</span>&lt;<span class="hljs-title class_">TInputs</span> <span class="hljs-keyword">extends</span> <span class="hljs-title class_">JsonObject</span>&gt; = <span class="hljs-function">(<span class="hljs-params">
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">PrepareComposition</span>&lt;<span class="hljs-title class_">TInputs</span> <span class="hljs-keyword">extends</span> <span class="hljs-title class_">JsonObject</span>&gt; = <span class="hljs-function">(<span class="hljs-params">
             <span class="hljs-attr">context</span>: <span class="hljs-title class_">Readonly</span>&lt;{
               compositionId: <span class="hljs-built_in">string</span>;
               inputs: DeepReadonly&lt;TInputs&gt;;
@@ -2429,6 +2438,7 @@ date: 2026-08-04
               <span class="hljs-attr">metadata</span>?: <span class="hljs-title class_">JsonObject</span>;
             }&gt;
           &gt;;</code></pre>
+              </div>
               <h2 id="opciones-consideradas">Opciones consideradas</h2>
               <ul>
                 <li>

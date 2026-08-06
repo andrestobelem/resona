@@ -2400,11 +2400,16 @@
               </div>
               <details class="frontmatter">
                 <summary>Frontmatter</summary>
-                <pre><code class="language-yaml">---
+                <div class="code-block">
+                  <button type="button" class="copy-code-button" data-copy-code="true">
+                    Copy code
+                  </button>
+                  <pre><code class="language-yaml">---
 status: accepted
 date: 2026-08-04
 ---
 </code></pre>
+                </div>
               </details>
             </div>
             <div class="markdown-body">
@@ -2417,7 +2422,12 @@ date: 2026-08-04
                 frecuencia representable por el perfil de ejecución.
               </p>
               <p>La conversión canónica es:</p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">const</span> frequencyHz = <span class="hljs-number">440</span> * <span class="hljs-number">2</span> ** (semitonesFromA4 / <span class="hljs-number">12</span>);</code></pre>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">const</span> frequencyHz = <span class="hljs-number">440</span> * <span class="hljs-number">2</span> ** (semitonesFromA4 / <span class="hljs-number">12</span>);</code></pre>
+              </div>
               <h2 id="opciones-consideradas">Opciones consideradas</h2>
               <ul>
                 <li>

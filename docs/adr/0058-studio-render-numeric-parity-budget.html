@@ -2402,11 +2402,16 @@
               </div>
               <details class="frontmatter">
                 <summary>Frontmatter</summary>
-                <pre><code class="language-yaml">---
+                <div class="code-block">
+                  <button type="button" class="copy-code-button" data-copy-code="true">
+                    Copy code
+                  </button>
+                  <pre><code class="language-yaml">---
 status: accepted
 date: 2026-08-04
 ---
 </code></pre>
+                </div>
               </details>
             </div>
             <div class="markdown-body">
@@ -2423,8 +2428,13 @@ date: 2026-08-04
                 Para las muestras de Studio <code>s[i]</code> y las offline <code>r[i]</code>, el
                 contrato inicial exige:
               </p>
-              <pre><code class="hljs language-text">max(abs(s[i] - r[i])) &lt;= 1e-5
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-text">max(abs(s[i] - r[i])) &lt;= 1e-5
           rms(s - r)             &lt;= 1e-6</code></pre>
+              </div>
               <h2 id="opciones-consideradas">Opciones consideradas</h2>
               <ul>
                 <li>Exigir igualdad bit a bit entre navegador y Node.</li>

@@ -2316,11 +2316,16 @@
             <div class="document-meta">
               <details class="frontmatter">
                 <summary>Frontmatter</summary>
-                <pre><code class="language-yaml">---
+                <div class="code-block">
+                  <button type="button" class="copy-code-button" data-copy-code="true">
+                    Copy code
+                  </button>
+                  <pre><code class="language-yaml">---
 name: git-guardrails-claude-code
 description: Set up Claude Code hooks to block dangerous git commands (push, reset --hard, clean, branch -D, etc.) before they execute. Use when user wants to prevent destructive git operations, add git safety hooks, or block git push/reset in Claude Code.
 ---
 </code></pre>
+                </div>
               </details>
             </div>
             <div class="markdown-body">
@@ -2364,7 +2369,11 @@ description: Set up Claude Code hooks to block dangerous git commands (push, res
               <h3 id="3-add-hook-to-settings">3. Add hook to settings</h3>
               <p>Add to the appropriate settings file:</p>
               <p><strong>Project</strong> (<code>.claude/settings.json</code>):</p>
-              <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
             <span class="hljs-attr">&quot;hooks&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
               <span class="hljs-attr">&quot;PreToolUse&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
                 <span class="hljs-punctuation">{</span>
@@ -2379,8 +2388,13 @@ description: Set up Claude Code hooks to block dangerous git commands (push, res
               <span class="hljs-punctuation">]</span>
             <span class="hljs-punctuation">}</span>
           <span class="hljs-punctuation">}</span></code></pre>
+              </div>
               <p><strong>Global</strong> (<code>~/.claude/settings.json</code>):</p>
-              <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-json"><span class="hljs-punctuation">{</span>
             <span class="hljs-attr">&quot;hooks&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
               <span class="hljs-attr">&quot;PreToolUse&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
                 <span class="hljs-punctuation">{</span>
@@ -2395,6 +2409,7 @@ description: Set up Claude Code hooks to block dangerous git commands (push, res
               <span class="hljs-punctuation">]</span>
             <span class="hljs-punctuation">}</span>
           <span class="hljs-punctuation">}</span></code></pre>
+              </div>
               <p>
                 If the settings file already exists, merge the hook into existing
                 <code>hooks.PreToolUse</code> array — don&#39;t overwrite other settings.
@@ -2406,7 +2421,12 @@ description: Set up Claude Code hooks to block dangerous git commands (push, res
               </p>
               <h3 id="5-verify">5. Verify</h3>
               <p>Run a quick test:</p>
-              <pre><code class="hljs language-bash"><span class="hljs-built_in">echo</span> <span class="hljs-string">&#x27;{&quot;tool_input&quot;:{&quot;command&quot;:&quot;git push origin main&quot;}}&#x27;</span> | &lt;path-to-script&gt;</code></pre>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-bash"><span class="hljs-built_in">echo</span> <span class="hljs-string">&#x27;{&quot;tool_input&quot;:{&quot;command&quot;:&quot;git push origin main&quot;}}&#x27;</span> | &lt;path-to-script&gt;</code></pre>
+              </div>
               <p>Should exit with code 2 and print a BLOCKED message to stderr.</p>
             </div>
 

@@ -2330,14 +2330,23 @@
               </p>
               <h2 id="file-structure">File structure</h2>
               <p>Single-context repo (most repos):</p>
-              <pre><code>/
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code>/
           ├── CONTEXT.md
           ├── docs/adr/
           │   ├── 0001-event-sourced-orders.md
           │   └── 0002-postgres-for-write-model.md
           └── src/</code></pre>
+              </div>
               <p>Multi-context repo (presence of <code>CONTEXT-MAP.md</code> at the root):</p>
-              <pre><code>/
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code>/
           ├── CONTEXT-MAP.md
           ├── docs/adr/                          ← system-wide decisions
           └── src/
@@ -2347,6 +2356,7 @@
               └── billing/
                   ├── CONTEXT.md
                   └── docs/adr/</code></pre>
+              </div>
               <h2 id="use-the-glossarys-vocabulary">Use the glossary&#39;s vocabulary</h2>
               <p>
                 When your output names a domain concept (in an issue title, a refactor proposal, a

@@ -57,6 +57,7 @@ describe("buildDocumentationSite", () => {
     const firstOutput = await readGeneratedFiles(projectRoot);
     expect(firstOutput[".resona-docs/docs.js"]).toContain("window.name");
     expect(firstOutput[".resona-docs/docs.js"]).toContain("IntersectionObserver");
+    expect(firstOutput[".resona-docs/docs.js"]).toContain("navigator.clipboard");
     expect(firstOutput[".resona-docs/styles.css"]).toContain("@media (max-width: 52rem)");
     expect(firstOutput[".resona-docs/styles.css"]).toContain(':root[data-theme="dark"]');
     expect(firstBuild.orphanedFiles).toEqual([]);
@@ -243,6 +244,8 @@ const answer = 42;
     expect(html).toContain('src="docs/assets/logo.svg" alt="Logo"');
     expect(html).toContain('class="hljs language-typescript"');
     expect(html).toContain("hljs-keyword");
+    expect(html).toContain('class="copy-code-button"');
+    expect(html).toContain('data-copy-code="true"');
     expect(html).toContain("<details>");
     expect(html).toContain('class="skip-link" href="#content"');
     expect(html).toContain('aria-label="Breadcrumb"');

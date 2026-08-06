@@ -2404,11 +2404,16 @@
               </div>
               <details class="frontmatter">
                 <summary>Frontmatter</summary>
-                <pre><code class="language-yaml">---
+                <div class="code-block">
+                  <button type="button" class="copy-code-button" data-copy-code="true">
+                    Copy code
+                  </button>
+                  <pre><code class="language-yaml">---
 status: accepted
 date: 2026-08-04
 ---
 </code></pre>
+                </div>
               </details>
             </div>
             <div class="markdown-body">
@@ -2420,7 +2425,11 @@ date: 2026-08-04
                 cerrada de procesadores. Las conexiones usan índices locales al plan y forman
                 cadenas de pista acíclicas que terminan en un único sumador master.
               </p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">ProcessorPlan</span> =
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">ProcessorPlan</span> =
             | <span class="hljs-title class_">Readonly</span>&lt;{<span class="hljs-attr">type</span>: <span class="hljs-string">&quot;sum&quot;</span>}&gt;
             | <span class="hljs-title class_">Readonly</span>&lt;{
                 <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;poly-synth&quot;</span>;
@@ -2443,6 +2452,7 @@ date: 2026-08-04
             <span class="hljs-attr">from</span>: <span class="hljs-title class_">ProcessorIndex</span>;
             <span class="hljs-attr">to</span>: <span class="hljs-title class_">ProcessorIndex</span>;
           }&gt;;</code></pre>
+              </div>
               <h2 id="opciones-consideradas">Opciones consideradas</h2>
               <ul>
                 <li>Publicar opcodes genéricos con diccionarios abiertos de parámetros.</li>

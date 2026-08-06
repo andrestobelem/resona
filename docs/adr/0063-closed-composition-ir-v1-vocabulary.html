@@ -2400,11 +2400,16 @@
               </div>
               <details class="frontmatter">
                 <summary>Frontmatter</summary>
-                <pre><code class="language-yaml">---
+                <div class="code-block">
+                  <button type="button" class="copy-code-button" data-copy-code="true">
+                    Copy code
+                  </button>
+                  <pre><code class="language-yaml">---
 status: accepted
 date: 2026-08-04
 ---
 </code></pre>
+                </div>
               </details>
             </div>
             <div class="markdown-body">
@@ -2418,7 +2423,11 @@ date: 2026-08-04
                 nodo público implementa <code>IRNodeBase</code> con ID, ruta canónica y ubicación
                 fuente opcional.
               </p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">IRNodeBase</span> = <span class="hljs-title class_">Readonly</span>&lt;{
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">IRNodeBase</span> = <span class="hljs-title class_">Readonly</span>&lt;{
             <span class="hljs-attr">id</span>: <span class="hljs-built_in">string</span>;
             <span class="hljs-attr">path</span>: <span class="hljs-title class_">NodePath</span>;
             <span class="hljs-attr">source</span>?: <span class="hljs-title class_">SourceLocation</span>;
@@ -2428,6 +2437,7 @@ date: 2026-08-04
           <span class="hljs-keyword">type</span> <span class="hljs-title class_">TrackIR</span> = <span class="hljs-title class_">AudioTrackIR</span> | <span class="hljs-title class_">InstrumentTrackIR</span>;
           <span class="hljs-keyword">type</span> <span class="hljs-title class_">InstrumentIR</span> = <span class="hljs-title class_">PolySynthIR</span>;
           <span class="hljs-keyword">type</span> <span class="hljs-title class_">EffectIR</span> = <span class="hljs-title class_">GainIR</span> | <span class="hljs-title class_">DelayIR</span>;</code></pre>
+              </div>
               <h2 id="opciones-consideradas">Opciones consideradas</h2>
               <ul>
                 <li>

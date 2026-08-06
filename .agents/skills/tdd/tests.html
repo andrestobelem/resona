@@ -2324,13 +2324,18 @@
                 <strong>Integration-style</strong>: Test through real interfaces, not mocks of
                 internal parts.
               </p>
-              <pre><code class="hljs language-typescript"><span class="hljs-comment">// GOOD: Tests observable behavior</span>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-typescript"><span class="hljs-comment">// GOOD: Tests observable behavior</span>
           <span class="hljs-title function_">test</span>(<span class="hljs-string">&quot;user can checkout with valid cart&quot;</span>, <span class="hljs-title function_">async</span> () =&gt; {
             <span class="hljs-keyword">const</span> cart = <span class="hljs-title function_">createCart</span>();
             cart.<span class="hljs-title function_">add</span>(product);
             <span class="hljs-keyword">const</span> result = <span class="hljs-keyword">await</span> <span class="hljs-title function_">checkout</span>(cart, paymentMethod);
             <span class="hljs-title function_">expect</span>(result.<span class="hljs-property">status</span>).<span class="hljs-title function_">toBe</span>(<span class="hljs-string">&quot;confirmed&quot;</span>);
           });</code></pre>
+              </div>
               <p>Characteristics:</p>
               <ul>
                 <li>Tests behavior users/callers care about</li>
@@ -2341,12 +2346,17 @@
               </ul>
               <h2 id="bad-tests">Bad Tests</h2>
               <p><strong>Implementation-detail tests</strong>: Coupled to internal structure.</p>
-              <pre><code class="hljs language-typescript"><span class="hljs-comment">// BAD: Tests implementation details</span>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-typescript"><span class="hljs-comment">// BAD: Tests implementation details</span>
           <span class="hljs-title function_">test</span>(<span class="hljs-string">&quot;checkout calls paymentService.process&quot;</span>, <span class="hljs-title function_">async</span> () =&gt; {
             <span class="hljs-keyword">const</span> mockPayment = jest.<span class="hljs-title function_">mock</span>(paymentService);
             <span class="hljs-keyword">await</span> <span class="hljs-title function_">checkout</span>(cart, payment);
             <span class="hljs-title function_">expect</span>(mockPayment.<span class="hljs-property">process</span>).<span class="hljs-title function_">toHaveBeenCalledWith</span>(cart.<span class="hljs-property">total</span>);
           });</code></pre>
+              </div>
               <p>Red flags:</p>
               <ul>
                 <li>Mocking internal collaborators</li>
@@ -2356,7 +2366,11 @@
                 <li>Test name describes HOW not WHAT</li>
                 <li>Verifying through external means instead of interface</li>
               </ul>
-              <pre><code class="hljs language-typescript"><span class="hljs-comment">// BAD: Bypasses interface to verify</span>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-typescript"><span class="hljs-comment">// BAD: Bypasses interface to verify</span>
           <span class="hljs-title function_">test</span>(<span class="hljs-string">&quot;createUser saves to database&quot;</span>, <span class="hljs-title function_">async</span> () =&gt; {
             <span class="hljs-keyword">await</span> <span class="hljs-title function_">createUser</span>({ <span class="hljs-attr">name</span>: <span class="hljs-string">&quot;Alice&quot;</span> });
             <span class="hljs-keyword">const</span> row = <span class="hljs-keyword">await</span> db.<span class="hljs-title function_">query</span>(<span class="hljs-string">&quot;SELECT * FROM users WHERE name = ?&quot;</span>, [<span class="hljs-string">&quot;Alice&quot;</span>]);
@@ -2369,11 +2383,16 @@
             <span class="hljs-keyword">const</span> retrieved = <span class="hljs-keyword">await</span> <span class="hljs-title function_">getUser</span>(user.<span class="hljs-property">id</span>);
             <span class="hljs-title function_">expect</span>(retrieved.<span class="hljs-property">name</span>).<span class="hljs-title function_">toBe</span>(<span class="hljs-string">&quot;Alice&quot;</span>);
           });</code></pre>
+              </div>
               <p>
                 <strong>Tautological tests</strong>: Expected value restates the implementation, so
                 the test passes by construction.
               </p>
-              <pre><code class="hljs language-typescript"><span class="hljs-comment">// BAD: Expected value is recomputed the way the code computes it</span>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-typescript"><span class="hljs-comment">// BAD: Expected value is recomputed the way the code computes it</span>
           <span class="hljs-title function_">test</span>(<span class="hljs-string">&quot;calculateTotal sums line items&quot;</span>, <span class="hljs-function">() =&gt;</span> {
             <span class="hljs-keyword">const</span> items = [{ <span class="hljs-attr">price</span>: <span class="hljs-number">10</span> }, { <span class="hljs-attr">price</span>: <span class="hljs-number">5</span> }];
             <span class="hljs-keyword">const</span> expected = items.<span class="hljs-title function_">reduce</span>(<span class="hljs-function">(<span class="hljs-params">sum, i</span>) =&gt;</span> sum + i.<span class="hljs-property">price</span>, <span class="hljs-number">0</span>);
@@ -2384,6 +2403,7 @@
           <span class="hljs-title function_">test</span>(<span class="hljs-string">&quot;calculateTotal sums line items&quot;</span>, <span class="hljs-function">() =&gt;</span> {
             <span class="hljs-title function_">expect</span>(<span class="hljs-title function_">calculateTotal</span>([{ <span class="hljs-attr">price</span>: <span class="hljs-number">10</span> }, { <span class="hljs-attr">price</span>: <span class="hljs-number">5</span> }])).<span class="hljs-title function_">toBe</span>(<span class="hljs-number">15</span>);
           });</code></pre>
+              </div>
             </div>
             <section class="backlinks" aria-labelledby="backlinks">
               <h2 id="backlinks">Referenced by</h2>

@@ -2511,12 +2511,22 @@
               <h2 id="gate-contract">Gate contract</h2>
               <h3 id="verified-fast-gate">Verified fast gate</h3>
               <p>Command:</p>
-              <pre><code class="hljs language-bash">pnpm check:fast</code></pre>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-bash">pnpm check:fast</code></pre>
+              </div>
               <p>Expansion:</p>
-              <pre><code class="hljs language-bash">pnpm format:check
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-bash">pnpm format:check
           pnpm lint
           pnpm typecheck
           pnpm <span class="hljs-built_in">test</span>:unit</code></pre>
+              </div>
               <p>Recorded result:</p>
               <ul>
                 <li>Run date: 2026-08-04.</li>
@@ -2537,11 +2547,21 @@
               </p>
               <h3 id="verified-full-gate">Verified full gate</h3>
               <p>Command:</p>
-              <pre><code class="hljs language-bash">pnpm check:full</code></pre>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-bash">pnpm check:full</code></pre>
+              </div>
               <p>Expansion:</p>
-              <pre><code class="hljs language-bash">pnpm check:fast
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-bash">pnpm check:fast
           pnpm build
           pnpm <span class="hljs-built_in">test</span>:integration</code></pre>
+              </div>
               <p>Recorded result:</p>
               <ul>
                 <li>Run date: 2026-08-04.</li>
@@ -2563,10 +2583,15 @@
               <p>None. Every currently executable project gate has a recorded local result.</p>
               <h3 id="setup-validations">Setup validations</h3>
               <p>The following setup validations passed:</p>
-              <pre><code class="hljs language-bash">pnpm <span class="hljs-built_in">exec</span> prettier --check . --ignore-unknown
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-bash">pnpm <span class="hljs-built_in">exec</span> prettier --check . --ignore-unknown
           pnpm <span class="hljs-built_in">exec</span> eslint .
           pnpm <span class="hljs-built_in">exec</span> markdownlint-cli2
           git diff --check</code></pre>
+              </div>
               <p>Markdownlint checked 92 files and reported zero issues.</p>
               <p>
                 The first Prettier run detected only missing trailing commas in

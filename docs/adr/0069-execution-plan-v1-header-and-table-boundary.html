@@ -2402,11 +2402,16 @@
               </div>
               <details class="frontmatter">
                 <summary>Frontmatter</summary>
-                <pre><code class="language-yaml">---
+                <div class="code-block">
+                  <button type="button" class="copy-code-button" data-copy-code="true">
+                    Copy code
+                  </button>
+                  <pre><code class="language-yaml">---
 status: accepted
 date: 2026-08-04
 ---
 </code></pre>
+                </div>
               </details>
             </div>
             <div class="markdown-body">
@@ -2420,7 +2425,11 @@ date: 2026-08-04
                 este contrato.
               </p>
               <p>La cabecera v1 es:</p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">ProcessorIndex</span> = <span class="hljs-built_in">number</span>;
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">ProcessorIndex</span> = <span class="hljs-built_in">number</span>;
 
           <span class="hljs-keyword">type</span> <span class="hljs-title class_">ExecutionPlan</span> = <span class="hljs-title class_">Readonly</span>&lt;{
             <span class="hljs-attr">format</span>: <span class="hljs-string">&quot;resona/execution-plan&quot;</span>;
@@ -2440,6 +2449,7 @@ date: 2026-08-04
 
             <span class="hljs-attr">trace</span>?: <span class="hljs-keyword">readonly</span> <span class="hljs-title class_">PlanTrace</span>[];
           }&gt;;</code></pre>
+              </div>
               <h2 id="opciones-consideradas">Opciones consideradas</h2>
               <ul>
                 <li>

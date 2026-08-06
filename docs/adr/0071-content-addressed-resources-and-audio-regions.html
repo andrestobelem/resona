@@ -2402,11 +2402,16 @@
               </div>
               <details class="frontmatter">
                 <summary>Frontmatter</summary>
-                <pre><code class="language-yaml">---
+                <div class="code-block">
+                  <button type="button" class="copy-code-button" data-copy-code="true">
+                    Copy code
+                  </button>
+                  <pre><code class="language-yaml">---
 status: accepted
 date: 2026-08-04
 ---
 </code></pre>
+                </div>
               </details>
             </div>
             <div class="markdown-body">
@@ -2418,7 +2423,11 @@ date: 2026-08-04
                 Cada colocación ejecutable los referencia por índice y expresa todo su tiempo en
                 frames del plan.
               </p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">Sha256Hash</span> = <span class="hljs-string">`sha256:<span class="hljs-subst">${<span class="hljs-built_in">string</span>}</span>`</span>;
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">Sha256Hash</span> = <span class="hljs-string">`sha256:<span class="hljs-subst">${<span class="hljs-built_in">string</span>}</span>`</span>;
           <span class="hljs-keyword">type</span> <span class="hljs-title class_">ResourceIndex</span> = <span class="hljs-built_in">number</span>;
 
           <span class="hljs-keyword">type</span> <span class="hljs-title class_">ResolvedResourcePlan</span> = <span class="hljs-title class_">Readonly</span>&lt;{
@@ -2438,6 +2447,7 @@ date: 2026-08-04
             <span class="hljs-attr">sourceOffsetFrame</span>: <span class="hljs-built_in">number</span>;
             <span class="hljs-attr">loop</span>: <span class="hljs-built_in">boolean</span>;
           }&gt;;</code></pre>
+              </div>
               <h2 id="opciones-consideradas">Opciones consideradas</h2>
               <ul>
                 <li>

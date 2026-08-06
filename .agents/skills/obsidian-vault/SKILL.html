@@ -2319,11 +2319,16 @@
             <div class="document-meta">
               <details class="frontmatter">
                 <summary>Frontmatter</summary>
-                <pre><code class="language-yaml">---
+                <div class="code-block">
+                  <button type="button" class="copy-code-button" data-copy-code="true">
+                    Copy code
+                  </button>
+                  <pre><code class="language-yaml">---
 name: obsidian-vault
 description: Search, create, and manage notes in the Obsidian vault with wikilinks and index notes. Use when user wants to find, create, or organize notes in Obsidian.
 ---
 </code></pre>
+                </div>
               </details>
             </div>
             <div class="markdown-body">
@@ -2349,11 +2354,16 @@ description: Search, create, and manage notes in the Obsidian vault with wikilin
               </ul>
               <h2 id="workflows">Workflows</h2>
               <h3 id="search-for-notes">Search for notes</h3>
-              <pre><code class="hljs language-bash"><span class="hljs-comment"># Search by filename</span>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-bash"><span class="hljs-comment"># Search by filename</span>
           find <span class="hljs-string">&quot;/mnt/d/Obsidian Vault/AI Research/&quot;</span> -name <span class="hljs-string">&quot;*.md&quot;</span> | grep -i <span class="hljs-string">&quot;keyword&quot;</span>
 
           <span class="hljs-comment"># Search by content</span>
           grep -rl <span class="hljs-string">&quot;keyword&quot;</span> <span class="hljs-string">&quot;/mnt/d/Obsidian Vault/AI Research/&quot;</span> --include=<span class="hljs-string">&quot;*.md&quot;</span></code></pre>
+              </div>
               <p>Or use Grep/Glob tools directly on the vault path.</p>
               <h3 id="create-a-new-note">Create a new note</h3>
               <ol>
@@ -2364,9 +2374,19 @@ description: Search, create, and manage notes in the Obsidian vault with wikilin
               </ol>
               <h3 id="find-related-notes">Find related notes</h3>
               <p>Search for <code>[[Note Title]]</code> across the vault to find backlinks:</p>
-              <pre><code class="hljs language-bash">grep -rl <span class="hljs-string">&quot;\\[\\[Note Title\\]\\]&quot;</span> <span class="hljs-string">&quot;/mnt/d/Obsidian Vault/AI Research/&quot;</span></code></pre>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-bash">grep -rl <span class="hljs-string">&quot;\\[\\[Note Title\\]\\]&quot;</span> <span class="hljs-string">&quot;/mnt/d/Obsidian Vault/AI Research/&quot;</span></code></pre>
+              </div>
               <h3 id="find-index-notes">Find index notes</h3>
-              <pre><code class="hljs language-bash">find <span class="hljs-string">&quot;/mnt/d/Obsidian Vault/AI Research/&quot;</span> -name <span class="hljs-string">&quot;*Index*&quot;</span></code></pre>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-bash">find <span class="hljs-string">&quot;/mnt/d/Obsidian Vault/AI Research/&quot;</span> -name <span class="hljs-string">&quot;*Index*&quot;</span></code></pre>
+              </div>
             </div>
 
             <nav class="page-navigation" aria-label="Document navigation">

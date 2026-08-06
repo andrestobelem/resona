@@ -2400,11 +2400,16 @@
               </div>
               <details class="frontmatter">
                 <summary>Frontmatter</summary>
-                <pre><code class="language-yaml">---
+                <div class="code-block">
+                  <button type="button" class="copy-code-button" data-copy-code="true">
+                    Copy code
+                  </button>
+                  <pre><code class="language-yaml">---
 status: accepted
 date: 2026-08-05
 ---
 </code></pre>
+                </div>
               </details>
             </div>
             <div class="markdown-body">
@@ -2417,11 +2422,16 @@ date: 2026-08-05
                 <code>InputSchemaIR</code> usa un envelope propio de Resona con un documento JSON
                 Schema Draft 2020-12:
               </p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">InputSchemaIR</span> = <span class="hljs-title class_">Readonly</span>&lt;{
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">InputSchemaIR</span> = <span class="hljs-title class_">Readonly</span>&lt;{
             <span class="hljs-attr">format</span>: <span class="hljs-string">&quot;resona/input-schema&quot;</span>;
             <span class="hljs-attr">schemaVersion</span>: <span class="hljs-number">1</span>;
             <span class="hljs-attr">jsonSchema</span>: <span class="hljs-title class_">JsonObject</span>;
           }&gt;;</code></pre>
+              </div>
               <p>
                 El documento describe estructura, constraints y metadata editorial, pero no
                 reemplaza al validador ejecutable. Studio interpreta el subconjunto acordado y usa

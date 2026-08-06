@@ -2400,11 +2400,16 @@
               </div>
               <details class="frontmatter">
                 <summary>Frontmatter</summary>
-                <pre><code class="language-yaml">---
+                <div class="code-block">
+                  <button type="button" class="copy-code-button" data-copy-code="true">
+                    Copy code
+                  </button>
+                  <pre><code class="language-yaml">---
 status: accepted
 date: 2026-08-04
 ---
 </code></pre>
+                </div>
               </details>
             </div>
             <div class="markdown-body">
@@ -2415,13 +2420,18 @@ date: 2026-08-04
                 El plan y el motor comparten una operación canónica para convertir valores de audio
                 a <code>Float32</code> y eliminar la representación de cero negativo:
               </p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">const</span> canonicalF32 = (<span class="hljs-attr">value</span>: <span class="hljs-built_in">number</span>): <span class="hljs-function"><span class="hljs-params">number</span> =&gt;</span> {
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">const</span> canonicalF32 = (<span class="hljs-attr">value</span>: <span class="hljs-built_in">number</span>): <span class="hljs-function"><span class="hljs-params">number</span> =&gt;</span> {
             <span class="hljs-keyword">const</span> rounded = <span class="hljs-title class_">Math</span>.<span class="hljs-title function_">fround</span>(value);
             <span class="hljs-keyword">return</span> <span class="hljs-title class_">Object</span>.<span class="hljs-title function_">is</span>(rounded, -<span class="hljs-number">0</span>) ? <span class="hljs-number">0</span> : rounded;
           };
 
           <span class="hljs-keyword">const</span> isCanonicalF32 = (<span class="hljs-attr">value</span>: <span class="hljs-built_in">number</span>): <span class="hljs-function"><span class="hljs-params">boolean</span> =&gt;</span>
             <span class="hljs-title class_">Number</span>.<span class="hljs-built_in">isFinite</span>(value) &amp;&amp; <span class="hljs-title class_">Object</span>.<span class="hljs-title function_">is</span>(value, <span class="hljs-title function_">canonicalF32</span>(value));</code></pre>
+              </div>
               <p>
                 Después de validar la <code>CompositionIR</code>, la planificación usa esta
                 operación para <code>gain</code>, <code>sustain</code>, <code>feedback</code>,

@@ -279,7 +279,7 @@ export const renderFrontmatter = (frontmatter: Frontmatter | null): string => {
 ${badges === "" ? "" : `  <div class="badges">${badges}</div>`}
   <details class="frontmatter">
     <summary>Frontmatter</summary>
-    <pre><code class="language-yaml">${escapeHtml(frontmatter.rawBlock)}</code></pre>
+${renderCopyableCodeBlock(' class="language-yaml"', escapeHtml(frontmatter.rawBlock))}
   </details>
 </div>`;
 };
@@ -299,7 +299,7 @@ export const renderMarkdownDocument = (
           language === ""
             ? ""
             : ` class="${highlighted.known ? "hljs " : ""}language-${escapeHtml(language)}"`;
-        return `<pre><code${className}>${highlighted.html}</code></pre>`;
+        return renderCopyableCodeBlock(className, highlighted.html);
       },
       heading(this: { parser: { parseInline(tokens: Token[]): string } }, { tokens, depth }) {
         const id = document.headings[headingIndex]?.id ?? slugifyHeading(tokensToText(tokens));
@@ -329,6 +329,12 @@ export const renderMarkdownDocument = (
 
   return String(marked.parse(document.body));
 };
+
+const renderCopyableCodeBlock = (codeAttributes: string, html: string): string =>
+  `<div class="code-block">
+  <button type="button" class="copy-code-button" data-copy-code="true">Copy code</button>
+  <pre><code${codeAttributes}>${html}</code></pre>
+</div>`;
 
 const parseSource = (source: string, relativePath: string): SourceParseResult => {
   if (!source.startsWith("---")) return { body: source, frontmatter: null };

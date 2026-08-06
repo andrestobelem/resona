@@ -2319,11 +2319,16 @@
             <div class="document-meta">
               <details class="frontmatter">
                 <summary>Frontmatter</summary>
-                <pre><code class="language-yaml">---
+                <div class="code-block">
+                  <button type="button" class="copy-code-button" data-copy-code="true">
+                    Copy code
+                  </button>
+                  <pre><code class="language-yaml">---
 name: qa
 description: Interactive QA session where user reports bugs or issues conversationally, and the agent files GitHub issues. Explores the codebase in the background for context and domain language. Use when user wants to report bugs, do QA, file issues conversationally, or mentions &quot;QA session&quot;.
 ---
 </code></pre>
+                </div>
               </details>
             </div>
             <div class="markdown-body">
@@ -2399,7 +2404,11 @@ description: Interactive QA session where user reports bugs or issues conversati
               </p>
               <h4 id="for-a-single-issue">For a single issue</h4>
               <p>Use this template:</p>
-              <pre><code>## What happened
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code>## What happened
 
           [Describe the actual behavior the user experienced, in plain language]
 
@@ -2416,13 +2425,18 @@ description: Interactive QA session where user reports bugs or issues conversati
           ## Additional context
 
           [Any extra observations from the user or from codebase exploration that help frame the issue — e.g. &quot;this only happens when using the Docker layer, not the filesystem layer&quot; — use domain language but don't cite files]</code></pre>
+              </div>
               <h4 id="for-a-breakdown-multiple-issues">For a breakdown (multiple issues)</h4>
               <p>
                 Create issues in dependency order (blockers first) so you can reference real issue
                 numbers.
               </p>
               <p>Use this template for each sub-issue:</p>
-              <pre><code>## Parent issue
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code>## Parent issue
 
           #&lt;parent-issue-number&gt; (if you created a tracking issue) or &quot;Reported during QA session&quot;
 
@@ -2447,6 +2461,7 @@ description: Interactive QA session where user reports bugs or issues conversati
           ## Additional context
 
           [Any extra observations relevant to this slice]</code></pre>
+              </div>
               <p>When creating a breakdown:</p>
               <ul>
                 <li>

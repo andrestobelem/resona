@@ -2316,11 +2316,16 @@
             <div class="document-meta">
               <details class="frontmatter">
                 <summary>Frontmatter</summary>
-                <pre><code class="language-yaml">---
+                <div class="code-block">
+                  <button type="button" class="copy-code-button" data-copy-code="true">
+                    Copy code
+                  </button>
+                  <pre><code class="language-yaml">---
 name: codebase-design
 description: Shared vocabulary for designing deep modules. Use when the user wants to design or improve a module's interface, find deepening opportunities, decide where a seam goes, make code more testable or AI-navigable, or when another skill needs the deep-module vocabulary.
 ---
 </code></pre>
+                </div>
               </details>
             </div>
             <div class="markdown-body">
@@ -2384,21 +2389,31 @@ description: Shared vocabulary for designing deep modules. Use when the user wan
               </p>
               <h2 id="deep-vs-shallow">Deep vs shallow</h2>
               <p><strong>Deep module</strong> = small interface + lots of implementation:</p>
-              <pre><code>┌─────────────────────┐
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code>┌─────────────────────┐
           │   Small Interface   │  ← Few methods, simple params
           ├─────────────────────┤
           │                     │
           │  Deep Implementation│  ← Complex logic hidden
           │                     │
           └─────────────────────┘</code></pre>
+              </div>
               <p>
                 <strong>Shallow module</strong> = large interface + little implementation (avoid):
               </p>
-              <pre><code>┌─────────────────────────────────┐
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code>┌─────────────────────────────────┐
           │       Large Interface           │  ← Many methods, complex params
           ├─────────────────────────────────┤
           │  Thin Implementation            │  ← Just passes through
           └─────────────────────────────────┘</code></pre>
+              </div>
               <p>When designing an interface, ask:</p>
               <ul>
                 <li>Can I reduce the number of methods?</li>
@@ -2436,23 +2451,33 @@ description: Shared vocabulary for designing deep modules. Use when the user wan
               <ol>
                 <li>
                   <p><strong>Accept dependencies, don&#39;t create them.</strong></p>
-                  <pre><code class="hljs language-typescript"><span class="hljs-comment">// Testable</span>
+                  <div class="code-block">
+                    <button type="button" class="copy-code-button" data-copy-code="true">
+                      Copy code
+                    </button>
+                    <pre><code class="hljs language-typescript"><span class="hljs-comment">// Testable</span>
           <span class="hljs-keyword">function</span> <span class="hljs-title function_">processOrder</span>(<span class="hljs-params">order, paymentGateway</span>) {}
 
           <span class="hljs-comment">// Hard to test</span>
           <span class="hljs-keyword">function</span> <span class="hljs-title function_">processOrder</span>(<span class="hljs-params">order</span>) {
             <span class="hljs-keyword">const</span> gateway = <span class="hljs-keyword">new</span> <span class="hljs-title class_">StripeGateway</span>();
           }</code></pre>
+                  </div>
                 </li>
                 <li>
                   <p><strong>Return results, don&#39;t produce side effects.</strong></p>
-                  <pre><code class="hljs language-typescript"><span class="hljs-comment">// Testable</span>
+                  <div class="code-block">
+                    <button type="button" class="copy-code-button" data-copy-code="true">
+                      Copy code
+                    </button>
+                    <pre><code class="hljs language-typescript"><span class="hljs-comment">// Testable</span>
           <span class="hljs-keyword">function</span> <span class="hljs-title function_">calculateDiscount</span>(<span class="hljs-params">cart</span>): <span class="hljs-title class_">Discount</span> {}
 
           <span class="hljs-comment">// Hard to test</span>
           <span class="hljs-keyword">function</span> <span class="hljs-title function_">applyDiscount</span>(<span class="hljs-params">cart</span>): <span class="hljs-built_in">void</span> {
             cart.<span class="hljs-property">total</span> -= discount;
           }</code></pre>
+                  </div>
                 </li>
                 <li>
                   <p>

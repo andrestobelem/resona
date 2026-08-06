@@ -2321,7 +2321,11 @@
             <div class="markdown-body">
               <h1 id="contextmd-format">CONTEXT.md Format</h1>
               <h2 id="structure">Structure</h2>
-              <pre><code class="hljs language-md"><span class="hljs-section"># {Context Name}</span>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-md"><span class="hljs-section"># {Context Name}</span>
 
           {One or two sentence description of what this context is and why it exists.}
 
@@ -2338,6 +2342,7 @@
           <span class="hljs-strong">**Customer**</span>:
           A person or organization that places orders.
           <span class="hljs-emphasis">_Avoid_</span>: Client, buyer, account</code></pre>
+              </div>
               <h2 id="rules">Rules</h2>
               <ul>
                 <li>
@@ -2369,7 +2374,11 @@
                 <strong>Multiple contexts:</strong> A <code>CONTEXT-MAP.md</code> at the repo root
                 lists the contexts, where they live, and how they relate to each other:
               </p>
-              <pre><code class="hljs language-md"><span class="hljs-section"># Context Map</span>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-md"><span class="hljs-section"># Context Map</span>
 
           <span class="hljs-section">## Contexts</span>
 
@@ -2382,6 +2391,7 @@
           <span class="hljs-bullet">-</span> <span class="hljs-strong">**Ordering → Fulfillment**</span>: Ordering emits <span class="hljs-code">`OrderPlaced`</span> events; Fulfillment consumes them to start picking
           <span class="hljs-bullet">-</span> <span class="hljs-strong">**Fulfillment → Billing**</span>: Fulfillment emits <span class="hljs-code">`ShipmentDispatched`</span> events; Billing consumes them to generate invoices
           <span class="hljs-bullet">-</span> <span class="hljs-strong">**Ordering ↔ Billing**</span>: Shared types for <span class="hljs-code">`CustomerId`</span> and <span class="hljs-code">`Money`</span></code></pre>
+              </div>
               <p>The skill infers which structure applies:</p>
               <ul>
                 <li>If <code>CONTEXT-MAP.md</code> exists, read it to find contexts</li>

@@ -548,6 +548,34 @@ pre {
   background: var(--code-background);
 }
 
+.code-block {
+  position: relative;
+  margin: 1rem 0;
+}
+
+.code-block pre {
+  margin: 0;
+  padding-top: 2.75rem;
+}
+
+.copy-code-button {
+  position: absolute;
+  z-index: 1;
+  top: 0.5rem;
+  right: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+  padding: 0.3rem 0.55rem;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font: 0.75rem Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.copy-code-button:hover {
+  background: var(--surface-muted);
+}
+
 code {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
@@ -790,6 +818,49 @@ const script = `/* global URL, document, IntersectionObserver, window */
     const theme = themes.has(select.value) ? select.value : "system";
     applyTheme(theme);
     storeTheme(theme);
+  });
+
+  const copyText = async (text) => {
+    if (window.navigator.clipboard?.writeText) {
+      await window.navigator.clipboard.writeText(text);
+      return;
+    }
+    if (typeof document.execCommand !== "function") {
+      throw new Error("Clipboard access is unavailable");
+    }
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.append(textarea);
+    textarea.select();
+    try {
+      if (!document.execCommand("copy")) throw new Error("Copy command failed");
+    } finally {
+      textarea.remove();
+    }
+  };
+
+  const copyCode = async (button) => {
+    const code = button.closest(".code-block")?.querySelector("code");
+    if (!code) return;
+    try {
+      await copyText(code.textContent ?? "");
+      button.textContent = "Copied";
+      button.dataset.copyState = "copied";
+    } catch {
+      button.textContent = "Copy unavailable";
+      button.dataset.copyState = "failed";
+    }
+    window.setTimeout(() => {
+      button.textContent = "Copy code";
+      delete button.dataset.copyState;
+    }, 1600);
+  };
+
+  document.querySelectorAll('[data-copy-code="true"]').forEach((button) => {
+    button.addEventListener("click", () => void copyCode(button));
   });
 
   const searchInput = document.querySelector("#docs-search");

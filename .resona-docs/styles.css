@@ -529,6 +529,38 @@ pre {
   background: var(--code-background);
 }
 
+.code-block {
+  position: relative;
+  margin: 1rem 0;
+}
+
+.code-block pre {
+  margin: 0;
+  padding-top: 2.75rem;
+}
+
+.copy-code-button {
+  position: absolute;
+  z-index: 1;
+  top: 0.5rem;
+  right: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+  padding: 0.3rem 0.55rem;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font:
+    0.75rem Inter,
+    ui-sans-serif,
+    system-ui,
+    sans-serif;
+}
+
+.copy-code-button:hover {
+  background: var(--surface-muted);
+}
+
 code {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }

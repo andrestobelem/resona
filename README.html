@@ -2433,7 +2433,11 @@
                 La API todavía no está definida. Este ejemplo solo muestra la experiencia que
                 buscamos:
               </p>
-              <pre><code class="hljs language-tsx">&lt;<span class="hljs-title class_">Composition</span> id=<span class="hljs-string">&quot;Demo&quot;</span> component={<span class="hljs-title class_">Demo</span>} bpm={<span class="hljs-number">120</span>} durationInBars={<span class="hljs-number">32</span>} /&gt;
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-tsx">&lt;<span class="hljs-title class_">Composition</span> id=<span class="hljs-string">&quot;Demo&quot;</span> component={<span class="hljs-title class_">Demo</span>} bpm={<span class="hljs-number">120</span>} durationInBars={<span class="hljs-number">32</span>} /&gt;
 
           <span class="hljs-keyword">const</span> <span class="hljs-title function_">Demo</span> = (<span class="hljs-params"></span>) =&gt; (
             <span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">MidiTrack</span> <span class="hljs-attr">instrument</span>=<span class="hljs-string">{</span>&lt;<span class="hljs-attr">Synth</span> <span class="hljs-attr">preset</span>=<span class="hljs-string">&quot;AnalogBass&quot;</span> /&gt;</span>}&gt;
@@ -2441,6 +2445,7 @@
               <span class="hljs-tag">&lt;<span class="hljs-name">Delay</span> <span class="hljs-attr">mix</span>=<span class="hljs-string">{0.2}</span> /&gt;</span>
             <span class="hljs-tag">&lt;/<span class="hljs-name">MidiTrack</span>&gt;</span></span>
           );</code></pre>
+              </div>
               <p>
                 La versión completa y sus supuestos están en la
                 <a href="docs/product.html#interfaz-conceptual">visión de producto</a>.

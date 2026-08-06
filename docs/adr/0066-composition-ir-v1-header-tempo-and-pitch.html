@@ -2400,11 +2400,16 @@
               </div>
               <details class="frontmatter">
                 <summary>Frontmatter</summary>
-                <pre><code class="language-yaml">---
+                <div class="code-block">
+                  <button type="button" class="copy-code-button" data-copy-code="true">
+                    Copy code
+                  </button>
+                  <pre><code class="language-yaml">---
 status: accepted
 date: 2026-08-04
 ---
 </code></pre>
+                </div>
               </details>
             </div>
             <div class="markdown-body">
@@ -2412,7 +2417,11 @@ date: 2026-08-04
                 CompositionIR v1 fija cabecera, tempo y pitch
               </h1>
               <p>La cabecera y los valores musicales escalares usan estas formas:</p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">CompositionIR</span> = <span class="hljs-title class_">Readonly</span>&lt;{
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">CompositionIR</span> = <span class="hljs-title class_">Readonly</span>&lt;{
             <span class="hljs-attr">format</span>: <span class="hljs-string">&quot;resona/composition-ir&quot;</span>;
             <span class="hljs-attr">schemaVersion</span>: <span class="hljs-number">1</span>;
             <span class="hljs-attr">compositionId</span>: <span class="hljs-built_in">string</span>;
@@ -2435,6 +2444,7 @@ date: 2026-08-04
             <span class="hljs-attr">type</span>: <span class="hljs-string">&quot;twelve-tet&quot;</span>;
             <span class="hljs-attr">semitonesFromA4</span>: <span class="hljs-built_in">number</span>;
           }&gt;;</code></pre>
+              </div>
               <h2 id="opciones-consideradas">Opciones consideradas</h2>
               <ul>
                 <li>Conservar BPM de punto flotante, métrica como tupla y pitch como nota MIDI.</li>

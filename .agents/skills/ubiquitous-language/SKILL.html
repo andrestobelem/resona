@@ -2319,12 +2319,17 @@
             <div class="document-meta">
               <details class="frontmatter">
                 <summary>Frontmatter</summary>
-                <pre><code class="language-yaml">---
+                <div class="code-block">
+                  <button type="button" class="copy-code-button" data-copy-code="true">
+                    Copy code
+                  </button>
+                  <pre><code class="language-yaml">---
 name: ubiquitous-language
 description: Extract a DDD-style ubiquitous language glossary from the current conversation, flagging ambiguities and proposing canonical terms. Saves to UBIQUITOUS_LANGUAGE.md. Use when user wants to define domain terms, build a glossary, harden terminology, create a ubiquitous language, or mentions &quot;domain model&quot; or &quot;DDD&quot;.
 disable-model-invocation: true
 ---
 </code></pre>
+                </div>
               </details>
             </div>
             <div class="markdown-body">
@@ -2356,7 +2361,11 @@ disable-model-invocation: true
               </ol>
               <h2 id="output-format">Output Format</h2>
               <p>Write a <code>UBIQUITOUS_LANGUAGE.md</code> file with this structure:</p>
-              <pre><code class="hljs language-md"><span class="hljs-section"># Ubiquitous Language</span>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-md"><span class="hljs-section"># Ubiquitous Language</span>
 
           <span class="hljs-section">## Order lifecycle</span>
 
@@ -2387,6 +2396,7 @@ disable-model-invocation: true
           <span class="hljs-section">## Flagged ambiguities</span>
 
           <span class="hljs-bullet">-</span> &quot;account&quot; was used to mean both <span class="hljs-strong">**Customer**</span> and <span class="hljs-strong">**User**</span> — these are distinct concepts: a <span class="hljs-strong">**Customer**</span> places orders, while a <span class="hljs-strong">**User**</span> is an authentication identity that may or may not represent a <span class="hljs-strong">**Customer**</span>.</code></pre>
+              </div>
               <h2 id="rules">Rules</h2>
               <ul>
                 <li>

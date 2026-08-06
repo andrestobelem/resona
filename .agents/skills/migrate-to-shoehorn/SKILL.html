@@ -2319,11 +2319,16 @@
             <div class="document-meta">
               <details class="frontmatter">
                 <summary>Frontmatter</summary>
-                <pre><code class="language-yaml">---
+                <div class="code-block">
+                  <button type="button" class="copy-code-button" data-copy-code="true">
+                    Copy code
+                  </button>
+                  <pre><code class="language-yaml">---
 name: migrate-to-shoehorn
 description: Migrate test files from `as` type assertions to @total-typescript/shoehorn. Use when user mentions shoehorn, wants to replace `as` in tests, or needs partial test data.
 ---
 </code></pre>
+                </div>
               </details>
             </div>
             <div class="markdown-body">
@@ -2341,13 +2346,22 @@ description: Migrate test files from `as` type assertions to @total-typescript/s
                 <li>Double-as (<code>as unknown as Type</code>) for intentionally wrong data</li>
               </ul>
               <h2 id="install">Install</h2>
-              <pre><code class="hljs language-bash">npm i @total-typescript/shoehorn</code></pre>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-bash">npm i @total-typescript/shoehorn</code></pre>
+              </div>
               <h2 id="migration-patterns">Migration patterns</h2>
               <h3 id="large-objects-with-few-needed-properties">
                 Large objects with few needed properties
               </h3>
               <p>Before:</p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">Request</span> = {
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">type</span> <span class="hljs-title class_">Request</span> = {
             <span class="hljs-attr">body</span>: { <span class="hljs-attr">id</span>: <span class="hljs-built_in">string</span> };
             <span class="hljs-attr">headers</span>: <span class="hljs-title class_">Record</span>&lt;<span class="hljs-built_in">string</span>, <span class="hljs-built_in">string</span>&gt;;
             <span class="hljs-attr">cookies</span>: <span class="hljs-title class_">Record</span>&lt;<span class="hljs-built_in">string</span>, <span class="hljs-built_in">string</span>&gt;;
@@ -2363,8 +2377,13 @@ description: Migrate test files from `as` type assertions to @total-typescript/s
               <span class="hljs-comment">// ...fake all 20 properties</span>
             });
           });</code></pre>
+              </div>
               <p>After:</p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">import</span> { fromPartial } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;@total-typescript/shoehorn&quot;</span>;
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">import</span> { fromPartial } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;@total-typescript/shoehorn&quot;</span>;
 
           <span class="hljs-title function_">it</span>(<span class="hljs-string">&quot;gets user by id&quot;</span>, <span class="hljs-function">() =&gt;</span> {
             <span class="hljs-title function_">getUser</span>(
@@ -2373,22 +2392,43 @@ description: Migrate test files from `as` type assertions to @total-typescript/s
               }),
             );
           });</code></pre>
+              </div>
               <h3 id="as-type--frompartial"><code>as Type</code> → <code>fromPartial()</code></h3>
               <p>Before:</p>
-              <pre><code class="hljs language-ts"><span class="hljs-title function_">getUser</span>({ <span class="hljs-attr">body</span>: { <span class="hljs-attr">id</span>: <span class="hljs-string">&quot;123&quot;</span> } } <span class="hljs-keyword">as</span> <span class="hljs-title class_">Request</span>);</code></pre>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-title function_">getUser</span>({ <span class="hljs-attr">body</span>: { <span class="hljs-attr">id</span>: <span class="hljs-string">&quot;123&quot;</span> } } <span class="hljs-keyword">as</span> <span class="hljs-title class_">Request</span>);</code></pre>
+              </div>
               <p>After:</p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">import</span> { fromPartial } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;@total-typescript/shoehorn&quot;</span>;
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">import</span> { fromPartial } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;@total-typescript/shoehorn&quot;</span>;
 
           <span class="hljs-title function_">getUser</span>(<span class="hljs-title function_">fromPartial</span>({ <span class="hljs-attr">body</span>: { <span class="hljs-attr">id</span>: <span class="hljs-string">&quot;123&quot;</span> } }));</code></pre>
+              </div>
               <h3 id="as-unknown-as-type--fromany">
                 <code>as unknown as Type</code> → <code>fromAny()</code>
               </h3>
               <p>Before:</p>
-              <pre><code class="hljs language-ts"><span class="hljs-title function_">getUser</span>({ <span class="hljs-attr">body</span>: { <span class="hljs-attr">id</span>: <span class="hljs-number">123</span> } } <span class="hljs-keyword">as</span> <span class="hljs-built_in">unknown</span> <span class="hljs-keyword">as</span> <span class="hljs-title class_">Request</span>); <span class="hljs-comment">// wrong type on purpose</span></code></pre>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-title function_">getUser</span>({ <span class="hljs-attr">body</span>: { <span class="hljs-attr">id</span>: <span class="hljs-number">123</span> } } <span class="hljs-keyword">as</span> <span class="hljs-built_in">unknown</span> <span class="hljs-keyword">as</span> <span class="hljs-title class_">Request</span>); <span class="hljs-comment">// wrong type on purpose</span></code></pre>
+              </div>
               <p>After:</p>
-              <pre><code class="hljs language-ts"><span class="hljs-keyword">import</span> { fromAny } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;@total-typescript/shoehorn&quot;</span>;
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-ts"><span class="hljs-keyword">import</span> { fromAny } <span class="hljs-keyword">from</span> <span class="hljs-string">&quot;@total-typescript/shoehorn&quot;</span>;
 
           <span class="hljs-title function_">getUser</span>(<span class="hljs-title function_">fromAny</span>({ <span class="hljs-attr">body</span>: { <span class="hljs-attr">id</span>: <span class="hljs-number">123</span> } }));</code></pre>
+              </div>
               <h2 id="when-to-use-each">When to use each</h2>
               <table>
                 <thead>

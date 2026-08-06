@@ -2319,11 +2319,16 @@
             <div class="document-meta">
               <details class="frontmatter">
                 <summary>Frontmatter</summary>
-                <pre><code class="language-yaml">---
+                <div class="code-block">
+                  <button type="button" class="copy-code-button" data-copy-code="true">
+                    Copy code
+                  </button>
+                  <pre><code class="language-yaml">---
 name: design-an-interface
 description: Generate multiple radically different interface designs for a module using parallel sub-agents. Use when user wants to design an API, explore interface options, compare module shapes, or mentions &quot;design it twice&quot;.
 ---
 </code></pre>
+                </div>
               </details>
             </div>
             <div class="markdown-body">
@@ -2359,7 +2364,11 @@ description: Generate multiple radically different interface designs for a modul
                 Spawn 3+ sub-agents simultaneously using Task tool. Each must produce a
                 <strong>radically different</strong> approach.
               </p>
-              <pre><code>Prompt template for each sub-agent:
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code>Prompt template for each sub-agent:
 
           Design an interface for: [module description]
 
@@ -2376,6 +2385,7 @@ description: Generate multiple radically different interface designs for a modul
           2. Usage example (how caller uses it)
           3. What this design hides internally
           4. Trade-offs of this approach</code></pre>
+              </div>
               <h3 id="3-present-designs">3. Present Designs</h3>
               <p>Show each design with:</p>
               <ol>

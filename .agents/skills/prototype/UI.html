@@ -2427,7 +2427,11 @@
               </p>
               <h3 id="3-wire-them-together">3. Wire them together</h3>
               <p>Create a single switcher component on the route:</p>
-              <pre><code class="hljs language-tsx"><span class="hljs-comment">// pseudo-code — adapt to the project&#x27;s framework</span>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-tsx"><span class="hljs-comment">// pseudo-code — adapt to the project&#x27;s framework</span>
           <span class="hljs-keyword">const</span> variant = searchParams.<span class="hljs-title function_">get</span>(<span class="hljs-string">&#x27;variant&#x27;</span>) ?? <span class="hljs-string">&#x27;A&#x27;</span>;
           <span class="hljs-keyword">return</span> (
             <span class="language-xml"><span class="hljs-tag">&lt;&gt;</span>
@@ -2437,6 +2441,7 @@
               <span class="hljs-tag">&lt;<span class="hljs-name">PrototypeSwitcher</span> <span class="hljs-attr">variants</span>=<span class="hljs-string">{[</span>&#x27;<span class="hljs-attr">A</span>&#x27;,&#x27;<span class="hljs-attr">B</span>&#x27;,&#x27;<span class="hljs-attr">C</span>&#x27;]} <span class="hljs-attr">current</span>=<span class="hljs-string">{variant}</span> /&gt;</span>
             <span class="hljs-tag">&lt;/&gt;</span></span>
           );</code></pre>
+              </div>
               <p>
                 For sub-shape A (existing page): keep all the existing data fetching above the
                 switcher; only the rendered subtree changes per variant.
