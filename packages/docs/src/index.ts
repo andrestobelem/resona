@@ -411,6 +411,11 @@ summary:focus-visible {
   text-decoration: none;
 }
 
+.table-of-contents a.toc-current {
+  color: var(--text);
+  font-weight: 800;
+}
+
 .page-navigation {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1017,8 +1022,8 @@ const renderBreadcrumbs = (document: MarkdownDocument): string => {
 const renderTableOfContents = (headings: readonly Heading[]): string => {
   const items = headings
     .map(
-      ({ level, slug, title }) =>
-        `          <li class="toc-level-${level}"><a href="#${escapeHtml(slug)}">${escapeHtml(title)}</a></li>`,
+      ({ level, slug, title }, index) =>
+        `          <li class="toc-level-${level}"><a href="#${escapeHtml(slug)}"${index === 0 ? ' class="toc-current" aria-current="location"' : ""}>${escapeHtml(title)}</a></li>`,
     )
     .join("\n");
   return `        <nav class="table-of-contents" aria-label="En esta página">
@@ -1129,6 +1134,32 @@ const themeScript = `<script>
       window.localStorage.setItem(key, theme);
     } catch {}
   });
+  const tocLinks = [...document.querySelectorAll(".table-of-contents a")];
+  const setCurrentHeading = (id) => {
+    for (const link of tocLinks) {
+      const current = link.getAttribute("href") === "#" + id;
+      link.classList.toggle("toc-current", current);
+      if (current) link.setAttribute("aria-current", "location");
+      else link.removeAttribute("aria-current");
+    }
+  };
+  if (tocLinks.length > 0 && "IntersectionObserver" in window) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((left, right) => left.boundingClientRect.top - right.boundingClientRect.top);
+        const id = visible[0]?.target.id;
+        if (id) setCurrentHeading(id);
+      },
+      { rootMargin: "-10% 0px -70% 0px", threshold: [0, 1] },
+    );
+    for (const link of tocLinks) {
+      const id = link.getAttribute("href")?.slice(1);
+      const heading = id ? document.getElementById(id) : null;
+      if (heading) observer.observe(heading);
+    }
+  }
 })();
 </script>`;
 
