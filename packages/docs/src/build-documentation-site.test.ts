@@ -131,6 +131,25 @@ describe("buildDocumentationSite", () => {
     await expect(runDocumentationBuild(projectRoot)).rejects.toThrow("unknown-label");
   });
 
+  it("rejects unresolved shortcut references", async () => {
+    const projectRoot = await mkdtemp(join(tmpdir(), "resona-docs-shortcut-reference-test-"));
+    temporaryRoots.push(projectRoot);
+    await writeFile(join(projectRoot, "README.md"), "# Broken\n\n[missing]\n");
+
+    await expect(runDocumentationBuild(projectRoot)).rejects.toThrow("missing");
+  });
+
+  it("ignores reference-shaped text in literal blocks", async () => {
+    const projectRoot = await mkdtemp(join(tmpdir(), "resona-docs-literal-reference-test-"));
+    temporaryRoots.push(projectRoot);
+    await writeFile(
+      join(projectRoot, "README.md"),
+      "# Literal\n\n    [x][missing]\n\n<div>\n[x][missing]\n</div>\n",
+    );
+
+    await expect(runDocumentationBuild(projectRoot)).resolves.toMatchObject({ sourceCount: 1 });
+  });
+
   it("rejects invalid frontmatter", async () => {
     const projectRoot = await mkdtemp(join(tmpdir(), "resona-docs-frontmatter-test-"));
     temporaryRoots.push(projectRoot);
