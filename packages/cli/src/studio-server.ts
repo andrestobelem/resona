@@ -12,6 +12,7 @@ import {
   type JsonObject,
   type ProjectSourceOptions,
 } from "@resona/engine";
+import { renderAudioToFile } from "@resona/renderer";
 
 const protocolFormat = "resona/studio-envelope" as const;
 const protocolVersion = 1 as const;
@@ -214,6 +215,57 @@ const safeDiagnostics = (state: StudioState, error: unknown): readonly Diagnosti
     : (redactProjectPath(state.options.projectRoot, diagnostics) as readonly Diagnostic[]);
 };
 
+type StudioRenderOptions = Readonly<{
+  outputPath: string;
+  overwrite: boolean;
+  startFrame: number;
+  endFrame: number;
+  tailFrames: number;
+  blockFrames: number;
+}>;
+
+const studioRenderOptions = (
+  state: StudioState,
+  body: Record<string, unknown>,
+  nominalDurationFrames: number,
+): StudioRenderOptions => {
+  const output = body.outputPath;
+  if (typeof output !== "string" || output.trim().length === 0) {
+    throw new Error("outputPath must be a non-empty string.");
+  }
+  const optionalInteger = (name: string, fallback: number): number => {
+    const value = body[name];
+    if (value === undefined) return fallback;
+    if (!Number.isSafeInteger(value)) throw new Error(`${name} must be a safe integer.`);
+    return value as number;
+  };
+  const overwrite = body.overwrite ?? false;
+  if (typeof overwrite !== "boolean") throw new Error("overwrite must be a boolean.");
+  const startFrame = optionalInteger("startFrame", 0);
+  const endFrame = optionalInteger("endFrame", nominalDurationFrames);
+  const tailFrames = optionalInteger("tailFrames", 0);
+  const blockFrames = optionalInteger("blockFrames", 128);
+  if (
+    startFrame < 0 ||
+    endFrame <= startFrame ||
+    endFrame > nominalDurationFrames ||
+    tailFrames < 0 ||
+    blockFrames <= 0 ||
+    !Number.isSafeInteger(endFrame + tailFrames) ||
+    !Number.isSafeInteger(endFrame - startFrame + tailFrames)
+  ) {
+    throw new Error("Render range must be a finite half-open interval with a non-negative tail.");
+  }
+  return {
+    outputPath: resolve(state.options.projectRoot, output.trim()),
+    overwrite,
+    startFrame,
+    endFrame,
+    tailFrames,
+    blockFrames,
+  };
+};
+
 const staticAudioPaths = async (directory: string): Promise<readonly string[]> => {
   const paths: string[] = [];
   const visit = async (current: string, prefix: string): Promise<void> => {
@@ -241,7 +293,7 @@ const shell = (state: StudioState): string => {
     <style>body{font:15px system-ui,sans-serif;max-width:1000px;margin:2rem auto;padding:0 1rem;background:#111827;color:#e5e7eb}button,select,input,textarea{font:inherit;padding:.45rem .7rem;margin:.25rem;background:#1f2937;color:#e5e7eb;border:1px solid #4b5563;border-radius:.35rem}textarea{display:block;width:100%;box-sizing:border-box;font-family:ui-monospace,monospace}fieldset{border:1px solid #4b5563;border-radius:.35rem;margin:.5rem 0;padding:.5rem}#input-error{display:block;color:#fca5a5;min-height:1.3rem}pre{white-space:pre-wrap;background:#030712;padding:1rem;border-radius:.4rem;overflow:auto}header{display:flex;align-items:center;gap:1rem}#studio-inspection{margin-top:1.5rem}#studio-inspection h2,#studio-inspection h3{margin-bottom:.5rem}.inspection-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(18rem,1fr));gap:1rem}.inspection-card{border:1px solid #4b5563;border-radius:.35rem;padding:.75rem;margin:.75rem 0}.studio-timeline{position:relative;min-height:8rem;border:1px solid #4b5563;border-radius:.35rem;padding:2rem .75rem .75rem;overflow-x:auto}.studio-timeline-sequences{display:grid;gap:.2rem;margin-bottom:.5rem;color:#9ca3af}.studio-timeline-tracks{display:grid;gap:.4rem}.timeline-track{display:grid;grid-template-columns:minmax(8rem,12rem) minmax(20rem,1fr);gap:.75rem;align-items:center;min-height:2.5rem}.timeline-track-label{font-weight:600}.timeline-clips{position:relative;display:block;min-height:2rem;margin:0;padding:0;list-style:none}.timeline-clip{position:absolute;top:0;display:flex;align-items:center;box-sizing:border-box;min-width:2rem;min-height:2rem;padding:.35rem .5rem;border:1px solid #60a5fa;border-radius:.25rem;background:#1e3a5f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.timeline-playhead{position:absolute;z-index:1;top:0;bottom:0;width:2px;background:#fbbf24;pointer-events:none;transition:left .1s linear}.meter-row{display:grid;grid-template-columns:minmax(8rem,12rem) minmax(8rem,1fr);gap:.75rem;align-items:center;margin:.4rem 0}.meter-row meter{width:100%;height:1rem}.inspection-list{margin:.25rem 0;padding-left:1.2rem}.inspection-muted{color:#9ca3af}</style>
   </head>
   <body><header><h1>Resona Studio</h1><span id="status">Loading compositions…</span><span id="cursor"></span></header>
-    <label>Composition <select id="composition"></select></label><button id="inspect">Prepare variant</button><button id="play" disabled>Play</button><button id="pause" disabled>Pause</button><label>Seek <input id="seek" type="range" min="0" max="0" value="0" step="1" disabled><span id="seek-value">0</span></label><label><input id="loop" type="checkbox" disabled> Loop</label>
+    <label>Composition <select id="composition"></select></label><button id="inspect">Prepare variant</button><button id="play" disabled>Play</button><button id="pause" disabled>Pause</button><label>Seek <input id="seek" type="range" min="0" max="0" value="0" step="1" disabled><span id="seek-value">0</span></label><label><input id="loop" type="checkbox" disabled> Loop</label><label>Output path <input id="render-output" type="text" placeholder="render.wav"></label><label><input id="render-overwrite" type="checkbox"> Overwrite</label><button id="render" disabled>Render</button>
     <section id="inputs" hidden><h2>Inputs</h2><div id="input-controls"></div><label>JSON fallback<textarea id="input-json" rows="8"></textarea></label><span id="input-error" role="alert"></span></section>
     <section id="studio-inspection" hidden aria-labelledby="inspection-title">
       <h2 id="inspection-title">Read-only composition inspection</h2>
@@ -277,6 +329,9 @@ const shell = (state: StudioState): string => {
       const seek = document.querySelector('#seek');
       const seekValue = document.querySelector('#seek-value');
       const loop = document.querySelector('#loop');
+      const renderOutput = document.querySelector('#render-output');
+      const renderOverwrite = document.querySelector('#render-overwrite');
+      const renderButton = document.querySelector('#render');
       const inputSection = document.querySelector('#inputs');
       const inputControls = document.querySelector('#input-controls');
       const inputJson = document.querySelector('#input-json');
@@ -442,6 +497,7 @@ const shell = (state: StudioState): string => {
         if (!isRecord(payload) || !isRecord(payload.composition) || !isRecord(payload.plan)) return;
         activePlan = payload.plan;
         inspection.hidden = false;
+        renderButton.disabled = activeVariant === undefined;
         timelineSequences.replaceChildren();
         timelineTracks.replaceChildren();
         chain.replaceChildren();
@@ -615,12 +671,14 @@ const shell = (state: StudioState): string => {
           if (!completed || !isCurrent()) { node?.disconnect(); if (audioNode === node) audioNode = undefined; if (audioContext === context) audioContext = undefined; await context.close(); }
         }
       };
-      const invalidateVariantRequest = () => { variantRequestSequence += 1; variantController?.abort(); variantController = undefined; activeVariant = undefined; details.textContent = ''; inspection.hidden = true; activePlan = undefined; activeMeterEntries = []; currentCursorFrame = 0; cursor.textContent = ''; seek.value = '0'; seek.max = '0'; seekValue.textContent = '0'; ready = false; isPlaying = false; inspect.disabled = false; play.disabled = true; pause.disabled = true; seek.disabled = true; loop.disabled = true; void closeAudio(); };
+      const invalidateVariantRequest = () => { variantRequestSequence += 1; variantController?.abort(); variantController = undefined; activeVariant = undefined; details.textContent = ''; inspection.hidden = true; activePlan = undefined; activeMeterEntries = []; currentCursorFrame = 0; cursor.textContent = ''; seek.value = '0'; seek.max = '0'; seekValue.textContent = '0'; ready = false; isPlaying = false; inspect.disabled = false; renderButton.disabled = true; play.disabled = true; pause.disabled = true; seek.disabled = true; loop.disabled = true; void closeAudio(); };
       const prepareVariant = async () => { const requestSequence = ++variantRequestSequence; variantController?.abort(); const controller = new AbortController(); variantController = controller; const resumeFrame = currentCursorFrame; const resumePlayback = isPlaying; status.textContent = 'Preparing…'; inspect.disabled = true; play.disabled = true; pause.disabled = true; seek.disabled = true; loop.disabled = true; inputError.textContent = ''; let inputs; try { inputs = readInputs(); await closeAudio(); if (requestSequence !== variantRequestSequence) return; const requestId = 'studio-variant-' + requestSequence + '-' + Date.now(); const value = await request('/api/v1/variants', {method: 'POST', headers: {'x-resona-request-id': requestId}, signal: controller.signal, body: JSON.stringify({compositionId: select.value, inputs, requestId})}); if (requestSequence !== variantRequestSequence) return; activeVariant = value.variantId; ended = false; details.textContent = JSON.stringify(value.payload, null, 2); renderInspection(value.payload); await prepareAudio(value.variantId, value.payload, resumeFrame, resumePlayback, requestSequence, controller.signal); if (requestSequence !== variantRequestSequence) return; status.textContent = resumePlayback ? 'Playing variant ' + value.variantId : 'Variant ' + value.variantId + ' ready'; } catch (error) { if (error?.name === 'AbortError' || requestSequence !== variantRequestSequence) return; inputError.textContent = error.message; status.textContent = error.message; await closeAudio(); } finally { if (requestSequence === variantRequestSequence) { variantController = undefined; inspect.disabled = false; } } };
       select.addEventListener('change', () => { invalidateVariantRequest(); const composition = compositions.find(candidate => candidate.id === select.value); if (composition !== undefined) renderInputs(composition); });
       inspect.addEventListener('click', () => { void prepareVariant(); });
       inputControls.addEventListener('change', event => { if (!fallbackInputs) { event.target?.dataset && (event.target.dataset.inputPresent = 'true'); void prepareVariant(); } });
       inputJson.addEventListener('change', () => { if (fallbackInputs) void prepareVariant(); });
+      const renderVariant = async () => { if (activeVariant === undefined) return; const outputPath = renderOutput.value.trim(); if (outputPath.length === 0) { inputError.textContent = 'Render requires an output path.'; return; } renderButton.disabled = true; status.textContent = 'Rendering…'; inputError.textContent = ''; try { const value = await request('/api/v1/variants/' + encodeURIComponent(activeVariant) + '/render', {method: 'POST', body: JSON.stringify({outputPath, overwrite: renderOverwrite.checked, requestId: 'studio-render-' + Date.now()})}); details.textContent = JSON.stringify(value.payload, null, 2); status.textContent = 'Rendered ' + String(value.payload.outputPath); } catch (error) { inputError.textContent = error.message; status.textContent = error.message; } finally { renderButton.disabled = activeVariant === undefined; } };
+      renderButton.addEventListener('click', () => { void renderVariant(); });
       play.addEventListener('click', async () => { if (!ready || audioNode === undefined || audioContext === undefined) return; try { if (ended) { audioNode.port.postMessage({type: 'seek', frame: 0}); currentCursorFrame = 0; seek.value = '0'; seekValue.textContent = '0'; ended = false; } await audioContext.resume(); audioNode.port.postMessage({type: 'play'}); isPlaying = true; status.textContent = 'Playing'; } catch (error) { status.textContent = error.message; } });
       pause.addEventListener('click', async () => { if (!ready || audioNode === undefined || audioContext === undefined) return; try { audioNode.port.postMessage({type: 'pause'}); isPlaying = false; await audioContext.suspend(); status.textContent = 'Paused'; } catch (error) { ready = false; isPlaying = false; play.disabled = true; pause.disabled = true; seek.disabled = true; loop.disabled = true; const message = error instanceof Error ? error.message : 'Preview transport failed.'; inputError.textContent = message; status.textContent = 'Preview error: ' + message; void closeAudio(); } });
       seek.addEventListener('change', async () => { if (!ready || audioNode === undefined || audioContext === undefined) return; try { const frame = Math.max(0, Math.min(Number(seek.value), Number(seek.max))); const resumePlayback = isPlaying; ended = false; isPlaying = false; currentCursorFrame = frame; seek.value = String(frame); seekValue.textContent = String(frame); audioNode.port.postMessage({type: 'seek', frame}); if (resumePlayback) { await audioContext.resume(); if (!ready || audioNode === undefined) return; audioNode.port.postMessage({type: 'play'}); isPlaying = true; status.textContent = 'Playing'; } else { status.textContent = 'Paused'; } } catch (error) { ready = false; isPlaying = false; play.disabled = true; pause.disabled = true; seek.disabled = true; loop.disabled = true; const message = error instanceof Error ? error.message : 'Preview transport failed.'; inputError.textContent = message; status.textContent = 'Preview error: ' + message; void closeAudio(); } });
@@ -864,10 +922,9 @@ const handle = async (
     return;
   }
 
-  const variantMatch = /^\/api\/v1\/variants\/([^/]+)(?:\/(plan)|\/resources\/([^/]+))?$/.exec(
-    parsed.pathname,
-  );
-  if (variantMatch !== null && request.method === "GET") {
+  const variantMatch =
+    /^\/api\/v1\/variants\/([^/]+)(?:\/(plan|render)|\/resources\/([^/]+))?$/.exec(parsed.pathname);
+  if (variantMatch !== null) {
     const variantId = decodeURIComponent(variantMatch[1] ?? "");
     const stored = state.variants.get(variantId);
     if (stored === undefined) {
@@ -877,6 +934,99 @@ const handle = async (
         404,
         "studio.variant-not-found",
         "The requested variant is not available.",
+        variantId,
+      );
+      json(response, failure.status, failure.document);
+      return;
+    }
+    if (variantMatch[2] === "render" && request.method === "POST") {
+      let options: StudioRenderOptions;
+      try {
+        options = studioRenderOptions(state, body ?? {}, stored.job.plan.nominalDurationFrames);
+      } catch (error) {
+        const failure = errorEnvelope(
+          state,
+          requestId,
+          400,
+          "studio.invalid-request",
+          errorMessage(error),
+          variantId,
+        );
+        json(response, failure.status, failure.document);
+        return;
+      }
+      const controller = new AbortController();
+      const onAborted = (): void => controller.abort();
+      request.once("aborted", onAborted);
+      try {
+        const published = await renderAudioToFile(stored.job, {
+          ...options,
+          signal: controller.signal,
+        });
+        const diagnostics = [...stored.job.diagnostics, ...published.diagnostics];
+        json(
+          response,
+          201,
+          envelope(
+            state,
+            requestId,
+            "render",
+            {
+              payload: {
+                project: studioProject(stored.job.project),
+                composition: stored.job.composition,
+                compositionId: stored.job.plan.compositionId,
+                variant: stored.job.variant,
+                spec: stored.job.spec,
+                fingerprint: stored.job.fingerprint,
+                outputPath: redactProjectPath(state.options.projectRoot, published.outputPath),
+                bytes: published.bytes,
+                frames: published.frames,
+                sampleRate: published.sampleRate,
+                channels: published.channels,
+                diagnostics: redactProjectPath(state.options.projectRoot, diagnostics),
+                effectiveOptions: {
+                  ...options,
+                  outputPath: redactProjectPath(state.options.projectRoot, options.outputPath),
+                },
+              },
+            },
+            variantId,
+          ),
+        );
+      } catch (error) {
+        if (response.destroyed || response.writableEnded) return;
+        json(
+          response,
+          409,
+          envelope(
+            state,
+            requestId,
+            "error",
+            {
+              error: {
+                code: controller.signal.aborted
+                  ? "studio.render-cancelled"
+                  : "studio.render-failed",
+                message: safeErrorMessage(state, error),
+                diagnostics: safeDiagnostics(state, error),
+              },
+            },
+            variantId,
+          ),
+        );
+      } finally {
+        request.removeListener("aborted", onAborted);
+      }
+      return;
+    }
+    if (request.method !== "GET" || variantMatch[2] === "render") {
+      const failure = errorEnvelope(
+        state,
+        requestId,
+        404,
+        "studio.route-not-found",
+        "The requested Studio route does not exist.",
         variantId,
       );
       json(response, failure.status, failure.document);

@@ -228,6 +228,10 @@ interactiva como el render final.
 - `renderAudio(job)` es la capacidad canónica de render en Node. La CLI y el botón de
   render de Studio son adaptadores sobre ella y entregan el mismo trabajo inmutable ya
   resuelto y compilado, sin volver a interpretar inputs ni mantener motores paralelos.
+- Studio inicia ese render desde una variante preparada mediante
+  `POST /api/v1/variants/:variantId/render`. El usuario debe indicar un output path; la
+  respuesta conserva el fingerprint/spec de la variante y expone las opciones efectivas sin
+  cambiar su identidad.
 - Las opciones de render se resuelven una vez con precedencia de invocación explícita,
   configuración del proyecto y default de Resona. El trabajo conserva el origen de cada
   valor y todas las superficies comparten sus descriptores, validación y semántica.
@@ -268,7 +272,8 @@ interactiva como el render final.
 - El primer hito no publica un Player embebible; transporte y reproducción se diseñan como
   módulos reutilizables para incorporarlo después de validar Studio y renderer.
 - Studio muestra selector e inputs, transporte, timeline de solo lectura, cadenas por pista,
-  medidores e inspector de IR y diagnósticos; no incluye waveform, piano roll ni mixer.
+  medidores, inspector de IR y diagnósticos, y permite publicar una variante preparada; no
+  incluye waveform, piano roll ni mixer.
 - Un cambio de código o inputs pausa y cancela la variante anterior, recompila desde estado
   limpio y restaura playhead y reproducción solo si la variante nueva queda lista.
 - Durante playback, el cursor de frames de muestras del `AudioWorklet` gobierna el tiempo;
