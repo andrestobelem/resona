@@ -101,6 +101,7 @@ describe("buildDocumentationSite", () => {
     const guideHtml = await readFile(join(projectRoot, "fixture", "guide.html"), "utf8");
     expect(guideHtml).toContain('<h2 id="repeated">Repeated</h2>');
     expect(guideHtml).toContain('<h2 id="repeated-1">Repeated</h2>');
+    expect(guideHtml).toContain('<h2 id="api_v2">API_V2</h2>');
   });
 
   it("rejects invalid local references", async () => {
@@ -117,6 +118,17 @@ describe("buildDocumentationSite", () => {
     await writeFile(join(projectRoot, "README.md"), "# Broken\n\n![missing](missing.svg)\n");
 
     await expect(runDocumentationBuild(projectRoot)).rejects.toThrow("missing.svg");
+  });
+
+  it("rejects unresolved GFM reference labels", async () => {
+    const projectRoot = await mkdtemp(join(tmpdir(), "resona-docs-reference-label-test-"));
+    temporaryRoots.push(projectRoot);
+    await writeFile(
+      join(projectRoot, "README.md"),
+      "# Broken\n\n[missing][unknown-label]\n\n![missing][unknown-image]\n",
+    );
+
+    await expect(runDocumentationBuild(projectRoot)).rejects.toThrow("unknown-label");
   });
 
   it("rejects invalid frontmatter", async () => {
