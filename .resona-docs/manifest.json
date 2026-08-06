@@ -595,7 +595,7 @@
     },
     {
       "path": "docs/adr/0081-studio-worklet-transport-and-module-delivery.md",
-      "sha256": "f3e67ed9959ee6dfc1951a4a86c1d124ebc4cb1e46fe3ebf1e26d3ffe1dd7925"
+      "sha256": "67dffdda34d94c8f8184d987305651cb2ad350d99f97ecec2e97f739a85950ec"
     },
     {
       "path": "docs/agents/domain.md",
@@ -615,7 +615,7 @@
     },
     {
       "path": "docs/architecture.md",
-      "sha256": "c6eefb7135f20339ebae5bf443efc2a68fb8117fe04f94ee180216f18f2df85c"
+      "sha256": "03ba0dde61b5bf419e3fe4e7cba1b67d04ebae1fdb3a5815758ccb8e6ff89b0d"
     },
     {
       "path": "docs/product.md",
@@ -639,7 +639,7 @@
     },
     {
       "path": "packages/cli/CONTEXT.md",
-      "sha256": "169072824354af332dd01aa1a894832c1e896f4cce911486b4e5f51b73b5df89"
+      "sha256": "b50539b9923530c46edfaf3d4d4f3e9949d5079d5db5b96b3e0f23e30e4b7874"
     },
     {
       "path": "packages/docs/test/fixtures/basic/.agents/notes.md",
@@ -925,7 +925,7 @@
     },
     {
       "path": ".resona-docs/search-index.js",
-      "sha256": "00655c9e8713356113e5eb9de25ec6313b4eeaed1fecb5da9ff1ad63db2ea9b7"
+      "sha256": "6161b4bb6fda987ad9a8ead0a503dfb736db4fd017d64f5f2ed5326e35083432"
     },
     {
       "path": ".resona-docs/styles.css",
@@ -1269,7 +1269,7 @@
     },
     {
       "path": "docs/adr/0081-studio-worklet-transport-and-module-delivery.html",
-      "sha256": "7384989b56f34d2539504ba7243ed5441cc0a5a25bbc220dd09c4ef978872491"
+      "sha256": "22cacf9c43d9c75510cabde18aa7cc213d7274e0ef1a42e23fd9ce8a1fe4b6de"
     },
     {
       "path": "docs/agents/domain.html",
@@ -1289,7 +1289,7 @@
     },
     {
       "path": "docs/architecture.html",
-      "sha256": "ba5cf06969a0334244779ffb83ce5a667daa676bef4cfe58d017952ce8901aa0"
+      "sha256": "c1d7efe0fc4b6d0e5349c20a32accd5516a6ba07377f653197f9aba3a34a8f32"
     },
     {
       "path": "docs/product.html",
@@ -1317,7 +1317,7 @@
     },
     {
       "path": "packages/cli/CONTEXT.html",
-      "sha256": "913c3cb62637a14a03c821de9a87ba2569fe5bc3c7e61205d8e4fabf8274a24e"
+      "sha256": "14e4626efcec330eb963ee6238f2c72fb564c04402e307ef2d14fac8d2457cf5"
     },
     {
       "path": "packages/docs/test/fixtures/basic/.agents/notes.html",

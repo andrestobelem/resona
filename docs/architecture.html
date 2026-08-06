@@ -3603,8 +3603,10 @@
                 <code>load</code>. Un <code>AudioContext</code> estéreo a 48 kHz y la respuesta
                 <code>ready</code> del worklet son precondiciones de play/pause; un sample rate
                 distinto falla readiness sin remuestreo. El worklet procesa el quantum estándar,
-                mantiene el cursor de frames y publica snapshots/ended; la shell solo dibuja ese
-                estado. Esas rutas no llevan datos del proyecto ni bundle de autoría, por lo que
+                mantiene el cursor de frames y publica snapshots, medidores pico por processor y
+                <code>ended</code>; la shell solo dibuja ese estado. El mensaje de medidores
+                reutiliza el buffer reservado al cargar el motor y no crea buffers dentro del
+                callback. Esas rutas no llevan datos del proyecto ni bundle de autoría, por lo que
                 exigen Host/Origin pero no el bearer token.
               </p>
               <p>
@@ -3634,7 +3636,9 @@
                 <li>Descubre composiciones registradas.</li>
                 <li>Permite seleccionar inputs y variantes.</li>
                 <li>Controla play, pause, seek y loop.</li>
-                <li>Muestra una timeline de solo lectura con pistas, clips y playhead.</li>
+                <li>
+                  Muestra una timeline de solo lectura con secuencias, pistas, clips y playhead.
+                </li>
                 <li>Muestra la cadena de instrumento y efectos de cada pista.</li>
                 <li>Mide niveles por pista y master.</li>
                 <li>Inspecciona la <code>CompositionIR</code> y sus diagnósticos.</li>
