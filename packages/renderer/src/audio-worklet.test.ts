@@ -1,0 +1,104 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  createResonaAudioWorkletProcessor,
+  type AudioWorkletCommand,
+  type AudioWorkletEvent,
+  type AudioWorkletPortLike,
+} from "./audio-worklet.js";
+
+const plan = {
+  format: "resona/execution-plan" as const,
+  schemaVersion: 1 as const,
+  compositionId: "worklet-test",
+  sampleRate: 48_000 as const,
+  channels: 2 as const,
+  nominalDurationFrames: 4,
+  masterProcessor: 1,
+  processors: [
+    {
+      type: "poly-synth" as const,
+      maxVoices: 1,
+      oscillator: "sine" as const,
+      attackFrames: 0,
+      decayFrames: 0,
+      sustain: 1,
+      releaseFrames: 0,
+    },
+    { type: "sum" as const },
+  ],
+  routes: [{ from: 0, to: 1 }],
+  resources: [],
+  audioRegions: [],
+  events: [
+    {
+      type: "note-attack" as const,
+      frame: 0,
+      instrument: 0,
+      occurrence: 1,
+      semitonesFromA4: 0,
+      velocity: 0.5,
+    },
+  ],
+  automation: [],
+};
+
+class FakePort implements AudioWorkletPortLike {
+  public onmessage: AudioWorkletPortLike["onmessage"] = null;
+  public readonly messages: unknown[] = [];
+  public readonly transfers: Array<ArrayBuffer[]> = [];
+
+  public postMessage(message: unknown, transfer?: readonly ArrayBuffer[]): void {
+    this.messages.push(message);
+    this.transfers.push(transfer === undefined ? [] : [...transfer]);
+  }
+
+  public send(command: AudioWorkletCommand): void {
+    this.onmessage?.({ data: command });
+  }
+}
+
+class FakeBase {
+  public readonly port = new FakePort();
+}
+
+describe("Resona AudioWorklet adapter", () => {
+  it("loads structured-clone plans, renders into planar output, and reports readiness/cursor", () => {
+    const Processor = createResonaAudioWorkletProcessor(FakeBase);
+    const processor = new Processor();
+    const port = processor.port as FakePort;
+    port.send({ type: "load", plan, resources: [] });
+    expect(port.messages).toContainEqual({
+      type: "ready",
+      sampleRate: 48_000,
+      channels: 2,
+      nominalDurationFrames: 4,
+    } satisfies AudioWorkletEvent);
+
+    port.send({ type: "play" });
+    const left = new Float32Array(4);
+    const right = new Float32Array(4);
+    expect(processor.process([], [[left, right]])).toBe(true);
+    expect(left[1]).toBeGreaterThan(0);
+    expect(Array.from(left)).toEqual(Array.from(right));
+    expect(port.messages).toContainEqual({ type: "ended", cursorFrame: 4 });
+
+    port.send({ type: "pause" });
+    left.fill(1);
+    right.fill(1);
+    processor.process([], [[left, right]]);
+    expect(Array.from(left)).toEqual([0, 0, 0, 0]);
+    expect(Array.from(right)).toEqual([0, 0, 0, 0]);
+  });
+
+  it("reports invalid commands without touching the audio callback", () => {
+    const Processor = createResonaAudioWorkletProcessor(FakeBase);
+    const processor = new Processor();
+    const port = processor.port as FakePort;
+    port.onmessage?.({ data: { type: "unknown" } });
+    expect(port.messages).toContainEqual({
+      type: "error",
+      message: "Invalid AudioWorklet command.",
+    } satisfies AudioWorkletEvent);
+  });
+});
