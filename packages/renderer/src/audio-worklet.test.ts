@@ -267,10 +267,15 @@ describe("Resona AudioWorklet adapter", () => {
     expect(Array.from(left.slice(0, 4))).toEqual(Array.from(left.slice(4, 8)));
     expect(port.messages).not.toContainEqual({ type: "ended", cursorFrame: 4 });
     expect(port.messages).toContainEqual({ type: "snapshot", cursorFrame: 4 });
-    expect(port.messages).toContainEqual({
-      type: "meter",
-      levels: expect.arrayContaining([expect.any(Number)]),
-    });
+    const meter = port.messages.find(
+      (message): message is { type: "meter"; levels: ArrayLike<number> } =>
+        typeof message === "object" &&
+        message !== null &&
+        "type" in message &&
+        message.type === "meter",
+    );
+    expect(meter).toBeDefined();
+    expect(Array.from(meter?.levels ?? [])).toEqual(expect.arrayContaining([expect.any(Number)]));
   });
 
   it("keeps PolySynth, automation, and Delay state clean across loops", () => {

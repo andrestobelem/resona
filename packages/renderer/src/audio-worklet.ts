@@ -22,7 +22,7 @@ export type AudioWorkletEvent =
       nominalDurationFrames: number;
     }>
   | Readonly<{ type: "snapshot"; cursorFrame: number }>
-  | Readonly<{ type: "meter"; levels: readonly number[] }>
+  | Readonly<{ type: "meter"; levels: ArrayLike<number> }>
   | Readonly<{ type: "ended"; cursorFrame: number }>
   | Readonly<{
       type: "underrun";
@@ -101,6 +101,10 @@ export const createResonaAudioWorkletProcessor = (
     private looping = false;
     private readonly interleaved = new Float32Array(quantumFrames * 2);
     private readonly snapshotMessage = { type: "snapshot" as const, cursorFrame: 0 };
+    private readonly meterMessage: { type: "meter"; levels: ArrayLike<number> } = {
+      type: "meter",
+      levels: [],
+    };
     private readonly endedMessage = { type: "ended" as const, cursorFrame: 0 };
 
     public constructor() {
@@ -118,6 +122,7 @@ export const createResonaAudioWorkletProcessor = (
             this.nominalDurationFrames = command.plan.nominalDurationFrames;
             this.playing = false;
             this.looping = false;
+            this.meterMessage.levels = this.engine.meters();
             this.port.postMessage({
               type: "ready",
               sampleRate: 48_000,
@@ -218,10 +223,7 @@ export const createResonaAudioWorkletProcessor = (
       }
       this.snapshotMessage.cursorFrame = this.engine.cursorFrame;
       this.port.postMessage(this.snapshotMessage satisfies AudioWorkletEvent);
-      this.port.postMessage({
-        type: "meter",
-        levels: Array.from(this.engine.meters()),
-      } satisfies AudioWorkletEvent);
+      this.port.postMessage(this.meterMessage satisfies AudioWorkletEvent);
       if (!this.looping && this.engine.cursorFrame >= this.nominalDurationFrames) {
         this.playing = false;
         this.endedMessage.cursorFrame = this.engine.cursorFrame;
