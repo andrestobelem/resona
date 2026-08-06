@@ -83,6 +83,7 @@ describe("Studio local service", () => {
     expect(html).toContain("resources.map(resource => resource.samples.buffer)");
     expect(html).toContain("type: 'play'");
     expect(html).toContain("type: 'pause'");
+    expect(html).toContain("Preview error: ");
 
     const worklet = await fetch(`${server.url}/studio/audio-worklet.js`);
     expect(worklet.status).toBe(200);

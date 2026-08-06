@@ -255,7 +255,7 @@ const shell = (state: StudioState): string => {
             if (message.type === 'ready') { clearTimeout(timeout); ready = true; resolve(message); }
             if (message.type === 'snapshot') cursor.textContent = ' · frame ' + message.cursorFrame;
             if (message.type === 'ended') { ended = true; play.disabled = false; pause.disabled = true; status.textContent = 'Playback ended'; }
-            if (message.type === 'error') { clearTimeout(timeout); reject(new Error(message.message)); }
+            if (message.type === 'error') { clearTimeout(timeout); ready = false; play.disabled = true; pause.disabled = true; status.textContent = 'Preview error: ' + message.message; reject(new Error(message.message)); }
           };
         });
         const resources = [];
