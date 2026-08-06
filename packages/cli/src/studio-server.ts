@@ -452,13 +452,13 @@ const shell = (state: StudioState): string => {
         const tempo = payload.composition.tempo?.bpm;
         const totalSeconds = Math.max(1e-9, durationSeconds(payload.composition.duration, tempo));
         const sampleRate = Math.max(1, Number(activePlan.sampleRate) || 48_000);
-        const audioRegionBuckets = new Map();
+        const audioRegionsByDestination = new Map();
         for (const region of Array.isArray(activePlan.audioRegions) ? activePlan.audioRegions : []) {
           if (!isRecord(region)) continue;
-          const key = String(region.destination) + ':' + String(region.startFrame);
-          const bucket = audioRegionBuckets.get(key);
+          const key = String(region.destination);
+          const bucket = audioRegionsByDestination.get(key);
           if (bucket) bucket.push(region);
-          else audioRegionBuckets.set(key, [region]);
+          else audioRegionsByDestination.set(key, [region]);
         }
         for (const entry of collectSequences(payload.composition.root, tempo, [], 0, 0, totalSeconds)) {
           const sequenceDuration = Math.max(0, Math.min(totalSeconds, entry.end) - entry.start);
@@ -486,9 +486,22 @@ const shell = (state: StudioState): string => {
             const clipNode = textNode('li', clipLabel, 'timeline-clip');
             clipNode.dataset.nodePath = pathLabel(clip.path);
             const clipStart = entry.start + positionSeconds(clip.from, tempo);
-            const regionKey = String(processorIndex) + ':' + String(Math.round(clipStart * sampleRate));
-            const regionBucket = audioRegionBuckets.get(regionKey);
-            const audioRegion = clip.type === 'audio-clip' && regionBucket ? regionBucket.shift() : undefined;
+            const regionBucket = audioRegionsByDestination.get(String(processorIndex));
+            const targetFrame = clipStart * sampleRate;
+            let audioRegion;
+            if (clip.type === 'audio-clip' && regionBucket) {
+              let bestIndex = -1;
+              let bestDistance = 0.51;
+              for (let regionIndex = 0; regionIndex < regionBucket.length; regionIndex += 1) {
+                const candidate = regionBucket[regionIndex];
+                const distance = Math.abs(Number(candidate.startFrame) - targetFrame);
+                if (distance < bestDistance) {
+                  bestIndex = regionIndex;
+                  bestDistance = distance;
+                }
+              }
+              if (bestIndex >= 0) audioRegion = regionBucket.splice(bestIndex, 1)[0];
+            }
             const trackEnd = Math.min(totalSeconds, entry.end);
             const availableDuration = Math.max(0, trackEnd - clipStart);
             const eventDuration = Array.isArray(clip.events) ? clip.events.reduce((end, event) => Math.max(end, positionSeconds(event.at, tempo) + durationSeconds(event.duration, tempo)), 0) : 0;
