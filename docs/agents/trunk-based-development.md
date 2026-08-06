@@ -185,6 +185,10 @@ Provider-verified check names:
 Both jobs are configured for pull requests targeting `main`, pushes to `main`, and manual
 workflow dispatch. The full job depends on the fast job.
 
+The GitHub repository setting `delete_branch_on_merge` is enabled. GitHub removes the head
+branch after a pull request merges, so CI does not run a separate cleanup job or require write
+permissions for `contents`.
+
 PR #22 passed both `CI / Fast gate` and `CI / Full gate` on 2026-08-05 UTC. Neither check
 has yet been approved as required branch protection.
 
