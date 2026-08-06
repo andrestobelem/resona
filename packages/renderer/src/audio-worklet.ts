@@ -75,6 +75,8 @@ export const createResonaAudioWorkletProcessor = (
     private nominalDurationFrames = Number.POSITIVE_INFINITY;
     private playing = false;
     private readonly interleaved = new Float32Array(quantumFrames * 2);
+    private readonly snapshotMessage = { type: "snapshot" as const, cursorFrame: 0 };
+    private readonly endedMessage = { type: "ended" as const, cursorFrame: 0 };
 
     public constructor() {
       super();
@@ -104,10 +106,8 @@ export const createResonaAudioWorkletProcessor = (
             if (this.engine === undefined) throw new Error("AudioWorklet is not ready.");
             this.engine.seek(command.frame);
             this.playing = false;
-            this.port.postMessage({
-              type: "snapshot",
-              cursorFrame: this.engine.cursorFrame,
-            } satisfies AudioWorkletEvent);
+            this.snapshotMessage.cursorFrame = this.engine.cursorFrame;
+            this.port.postMessage(this.snapshotMessage satisfies AudioWorkletEvent);
           }
         } catch (error) {
           this.playing = false;
@@ -159,16 +159,12 @@ export const createResonaAudioWorkletProcessor = (
         } satisfies AudioWorkletEvent);
         return true;
       }
-      this.port.postMessage({
-        type: "snapshot",
-        cursorFrame: this.engine.cursorFrame,
-      } satisfies AudioWorkletEvent);
+      this.snapshotMessage.cursorFrame = this.engine.cursorFrame;
+      this.port.postMessage(this.snapshotMessage satisfies AudioWorkletEvent);
       if (this.engine.cursorFrame >= this.nominalDurationFrames) {
         this.playing = false;
-        this.port.postMessage({
-          type: "ended",
-          cursorFrame: this.engine.cursorFrame,
-        } satisfies AudioWorkletEvent);
+        this.endedMessage.cursorFrame = this.engine.cursorFrame;
+        this.port.postMessage(this.endedMessage satisfies AudioWorkletEvent);
       }
       return true;
     }
