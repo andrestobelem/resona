@@ -32,7 +32,8 @@ HTTP para contenido inmutable y controlar carreras durante rebuilds y cambios de
 - La protección de la sesión se define en el
   [ADR 0051](0051-loopback-token-protected-studio.md).
 - El primer corte usa `resona/studio-envelope` v1 en `/api/v1/session`,
-  `/api/v1/compositions`, `/api/v1/variants`, `/api/v1/variants/:variantId/plan` y
+  `/api/v1/compositions`, `/api/v1/static-resources`, `/api/v1/variants`,
+  `/api/v1/variants/:variantId/plan` y
   `/api/v1/variants/:variantId/resources/:sha256-hash`.
 - Los payloads de variante omiten paths físicos y el acceso a recursos exige hashes ya
   resueltos para esa variante.

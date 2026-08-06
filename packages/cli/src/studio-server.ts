@@ -1,6 +1,6 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
-import { readFile, realpath } from "node:fs/promises";
+import { readdir, readFile, realpath } from "node:fs/promises";
 import { relative, resolve } from "node:path";
 
 import {
@@ -46,6 +46,7 @@ type StudioState = {
   readonly sessionId: string;
   readonly variants: Map<string, StoredVariant>;
   readonly activeByComposition: Map<string, AbortController>;
+  staticDirectory?: string;
   port: number;
   url: string;
 };
@@ -213,15 +214,36 @@ const safeDiagnostics = (state: StudioState, error: unknown): readonly Diagnosti
     : (redactProjectPath(state.options.projectRoot, diagnostics) as readonly Diagnostic[]);
 };
 
+const staticAudioPaths = async (directory: string): Promise<readonly string[]> => {
+  const paths: string[] = [];
+  const visit = async (current: string, prefix: string): Promise<void> => {
+    const entries = await readdir(current, { withFileTypes: true });
+    for (const entry of entries) {
+      if (entry.isSymbolicLink()) continue;
+      const logicalPath = prefix.length === 0 ? entry.name : `${prefix}/${entry.name}`;
+      const absolutePath = resolve(current, entry.name);
+      if (entry.isDirectory()) {
+        await visit(absolutePath, logicalPath);
+      } else if (entry.isFile() && entry.name.toLowerCase().endsWith(".wav")) {
+        paths.push(logicalPath);
+      }
+    }
+  };
+  await visit(directory, "");
+  return paths.sort();
+};
+
 const shell = (state: StudioState): string => {
   const bootstrap = JSON.stringify({ token: state.token, sessionId: state.sessionId });
   return `<!doctype html>
 <html lang="en">
   <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Resona Studio</title>
-    <style>body{font:15px system-ui,sans-serif;max-width:1000px;margin:2rem auto;padding:0 1rem;background:#111827;color:#e5e7eb}button,select{font:inherit;padding:.45rem .7rem;margin:.25rem;background:#1f2937;color:#e5e7eb;border:1px solid #4b5563;border-radius:.35rem}pre{white-space:pre-wrap;background:#030712;padding:1rem;border-radius:.4rem;overflow:auto}header{display:flex;align-items:center;gap:1rem}</style>
+    <style>body{font:15px system-ui,sans-serif;max-width:1000px;margin:2rem auto;padding:0 1rem;background:#111827;color:#e5e7eb}button,select,input,textarea{font:inherit;padding:.45rem .7rem;margin:.25rem;background:#1f2937;color:#e5e7eb;border:1px solid #4b5563;border-radius:.35rem}textarea{display:block;width:100%;box-sizing:border-box;font-family:ui-monospace,monospace}fieldset{border:1px solid #4b5563;border-radius:.35rem;margin:.5rem 0;padding:.5rem}#input-error{display:block;color:#fca5a5;min-height:1.3rem}pre{white-space:pre-wrap;background:#030712;padding:1rem;border-radius:.4rem;overflow:auto}header{display:flex;align-items:center;gap:1rem}</style>
   </head>
   <body><header><h1>Resona Studio</h1><span id="status">Loading compositions…</span><span id="cursor"></span></header>
-    <label>Composition <select id="composition"></select></label><button id="inspect">Inspect variant</button><button id="play" disabled>Play</button><button id="pause" disabled>Pause</button><pre id="details"></pre>
+    <label>Composition <select id="composition"></select></label><button id="inspect">Prepare variant</button><button id="play" disabled>Play</button><button id="pause" disabled>Pause</button>
+    <section id="inputs" hidden><h2>Inputs</h2><div id="input-controls"></div><label>JSON fallback<textarea id="input-json" rows="8"></textarea></label><span id="input-error" role="alert"></span></section>
+    <pre id="details"></pre>
     <script>
       const session = ${bootstrap};
       const headers = () => ({Authorization: 'Bearer ' + session.token, 'Content-Type': 'application/json'});
@@ -232,46 +254,150 @@ const shell = (state: StudioState): string => {
       const inspect = document.querySelector('#inspect');
       const play = document.querySelector('#play');
       const pause = document.querySelector('#pause');
+      const inputSection = document.querySelector('#inputs');
+      const inputControls = document.querySelector('#input-controls');
+      const inputJson = document.querySelector('#input-json');
+      const inputError = document.querySelector('#input-error');
       let audioContext;
       let audioNode;
       let activeVariant;
       let ready = false;
       let ended = false;
-      const request = async (path, options = {}) => fetch(path, { ...options, headers: {...headers(), ...(options.headers || {})} }).then(async response => { const value = await response.json(); if (!response.ok) throw new Error(value.error?.message || 'Studio request failed'); return value; });
-      const load = async () => { const value = await request('/api/v1/compositions'); for (const composition of value.compositions) { const option = document.createElement('option'); option.value = composition.id; option.textContent = composition.id; select.append(option); } status.textContent = value.compositions.length + ' compositions'; };
-      const closeAudio = async () => { ready = false; audioNode?.disconnect(); audioNode = undefined; if (audioContext !== undefined) await audioContext.close(); audioContext = undefined; play.disabled = true; pause.disabled = true; };
-      const prepareAudio = async (variantId, payload) => {
-        if (typeof AudioContext === 'undefined') throw new Error('This browser does not support AudioWorklet preview.');
-        audioContext = new AudioContext({sampleRate: 48000});
-        if (audioContext.sampleRate !== 48000) throw new Error('Studio preview requires a 48 kHz AudioContext.');
-        await audioContext.audioWorklet.addModule('/studio/audio-worklet.js');
-        const node = new AudioWorkletNode(audioContext, 'resona-audio', {numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2]});
-        audioNode = node;
-        node.connect(audioContext.destination);
-        const readyPromise = new Promise((resolve, reject) => {
-          const timeout = setTimeout(() => reject(new Error('AudioWorklet readiness timed out.')), 5000);
-          node.port.onmessage = event => {
-            const message = event.data;
-            if (message.type === 'ready') { clearTimeout(timeout); ready = true; resolve(message); }
-            if (message.type === 'snapshot') cursor.textContent = ' · frame ' + message.cursorFrame;
-            if (message.type === 'ended') { ended = true; play.disabled = false; pause.disabled = true; status.textContent = 'Playback ended'; }
-            if (message.type === 'error') { clearTimeout(timeout); ready = false; play.disabled = true; pause.disabled = true; status.textContent = 'Preview error: ' + message.message; reject(new Error(message.message)); }
-          };
-        });
-        const resources = [];
-        for (const resource of payload.resources) {
-          const value = await request('/api/v1/variants/' + encodeURIComponent(variantId) + '/resources/' + encodeURIComponent(resource.hash));
-          const resolved = value.payload.resource;
-          resources.push({...resolved, samples: Float32Array.from(resolved.samples)});
-        }
-        node.port.postMessage({type: 'load', plan: payload.plan, resources}, resources.map(resource => resource.samples.buffer));
-        await readyPromise;
-        play.disabled = false;
-        pause.disabled = false;
+      let compositions = [];
+      let staticResources = [];
+      let selectedComposition;
+      let variantController;
+      let variantRequestSequence = 0;
+      let currentCursorFrame = 0;
+      let isPlaying = false;
+      let fallbackInputs = false;
+      let audioClosePromise = Promise.resolve();
+      const isRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
+      const cloneJson = value => JSON.parse(JSON.stringify(value === undefined ? {} : value));
+      const request = async (path, options = {}) => { const response = await fetch(path, { ...options, headers: {...headers(), ...(options.headers || {})} }); const value = await response.json(); if (!response.ok) throw new Error(value.error?.message || 'Studio request failed'); return value; };
+      const resourceHint = schema => { const hint = schema?.['x-resona-resource']; return hint === 'audio' || hint === 'audio-resource' || (isRecord(hint) && hint.type === 'audio-resource'); };
+      const hasControl = schema => {
+        if (!isRecord(schema)) return false;
+        if (resourceHint(schema) || Array.isArray(schema.enum)) return true;
+        if (schema.type === 'boolean' || schema.type === 'number' || schema.type === 'integer' || schema.type === 'string') return true;
+        if (schema.type !== 'object' || !isRecord(schema.properties)) return false;
+        if (schema.additionalProperties !== false || isRecord(schema.patternProperties)) return false;
+        return Object.values(schema.properties).every(hasControl);
       };
-      inspect.addEventListener('click', async () => { status.textContent = 'Preparing…'; inspect.disabled = true; play.disabled = true; pause.disabled = true; try { await closeAudio(); const value = await request('/api/v1/variants', {method: 'POST', body: JSON.stringify({compositionId: select.value})}); activeVariant = value.variantId; ended = false; details.textContent = JSON.stringify(value.payload, null, 2); await prepareAudio(value.variantId, value.payload); status.textContent = 'Variant ' + value.variantId + ' ready'; } catch (error) { status.textContent = error.message; await closeAudio(); } finally { inspect.disabled = false; } });
-      play.addEventListener('click', async () => { if (!ready || audioNode === undefined || audioContext === undefined) return; try { if (ended) { audioNode.port.postMessage({type: 'seek', frame: 0}); ended = false; } await audioContext.resume(); audioNode.port.postMessage({type: 'play'}); status.textContent = 'Playing'; } catch (error) { status.textContent = error.message; } });
-      pause.addEventListener('click', async () => { if (!ready || audioNode === undefined || audioContext === undefined) return; audioNode.port.postMessage({type: 'pause'}); await audioContext.suspend(); status.textContent = 'Paused'; });
+      const labelFor = path => String(path[path.length - 1] || 'value');
+      const setAt = (target, path, value) => { let current = target; for (let index = 0; index < path.length - 1; index += 1) { const key = path[index]; if (!isRecord(current[key])) current[key] = {}; current = current[key]; } current[path[path.length - 1]] = value; };
+      const valueAt = (target, path) => path.reduce((current, key) => current === undefined ? undefined : current[key], target);
+      const appendControl = (schema, path, value, parent) => {
+        if (schema.type === 'object' && isRecord(schema.properties)) {
+          const fieldset = document.createElement('fieldset');
+          const legend = document.createElement('legend');
+          legend.textContent = labelFor(path);
+          fieldset.append(legend);
+          for (const [key, childSchema] of Object.entries(schema.properties)) appendControl(childSchema, [...path, key], valueAt(value, [key]), fieldset);
+          parent.append(fieldset);
+          return;
+        }
+        const label = document.createElement('label');
+        label.textContent = labelFor(path) + ' ';
+        let control;
+        if (resourceHint(schema)) {
+          control = document.createElement('select');
+          for (const resource of staticResources) { const option = document.createElement('option'); option.value = resource; option.textContent = resource; option.selected = isRecord(value) && value.path === resource; control.append(option); }
+          if (staticResources.length === 0) { const option = document.createElement('option'); option.textContent = 'No WAV resources found'; option.disabled = true; option.selected = true; control.append(option); }
+          control.dataset.inputKind = 'audio-resource';
+        } else if (Array.isArray(schema.enum)) {
+          control = document.createElement('select');
+          for (const optionValue of schema.enum) { const option = document.createElement('option'); option.value = JSON.stringify(optionValue); option.textContent = String(optionValue); option.selected = JSON.stringify(optionValue) === JSON.stringify(value); control.append(option); }
+          control.dataset.inputKind = 'enum';
+        } else if (schema.type === 'boolean') {
+          control = document.createElement('input'); control.type = 'checkbox'; control.checked = value === true;
+        } else if (schema.type === 'number' || schema.type === 'integer') {
+          control = document.createElement('input'); control.type = 'number'; control.value = typeof value === 'number' ? String(value) : ''; if (typeof schema.minimum === 'number') control.min = String(schema.minimum); if (typeof schema.maximum === 'number') control.max = String(schema.maximum); control.step = schema.type === 'integer' ? '1' : (typeof schema.multipleOf === 'number' ? String(schema.multipleOf) : 'any');
+        } else {
+          control = document.createElement(schema['x-resona-ui'] === 'textarea' || (isRecord(schema['x-resona-ui']) && schema['x-resona-ui'].control === 'textarea') ? 'textarea' : 'input'); control.type = 'text'; control.value = typeof value === 'string' ? value : '';
+        }
+        control.dataset.inputPath = JSON.stringify(path); control.dataset.inputPresent = value === undefined ? 'false' : 'true'; label.append(control); parent.append(label);
+      };
+      const renderInputs = composition => {
+        selectedComposition = composition;
+        inputError.textContent = '';
+        const schema = composition.inputSchema?.jsonSchema || {type: 'object', properties: {}};
+        const defaults = cloneJson(composition.defaultInputs);
+        fallbackInputs = !hasControl(schema);
+        inputSection.hidden = false;
+        inputControls.hidden = fallbackInputs;
+        inputJson.hidden = !fallbackInputs;
+        inputJson.value = JSON.stringify(defaults, null, 2);
+        inputControls.replaceChildren();
+        if (fallbackInputs) { inputControls.textContent = 'This input schema uses JSON fallback with server-side validation.'; return; }
+        appendControl(schema, [], defaults, inputControls);
+      };
+      const readInputs = () => {
+        if (fallbackInputs) { const parsed = JSON.parse(inputJson.value); if (!isRecord(parsed)) throw new Error('Inputs JSON must be an object.'); return parsed; }
+        const result = cloneJson(selectedComposition.defaultInputs);
+        for (const control of inputControls.querySelectorAll('[data-input-path]')) { if (control.dataset.inputPresent !== 'true') continue; const path = JSON.parse(control.dataset.inputPath); let value; if (control.dataset.inputKind === 'audio-resource') value = {type: 'resona/static-audio', version: 1, path: control.value}; else if (control.dataset.inputKind === 'enum') value = JSON.parse(control.value); else if (control.type === 'checkbox') value = control.checked; else if (control.type === 'number') value = control.value === '' ? null : Number(control.value); else value = control.value; setAt(result, path, value); }
+        return result;
+      };
+      const load = async () => { const value = await request('/api/v1/compositions'); compositions = value.compositions; try { const resources = await request('/api/v1/static-resources'); staticResources = resources.payload.resources; } catch { staticResources = []; } for (const composition of compositions) { const option = document.createElement('option'); option.value = composition.id; option.textContent = composition.id; select.append(option); } if (compositions[0] !== undefined) renderInputs(compositions[0]); status.textContent = compositions.length + ' compositions'; };
+      const closeAudio = () => { const close = async () => { ready = false; isPlaying = false; const node = audioNode; const context = audioContext; audioNode = undefined; audioContext = undefined; node?.disconnect(); if (context !== undefined) await context.close(); play.disabled = true; pause.disabled = true; }; audioClosePromise = audioClosePromise.then(close, close); return audioClosePromise; };
+      const prepareAudio = async (variantId, payload, resumeFrame, resumePlayback, requestSequence, signal) => {
+        if (typeof AudioContext === 'undefined') throw new Error('This browser does not support AudioWorklet preview.');
+        const context = new AudioContext({sampleRate: 48000});
+        const isCurrent = () => requestSequence === variantRequestSequence && !signal.aborted;
+        let node;
+        let completed = false;
+        try {
+          if (context.sampleRate !== 48000) throw new Error('Studio preview requires a 48 kHz AudioContext.');
+          await context.audioWorklet.addModule('/studio/audio-worklet.js');
+          if (!isCurrent()) return;
+          node = new AudioWorkletNode(context, 'resona-audio', {numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2]});
+          audioContext = context;
+          audioNode = node;
+          node.connect(context.destination);
+          const readyPromise = new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error('AudioWorklet readiness timed out.')), 5000);
+            const abort = () => { clearTimeout(timeout); const error = new Error('AudioWorklet preparation was cancelled.'); error.name = 'AbortError'; reject(error); };
+            signal.addEventListener('abort', abort, {once: true});
+            node.port.onmessage = event => {
+              if (!isCurrent()) return;
+              const message = event.data;
+              if (message.type === 'ready') { clearTimeout(timeout); signal.removeEventListener('abort', abort); ready = true; resolve(message); }
+              if (message.type === 'snapshot') { currentCursorFrame = message.cursorFrame; cursor.textContent = ' · frame ' + message.cursorFrame; }
+              if (message.type === 'ended') { currentCursorFrame = message.cursorFrame; isPlaying = false; ended = true; play.disabled = false; pause.disabled = true; status.textContent = 'Playback ended'; }
+              if (message.type === 'error') { clearTimeout(timeout); signal.removeEventListener('abort', abort); ready = false; play.disabled = true; pause.disabled = true; status.textContent = 'Preview error: ' + message.message; reject(new Error(message.message)); }
+            };
+            if (signal.aborted) abort();
+          });
+          const resources = [];
+          for (const resource of payload.resources) {
+            if (!isCurrent()) return;
+            const value = await request('/api/v1/variants/' + encodeURIComponent(variantId) + '/resources/' + encodeURIComponent(resource.hash), {signal});
+            if (!isCurrent()) return;
+            const resolved = value.payload.resource;
+            resources.push({...resolved, samples: Float32Array.from(resolved.samples)});
+          }
+          node.port.postMessage({type: 'load', plan: payload.plan, resources}, resources.map(resource => resource.samples.buffer));
+          await readyPromise;
+          if (!isCurrent()) return;
+          const seekFrame = Math.min(Math.max(0, resumeFrame), Math.max(0, payload.plan.nominalDurationFrames - 1));
+          if (seekFrame > 0) node.port.postMessage({type: 'seek', frame: seekFrame});
+          currentCursorFrame = seekFrame;
+          play.disabled = false;
+          pause.disabled = false;
+          if (resumePlayback) { await context.resume(); if (!isCurrent()) return; node.port.postMessage({type: 'play'}); isPlaying = true; ended = false; }
+          completed = true;
+        } finally {
+          if (!completed || !isCurrent()) { node?.disconnect(); if (audioNode === node) audioNode = undefined; if (audioContext === context) audioContext = undefined; await context.close(); }
+        }
+      };
+      const invalidateVariantRequest = () => { variantRequestSequence += 1; variantController?.abort(); variantController = undefined; activeVariant = undefined; details.textContent = ''; currentCursorFrame = 0; ready = false; isPlaying = false; inspect.disabled = false; play.disabled = true; pause.disabled = true; void closeAudio(); };
+      const prepareVariant = async () => { const requestSequence = ++variantRequestSequence; variantController?.abort(); const controller = new AbortController(); variantController = controller; const resumeFrame = currentCursorFrame; const resumePlayback = isPlaying; status.textContent = 'Preparing…'; inspect.disabled = true; play.disabled = true; pause.disabled = true; inputError.textContent = ''; let inputs; try { inputs = readInputs(); await closeAudio(); if (requestSequence !== variantRequestSequence) return; const requestId = 'studio-variant-' + requestSequence + '-' + Date.now(); const value = await request('/api/v1/variants', {method: 'POST', headers: {'x-resona-request-id': requestId}, signal: controller.signal, body: JSON.stringify({compositionId: select.value, inputs, requestId})}); if (requestSequence !== variantRequestSequence) return; activeVariant = value.variantId; ended = false; details.textContent = JSON.stringify(value.payload, null, 2); await prepareAudio(value.variantId, value.payload, resumeFrame, resumePlayback, requestSequence, controller.signal); if (requestSequence !== variantRequestSequence) return; status.textContent = resumePlayback ? 'Playing variant ' + value.variantId : 'Variant ' + value.variantId + ' ready'; } catch (error) { if (error?.name === 'AbortError' || requestSequence !== variantRequestSequence) return; inputError.textContent = error.message; status.textContent = error.message; await closeAudio(); } finally { if (requestSequence === variantRequestSequence) { variantController = undefined; inspect.disabled = false; } } };
+      select.addEventListener('change', () => { invalidateVariantRequest(); const composition = compositions.find(candidate => candidate.id === select.value); if (composition !== undefined) renderInputs(composition); });
+      inspect.addEventListener('click', () => { void prepareVariant(); });
+      inputControls.addEventListener('change', event => { if (!fallbackInputs) { event.target?.dataset && (event.target.dataset.inputPresent = 'true'); void prepareVariant(); } });
+      inputJson.addEventListener('change', () => { if (fallbackInputs) void prepareVariant(); });
+      play.addEventListener('click', async () => { if (!ready || audioNode === undefined || audioContext === undefined) return; try { if (ended) { audioNode.port.postMessage({type: 'seek', frame: 0}); currentCursorFrame = 0; ended = false; } await audioContext.resume(); audioNode.port.postMessage({type: 'play'}); isPlaying = true; status.textContent = 'Playing'; } catch (error) { status.textContent = error.message; } });
+      pause.addEventListener('click', async () => { if (!ready || audioNode === undefined || audioContext === undefined) return; audioNode.port.postMessage({type: 'pause'}); isPlaying = false; await audioContext.suspend(); status.textContent = 'Paused'; });
       load().catch(error => { status.textContent = error.message; });
     </script>
   </body>
@@ -389,6 +515,10 @@ const handle = async (
         state.options.projectRoot,
         sourceOptions(state.options),
       );
+      state.staticDirectory = resolve(
+        state.options.projectRoot,
+        catalog.project.configuration.staticDir.value,
+      );
       json(
         response,
         200,
@@ -404,6 +534,40 @@ const handle = async (
         envelope(state, requestId, "error", {
           error: {
             code: "studio.compositions-failed",
+            message: safeErrorMessage(state, error),
+            diagnostics: safeDiagnostics(state, error),
+          },
+        }),
+      );
+    }
+    return;
+  }
+  if (parsed.pathname === "/api/v1/static-resources" && request.method === "GET") {
+    try {
+      if (state.staticDirectory === undefined) {
+        const catalog = await loadProjectCompositions(
+          state.options.projectRoot,
+          sourceOptions(state.options),
+        );
+        state.staticDirectory = resolve(
+          state.options.projectRoot,
+          catalog.project.configuration.staticDir.value,
+        );
+      }
+      json(
+        response,
+        200,
+        envelope(state, requestIdFrom(request), "static-resources", {
+          payload: { resources: await staticAudioPaths(state.staticDirectory) },
+        }),
+      );
+    } catch (error) {
+      json(
+        response,
+        500,
+        envelope(state, requestIdFrom(request), "error", {
+          error: {
+            code: "studio.static-resources-failed",
             message: safeErrorMessage(state, error),
             diagnostics: safeDiagnostics(state, error),
           },

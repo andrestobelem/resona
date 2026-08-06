@@ -6,6 +6,8 @@ import { fileURLToPath } from "node:url";
 
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 
+import { createRenderJob } from "@resona/engine";
+
 import { startStudioServer, type StudioServer } from "./studio-server.js";
 
 const engineModulePath = fileURLToPath(new URL("../../engine/dist/index.js", import.meta.url));
@@ -17,6 +19,7 @@ beforeAll(async () => {
   exactProjectRoot = await realpath(await mkdtemp(join(tmpdir(), "resona-studio-")));
   await mkdir(join(exactProjectRoot, "src"), { recursive: true });
   await mkdir(join(exactProjectRoot, "public"), { recursive: true });
+  await mkdir(join(exactProjectRoot, "public", "nested"), { recursive: true });
   exactEntryPoint = join(exactProjectRoot, "src", "index.tsx");
   const wav = Buffer.alloc(48);
   wav.write("RIFF", 0, "ascii");
@@ -34,13 +37,19 @@ beforeAll(async () => {
   wav.writeUInt32LE(4, 40);
   wav.writeFloatLE(0.25, 44);
   await writeFile(join(exactProjectRoot, "public", "tone.wav"), wav);
+  await writeFile(join(exactProjectRoot, "public", "nested", "nested.wav"), wav);
+  await writeFile(join(exactProjectRoot, "public", "README.txt"), "not audio");
   await writeFile(
     exactEntryPoint,
-    `import { AudioClip, Composition, Sequence, Track, duration, position, rational, registerRoot, staticAudio } from ${JSON.stringify(engineModulePath)};
+    `import { AudioClip, Composition, EventClip, PolySynth, Sequence, Track, duration, note, pitch, position, rational, registerRoot, staticAudio } from ${JSON.stringify(engineModulePath)};
 const Song = () => <Sequence id="root" from={position.seconds(0n)} />;
 const ResourceSong = () => <Sequence id="root" from={position.seconds(0n)}><Track id="audio" source={<AudioClip id="tone" src={staticAudio("tone.wav")} from={position.seconds(0n)} duration={duration.seconds(1n, 48000n)} />} /></Sequence>;
 const prepareResource = async ({ resources }) => { await resources.audio(staticAudio("tone.wav")); return {}; };
-const Root = () => <><Composition id="StudioFixture" component={Song} duration={duration.seconds(1n)} bpm={rational(120n)} timeSignature={{ beatsPerBar: 4, beatUnit: 4 }} /><Composition id="ResourceFixture" component={ResourceSong} prepare={prepareResource} duration={duration.seconds(1n, 48000n)} bpm={rational(120n)} timeSignature={{ beatsPerBar: 4, beatUnit: 4 }} /></>;
+const inputSchema = { ir: { format: "resona/input-schema", schemaVersion: 1, jsonSchema: { $schema: "https://json-schema.org/draft/2020-12/schema", type: "object", properties: { intensity: { type: "number", minimum: 0, maximum: 1 }, mode: { type: "string", enum: ["soft", "loud"] }, enabled: { type: "boolean" }, label: { type: "string", "x-resona-ui": "textarea" }, voice: { type: "object", properties: { semitonesFromA4: { type: "integer" } }, required: ["semitonesFromA4"], additionalProperties: false } }, required: ["intensity", "mode", "enabled", "label", "voice"], additionalProperties: false } }, validate: value => { if (value !== null && typeof value === "object" && "intensity" in value && typeof value.intensity === "number" && value.intensity >= 0 && value.intensity <= 1 && "mode" in value && (value.mode === "soft" || value.mode === "loud") && "enabled" in value && typeof value.enabled === "boolean" && "label" in value && typeof value.label === "string" && "voice" in value && value.voice !== null && typeof value.voice === "object" && "semitonesFromA4" in value.voice && Number.isSafeInteger(value.voice.semitonesFromA4)) return { success: true }; return { success: false, issues: [{ code: "invalid-input", path: [], message: "Invalid Studio inputs." }] }; } };
+const InputSong = ({ intensity, mode, enabled, voice }) => <Sequence id="root" from={position.seconds(0n)}><Track id="lead" source={<EventClip id="notes" from={position.seconds(0n)} events={[note({ at: position.seconds(0n), duration: duration.seconds(1n), pitch: pitch.semitonesFromA4(voice.semitonesFromA4), velocity: enabled ? (mode === "loud" ? intensity : intensity * 0.5) : 0.1 })]} />} instrument={<PolySynth id="synth" oscillator="sine" attack={duration.seconds(0n)} decay={duration.seconds(0n)} sustain={1} release={duration.seconds(0n)} />} /></Sequence>;
+const jsonSchema = { ir: { format: "resona/input-schema", schemaVersion: 1, jsonSchema: { $schema: "https://json-schema.org/draft/2020-12/schema", type: "object", properties: { tags: { type: "array", items: { type: "string" } } }, required: ["tags"], additionalProperties: false } }, validate: value => value !== null && typeof value === "object" && "tags" in value && Array.isArray(value.tags) && value.tags.every(tag => typeof tag === "string") ? { success: true } : { success: false, issues: [{ code: "invalid-input", path: [], message: "Invalid JSON inputs." }] } };
+const JsonSong = () => <Sequence id="root" from={position.seconds(0n)} />;
+const Root = () => <><Composition id="StudioFixture" component={Song} duration={duration.seconds(1n)} bpm={rational(120n)} timeSignature={{ beatsPerBar: 4, beatUnit: 4 }} /><Composition id="ResourceFixture" component={ResourceSong} prepare={prepareResource} duration={duration.seconds(1n, 48000n)} bpm={rational(120n)} timeSignature={{ beatsPerBar: 4, beatUnit: 4 }} /><Composition id="InputFixture" component={InputSong} schema={inputSchema} defaultInputs={{ intensity: 0.25, mode: "soft", enabled: true, label: "demo", voice: { semitonesFromA4: 0 } }} duration={duration.seconds(1n)} bpm={rational(120n)} timeSignature={{ beatsPerBar: 4, beatUnit: 4 }} /><Composition id="JsonFixture" component={JsonSong} schema={jsonSchema} defaultInputs={{ tags: ["default"] }} duration={duration.seconds(1n)} bpm={rational(120n)} timeSignature={{ beatsPerBar: 4, beatUnit: 4 }} /></>;
 registerRoot(Root);`,
   );
 });
@@ -84,6 +93,21 @@ describe("Studio local service", () => {
     expect(html).toContain("type: 'play'");
     expect(html).toContain("type: 'pause'");
     expect(html).toContain("Preview error: ");
+    expect(html).toContain('id="input-controls"');
+    expect(html).toContain('id="input-json"');
+    expect(html).toContain('id="input-error"');
+    expect(html).toContain("/api/v1/static-resources");
+    expect(html).toContain("AbortController");
+    expect(html).toContain("requestId");
+    expect(html).toContain("variantRequestSequence");
+    expect(html).toContain("variantRequestSequence += 1");
+    expect(html).toContain("currentCursorFrame");
+    expect(html).toContain("requestSequence !== variantRequestSequence");
+    expect(html).toContain("if (!isCurrent()) return");
+    expect(html).toContain("inputPresent");
+    expect(html).toContain("audioClosePromise");
+    expect(html).toContain("schema.additionalProperties !== false");
+    expect(html).toContain("JSON fallback with server-side validation.");
 
     const worklet = await fetch(`${server.url}/studio/audio-worklet.js`);
     expect(worklet.status).toBe(200);
@@ -107,10 +131,18 @@ describe("Studio local service", () => {
     const missingToken = await fetch(`${server.url}/api/v1/compositions`);
     expect(missingToken.status).toBe(401);
 
+    const missingStaticToken = await fetch(`${server.url}/api/v1/static-resources`);
+    expect(missingStaticToken.status).toBe(401);
+
     const foreignOrigin = await fetch(`${server.url}/api/v1/compositions`, {
       headers: apiHeaders(server, { origin: "http://evil.example" }),
     });
     expect(foreignOrigin.status).toBe(403);
+
+    const foreignStaticOrigin = await fetch(`${server.url}/api/v1/static-resources`, {
+      headers: apiHeaders(server, { origin: "http://evil.example" }),
+    });
+    expect(foreignStaticOrigin.status).toBe(403);
 
     const compositions = await fetch(`${server.url}/api/v1/compositions`, {
       headers: apiHeaders(server),
@@ -123,6 +155,37 @@ describe("Studio local service", () => {
       type: "compositions",
       sessionId: server.sessionId,
       compositions: expect.arrayContaining([expect.objectContaining({ id: "StudioFixture" })]),
+    });
+    const inputComposition = compositionsDocument.compositions.find(
+      (composition: { id: string }) => composition.id === "InputFixture",
+    );
+    expect(inputComposition).toMatchObject({
+      id: "InputFixture",
+      defaultInputs: {
+        intensity: 0.25,
+        mode: "soft",
+        enabled: true,
+        label: "demo",
+        voice: { semitonesFromA4: 0 },
+      },
+    });
+    expect(inputComposition.inputSchema.jsonSchema).toMatchObject({
+      properties: {
+        intensity: { type: "number", minimum: 0, maximum: 1 },
+        mode: { type: "string", enum: ["soft", "loud"] },
+      },
+    });
+    expect(compositionsDocument.compositions).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: "JsonFixture" })]),
+    );
+
+    const staticResources = await fetch(`${server.url}/api/v1/static-resources`, {
+      headers: apiHeaders(server),
+    });
+    expect(staticResources.status).toBe(200);
+    await expect(staticResources.json()).resolves.toMatchObject({
+      type: "static-resources",
+      payload: { resources: ["nested/nested.wav", "tone.wav"] },
     });
 
     const session = await fetch(`${server.url}/api/v1/session`, {
@@ -182,6 +245,65 @@ describe("Studio local service", () => {
       { headers: apiHeaders(server) },
     );
     expect(unauthorizedResource.status).toBe(404);
+  }, 15_000);
+
+  it("creates distinct input variants with the same fingerprint as the Node render job", async () => {
+    const server = await createServer();
+    const createVariant = async (
+      inputs: Record<string, unknown> | undefined,
+      requestId: string,
+    ) => {
+      const response = await fetch(`${server.url}/api/v1/variants`, {
+        method: "POST",
+        headers: apiHeaders(server, { "content-type": "application/json" }),
+        body: JSON.stringify({
+          compositionId: "InputFixture",
+          ...(inputs === undefined ? {} : { inputs }),
+          requestId,
+        }),
+      });
+      return {
+        response,
+        document: (await response.json()) as {
+          requestId: string;
+          variantId: string;
+          payload: { fingerprint: string; variant: { inputs: unknown }; plan: unknown };
+        },
+      };
+    };
+
+    const defaultVariant = await createVariant(undefined, "input-default");
+    const loudVariant = await createVariant({ intensity: 0.75, mode: "loud" }, "input-loud");
+    expect(defaultVariant.response.status).toBe(201);
+    expect(loudVariant.response.status).toBe(201);
+    expect(defaultVariant.document.requestId).toBe("input-default");
+    expect(loudVariant.document.requestId).toBe("input-loud");
+    expect(loudVariant.document.variantId).not.toBe(defaultVariant.document.variantId);
+    expect(defaultVariant.document.payload.variant.inputs).toEqual({
+      intensity: 0.25,
+      mode: "soft",
+      enabled: true,
+      label: "demo",
+      voice: { semitonesFromA4: 0 },
+    });
+    expect(loudVariant.document.payload.variant.inputs).toEqual({
+      intensity: 0.75,
+      mode: "loud",
+      enabled: true,
+      label: "demo",
+      voice: { semitonesFromA4: 0 },
+    });
+    expect(loudVariant.document.payload.fingerprint).not.toBe(
+      defaultVariant.document.payload.fingerprint,
+    );
+
+    const nodeJob = await createRenderJob({
+      projectRoot: exactProjectRoot,
+      compositionId: "InputFixture",
+      inputs: { intensity: 0.75, mode: "loud" },
+      entryPoint: exactEntryPoint,
+    });
+    expect(loudVariant.document.payload.fingerprint).toBe(nodeJob.fingerprint);
   }, 15_000);
 
   it("returns protocol errors for malformed or unknown variant requests", async () => {
