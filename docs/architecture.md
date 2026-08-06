@@ -1023,8 +1023,10 @@ La shell del primer corte carga además los módulos privados same-origin
 los samples JSON autorizados a `Float32Array` y transfiere sus buffers junto con el plan en un
 comando `load`. Un `AudioContext` estéreo a 48 kHz y la respuesta `ready` del worklet son
 precondiciones de play/pause; un sample rate distinto falla readiness sin remuestreo. El
-worklet procesa el quantum estándar, mantiene el cursor de frames y publica snapshots/ended;
-la shell solo dibuja ese estado. Esas rutas no llevan datos del proyecto ni bundle de autoría,
+worklet procesa el quantum estándar, mantiene el cursor de frames y publica snapshots,
+medidores pico por processor y `ended`; la shell solo dibuja ese estado. El mensaje de medidores
+reutiliza el buffer reservado al cargar el motor y no crea buffers dentro del callback. Esas rutas
+no llevan datos del proyecto ni bundle de autoría,
 por lo que exigen Host/Origin pero no el bearer token.
 
 Studio transfiere `ExecutionPlan` al `AudioWorklet` mediante structured clone y entrega los
@@ -1047,7 +1049,7 @@ la misma confianza que ejecutar sus scripts. La decisión está registrada en el
 - Descubre composiciones registradas.
 - Permite seleccionar inputs y variantes.
 - Controla play, pause, seek y loop.
-- Muestra una timeline de solo lectura con pistas, clips y playhead.
+- Muestra una timeline de solo lectura con secuencias, pistas, clips y playhead.
 - Muestra la cadena de instrumento y efectos de cada pista.
 - Mide niveles por pista y master.
 - Inspecciona la `CompositionIR` y sus diagnósticos.
