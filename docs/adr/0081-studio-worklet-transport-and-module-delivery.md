@@ -22,9 +22,11 @@ controles únicamente después de `ready` y de que el contexto confirme 48 kHz.
 El adaptador procesa el quantum estándar de 128 frames y publica un snapshot por quantum. El
 callback no hace red, filesystem, evaluación TSX ni crea buffers; usa un buffer interleaved
 reservado al construir el processor y copia la señal a las salidas planares de Web Audio.
-El único intercambio durante el callback es el snapshot reutilizado que se publica por
-`MessagePort` una vez por quantum; su structured clone es una decisión controlada del
-adaptador y una futura optimización puede moverlo a un canal compartido.
+El intercambio normal durante el callback es el snapshot reutilizado que se publica por
+`MessagePort` una vez por quantum. Los underruns publican además su diagnóstico, y una
+frontera de loop puede publicar un snapshot adicional después de reconstruir el estado en
+frame cero. Ese structured clone es una decisión controlada del adaptador y una futura
+optimización puede moverlo a un canal compartido.
 Playback se detiene al alcanzar la duración nominal del plan, salvo que `loop` esté activo. En
 cada frontera de loop el worklet ejecuta `seek(0)`, por lo que voces, envolventes, automatización,
 delay y demás estado se reconstruyen desde el mismo origen. Si `AudioEngine.process` produce
