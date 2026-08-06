@@ -102,6 +102,7 @@ describe("buildDocumentationSite", () => {
     expect(guideHtml).toContain('<h2 id="repeated">Repeated</h2>');
     expect(guideHtml).toContain('<h2 id="repeated-1">Repeated</h2>');
     expect(guideHtml).toContain('<h2 id="api_v2">API_V2</h2>');
+    expect(guideHtml).toContain("toc-current");
   });
 
   it("renders a navigable, accessible documentation shell", async () => {
@@ -121,6 +122,8 @@ describe("buildDocumentationSite", () => {
     expect(guideHtml).toContain('aria-label="En esta página"');
     expect(guideHtml).toContain('href="guide.md"');
     expect(guideHtml).toContain('href="../README.html"');
+    expect(guideHtml).toContain("page-nav-previous");
+    expect(guideHtml).toContain("Resona docs fixture");
     expect(guideHtml).toContain('href="#top"');
     expect(guideHtml).toContain('id="theme-select"');
     expect(guideHtml).toContain("localStorage");
