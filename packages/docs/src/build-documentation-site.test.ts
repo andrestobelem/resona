@@ -128,6 +128,10 @@ describe("buildDocumentationSite", () => {
     expect(guideHtml).toContain('id="theme-select"');
     expect(guideHtml).toContain("localStorage");
     expect(guideHtml).toContain("IntersectionObserver");
+    expect(styles).toContain(".docs-layout");
+    expect(styles).toContain("@media (max-width: 48rem)");
+    expect(styles).toContain(":focus-visible");
+    expect(styles).toContain("prefers-reduced-motion");
     expect(styles).toContain("prefers-color-scheme");
   });
 
