@@ -10,31 +10,44 @@
     <main>
       <p class="source-path">.agents/skills/ubiquitous-language/SKILL.md</p>
       <article>
-        <p>
-          --- name: ubiquitous-language description: Extract a DDD-style ubiquitous language
-          glossary from the current conversation, flagging ambiguities and proposing canonical
-          terms. Saves to UBIQUITOUS_LANGUAGE.md. Use when user wants to define domain terms, build
-          a glossary, harden terminology, create a ubiquitous language, or mentions &quot;domain
-          model&quot; or &quot;DDD&quot;. disable-model-invocation: true ---
-        </p>
+        <aside class="frontmatter">
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+name: ubiquitous-language
+description: Extract a DDD-style ubiquitous language glossary from the current conversation, flagging ambiguities and proposing canonical terms. Saves to UBIQUITOUS_LANGUAGE.md. Use when user wants to define domain terms, build a glossary, harden terminology, create a ubiquitous language, or mentions &quot;domain model&quot; or &quot;DDD&quot;.
+disable-model-invocation: true
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="ubiquitous-language">Ubiquitous Language</h1>
         <p>
           Extract and formalize domain terminology from the current conversation into a consistent
           glossary, saved to a local file.
         </p>
         <h2 id="process">Process</h2>
-        <p>
-          1. **Scan the conversation** for domain-relevant nouns, verbs, and concepts 2. **Identify
-          problems**: - Same word used for different concepts (ambiguity) - Different words used for
-          the same concept (synonyms) - Vague or overloaded terms 3. **Propose a canonical
-          glossary** with opinionated term choices 4. **Write to `UBIQUITOUS_LANGUAGE.md`** in the
-          working directory using the format below 5. **Output a summary** inline in the
-          conversation
-        </p>
+        <ol>
+          <li>
+            <strong>Scan the conversation</strong> for domain-relevant nouns, verbs, and concepts
+          </li>
+          <li>
+            <strong>Identify problems</strong>:
+            <ul>
+              <li>Same word used for different concepts (ambiguity)</li>
+              <li>Different words used for the same concept (synonyms)</li>
+              <li>Vague or overloaded terms</li>
+            </ul>
+          </li>
+          <li><strong>Propose a canonical glossary</strong> with opinionated term choices</li>
+          <li>
+            <strong>Write to <code>UBIQUITOUS_LANGUAGE.md</code></strong> in the working directory
+            using the format below
+          </li>
+          <li><strong>Output a summary</strong> inline in the conversation</li>
+        </ol>
         <h2 id="output-format">Output Format</h2>
-        <p>Write a `UBIQUITOUS_LANGUAGE.md` file with this structure:</p>
-        <pre><code class="language-md">
-# Ubiquitous Language
+        <p>Write a <code>UBIQUITOUS_LANGUAGE.md</code> file with this structure:</p>
+        <pre><code class="language-md"># Ubiquitous Language
 
 ## Order lifecycle
 
@@ -65,47 +78,85 @@
 ## Flagged ambiguities
 
 - &quot;account&quot; was used to mean both **Customer** and **User** — these are distinct concepts: a **Customer** places orders, while a **User** is an authentication identity that may or may not represent a **Customer**.
-        </code></pre>
+</code></pre>
         <h2 id="rules">Rules</h2>
-        <p>
-          - **Be opinionated.** When multiple words exist for the same concept, pick the best one
-          and list the others as aliases to avoid. - **Flag conflicts explicitly.** If a term is
-          used ambiguously in the conversation, call it out in the &quot;Flagged ambiguities&quot;
-          section with a clear recommendation. - **Only include terms relevant for domain experts.**
-          Skip the names of modules or classes unless they have meaning in the domain language. -
-          **Keep definitions tight.** One sentence max. Define what it IS, not what it does. -
-          **Show relationships.** Use bold term names and express cardinality where obvious. -
-          **Only include domain terms.** Skip generic programming concepts (array, function,
-          endpoint) unless they have domain-specific meaning. - **Group terms into multiple tables**
-          when natural clusters emerge (e.g. by subdomain, lifecycle, or actor). Each group gets its
-          own heading and table. If all terms belong to a single cohesive domain, one table is fine
-          — don't force groupings. - **Write an example dialogue.** A short conversation (3-5
-          exchanges) between a dev and a domain expert that demonstrates how the terms interact
-          naturally. The dialogue should clarify boundaries between related concepts and show terms
-          being used precisely.
-        </p>
-        <p>&lt;example&gt;</p>
+        <ul>
+          <li>
+            <strong>Be opinionated.</strong> When multiple words exist for the same concept, pick
+            the best one and list the others as aliases to avoid.
+          </li>
+          <li>
+            <strong>Flag conflicts explicitly.</strong> If a term is used ambiguously in the
+            conversation, call it out in the &quot;Flagged ambiguities&quot; section with a clear
+            recommendation.
+          </li>
+          <li>
+            <strong>Only include terms relevant for domain experts.</strong> Skip the names of
+            modules or classes unless they have meaning in the domain language.
+          </li>
+          <li>
+            <strong>Keep definitions tight.</strong> One sentence max. Define what it IS, not what
+            it does.
+          </li>
+          <li>
+            <strong>Show relationships.</strong> Use bold term names and express cardinality where
+            obvious.
+          </li>
+          <li>
+            <strong>Only include domain terms.</strong> Skip generic programming concepts (array,
+            function, endpoint) unless they have domain-specific meaning.
+          </li>
+          <li>
+            <strong>Group terms into multiple tables</strong> when natural clusters emerge (e.g. by
+            subdomain, lifecycle, or actor). Each group gets its own heading and table. If all terms
+            belong to a single cohesive domain, one table is fine — don't force groupings.
+          </li>
+          <li>
+            <strong>Write an example dialogue.</strong> A short conversation (3-5 exchanges) between
+            a dev and a domain expert that demonstrates how the terms interact naturally. The
+            dialogue should clarify boundaries between related concepts and show terms being used
+            precisely.
+          </li>
+        </ul>
+        &lt;example&gt;
         <h2 id="example-dialogue">Example dialogue</h2>
-        <p>&gt; **Dev:** &quot;How do I test the **sync service** without Docker?&quot;</p>
-        <p>
-          &gt; **Domain expert:** &quot;Provide the **filesystem layer** instead of the **Docker
-          layer**. It implements the same **Sandbox service** interface but uses a local directory
-          as the **sandbox**.&quot;
-        </p>
-        <p>&gt; **Dev:** &quot;So **sync-in** still creates a **bundle** and unpacks it?&quot;</p>
-        <p>
-          &gt; **Domain expert:** &quot;Exactly. The **sync service** doesn't know which layer it's
-          talking to. It calls `exec` and `copyIn` — the **filesystem layer** just runs those as
-          local shell commands.&quot;
-        </p>
-        <p>&lt;/example&gt;</p>
+        <blockquote>
+          <p>
+            <strong>Dev:</strong> &quot;How do I test the <strong>sync service</strong> without
+            Docker?&quot;
+          </p>
+        </blockquote>
+        <blockquote>
+          <p>
+            <strong>Domain expert:</strong> &quot;Provide the
+            <strong>filesystem layer</strong> instead of the <strong>Docker layer</strong>. It
+            implements the same <strong>Sandbox service</strong> interface but uses a local
+            directory as the <strong>sandbox</strong>.&quot;
+          </p>
+        </blockquote>
+        <blockquote>
+          <p>
+            <strong>Dev:</strong> &quot;So <strong>sync-in</strong> still creates a
+            <strong>bundle</strong> and unpacks it?&quot;
+          </p>
+        </blockquote>
+        <blockquote>
+          <p>
+            <strong>Domain expert:</strong> &quot;Exactly. The <strong>sync service</strong> doesn't
+            know which layer it's talking to. It calls <code>exec</code> and <code>copyIn</code> —
+            the <strong>filesystem layer</strong> just runs those as local shell commands.&quot;
+          </p>
+        </blockquote>
+        &lt;/example&gt;
         <h2 id="re-running">Re-running</h2>
         <p>When invoked again in the same conversation:</p>
-        <p>
-          1. Read the existing `UBIQUITOUS_LANGUAGE.md` 2. Incorporate any new terms from subsequent
-          discussion 3. Update definitions if understanding has evolved 4. Re-flag any new
-          ambiguities 5. Rewrite the example dialogue to incorporate new terms
-        </p>
+        <ol>
+          <li>Read the existing <code>UBIQUITOUS_LANGUAGE.md</code></li>
+          <li>Incorporate any new terms from subsequent discussion</li>
+          <li>Update definitions if understanding has evolved</li>
+          <li>Re-flag any new ambiguities</li>
+          <li>Rewrite the example dialogue to incorporate new terms</li>
+        </ol>
       </article>
     </main>
   </body>

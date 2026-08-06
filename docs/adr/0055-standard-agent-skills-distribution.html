@@ -12,7 +12,19 @@
     <main>
       <p class="source-path">docs/adr/0055-standard-agent-skills-distribution.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="las-agent-skills-usan-una-distribucion-estandar-con-fuente-canonica-en-el-monorepo">
           Las Agent Skills usan una distribución estándar con fuente canónica en el monorepo
         </h1>
@@ -22,45 +34,80 @@
           compatibles con el estándar Agent Skills.
         </p>
         <p>
-          La vía interoperable es `npx skills add &lt;repositorio-oficial-de-resona&gt;`. El CLI
-          ofrece `resona skills add` y `resona skills update` como wrappers de conveniencia que
-          delegan en una versión fijada del instalador estándar y escriben la representación
-          canónica en `.agents/skills`.
+          La vía interoperable es <code>npx skills add &lt;repositorio-oficial-de-resona&gt;</code>.
+          El CLI ofrece <code>resona skills add</code> y <code>resona skills update</code> como
+          wrappers de conveniencia que delegan en una versión fijada del instalador estándar y
+          escriben la representación canónica en <code>.agents/skills</code>.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Publicar instrucciones para copiar manualmente desde el monorepo. - Mantener las skills
-          solo en un repositorio separado. - Mantenerlas canónicas en el monorepo, sincronizarlas
-          para distribución y ofrecer tanto el instalador estándar como wrappers del CLI.
-        </p>
+        <ul>
+          <li>Publicar instrucciones para copiar manualmente desde el monorepo.</li>
+          <li>Mantener las skills solo en un repositorio separado.</li>
+          <li>
+            Mantenerlas canónicas en el monorepo, sincronizarlas para distribución y ofrecer tanto
+            el instalador estándar como wrappers del CLI.
+          </li>
+        </ul>
         <p>
           Se eligió la tercera opción porque mantiene instrucciones y producto en la misma revisión,
           preserva interoperabilidad entre agentes y ofrece una experiencia directa a quienes ya
           usan el CLI de Resona.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - El repositorio de distribución es un artefacto publicado, no una segunda fuente de
-          verdad. - Los wrappers no definen otro formato ni contienen lógica propia de instalación.
-          - Cada skill usa exactamente la versión del release de Resona que documenta, sin un ciclo
-          de versiones independiente. - La versión del instalador subyacente queda fijada para que
-          un release sea reproducible. - La instalación principal vive en `.agents/skills`;
-          integraciones específicas usan adaptadores o symlinks sin duplicar el contenido canónico.
-          - `resona skills status` compara las versiones instalada y esperada y expone un resultado
-          estructurado reutilizable por Studio. - Una instalación ausente no genera advertencias;
-          una versión diferente produce una advertencia no bloqueante con el comando de
-          actualización. - La detección nunca modifica el proyecto y las actualizaciones solo
-          ocurren ante un `resona skills update` explícito. - El hash calculado del lockfile permite
-          distinguir una skill desactualizada de una skill modificada localmente sin crear un
-          formato de estado paralelo. - `update` rechaza sobrescribir modificaciones locales;
-          `update --force` permite hacerlo de forma explícita. - Las personalizaciones durables usan
-          otra identidad de skill en lugar de modificar la copia oficial administrada. - Los
-          comandos de mantenimiento se entregan con la primera versión utilizable y no bloquean el
-          primer corte vertical del motor. - La coordenada concreta del repositorio oficial se
-          elegirá cuando exista la organización de publicación. - La validación previa a sincronizar
-          el artefacto se define en el [ADR
-          0056](0056-deterministic-quality-gate-for-agent-skills.md).
-        </p>
+        <ul>
+          <li>
+            El repositorio de distribución es un artefacto publicado, no una segunda fuente de
+            verdad.
+          </li>
+          <li>Los wrappers no definen otro formato ni contienen lógica propia de instalación.</li>
+          <li>
+            Cada skill usa exactamente la versión del release de Resona que documenta, sin un ciclo
+            de versiones independiente.
+          </li>
+          <li>
+            La versión del instalador subyacente queda fijada para que un release sea reproducible.
+          </li>
+          <li>
+            La instalación principal vive en <code>.agents/skills</code>; integraciones específicas
+            usan adaptadores o symlinks sin duplicar el contenido canónico.
+          </li>
+          <li>
+            <code>resona skills status</code> compara las versiones instalada y esperada y expone un
+            resultado estructurado reutilizable por Studio.
+          </li>
+          <li>
+            Una instalación ausente no genera advertencias; una versión diferente produce una
+            advertencia no bloqueante con el comando de actualización.
+          </li>
+          <li>
+            La detección nunca modifica el proyecto y las actualizaciones solo ocurren ante un
+            <code>resona skills update</code> explícito.
+          </li>
+          <li>
+            El hash calculado del lockfile permite distinguir una skill desactualizada de una skill
+            modificada localmente sin crear un formato de estado paralelo.
+          </li>
+          <li>
+            <code>update</code> rechaza sobrescribir modificaciones locales;
+            <code>update --force</code> permite hacerlo de forma explícita.
+          </li>
+          <li>
+            Las personalizaciones durables usan otra identidad de skill en lugar de modificar la
+            copia oficial administrada.
+          </li>
+          <li>
+            Los comandos de mantenimiento se entregan con la primera versión utilizable y no
+            bloquean el primer corte vertical del motor.
+          </li>
+          <li>
+            La coordenada concreta del repositorio oficial se elegirá cuando exista la organización
+            de publicación.
+          </li>
+          <li>
+            La validación previa a sincronizar el artefacto se define en el
+            <a href="0056-deterministic-quality-gate-for-agent-skills.html">ADR 0056</a>.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

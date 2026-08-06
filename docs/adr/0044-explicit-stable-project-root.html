@@ -10,7 +10,19 @@
     <main>
       <p class="source-path">docs/adr/0044-explicit-stable-project-root.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="la-raiz-del-proyecto-se-resuelve-una-vez">
           La raíz del proyecto se resuelve una vez
         </h1>
@@ -20,23 +32,27 @@
           congelada y no contra el directorio de trabajo actual.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Resolver cada path contra el `cwd` en el momento de usarlo. - Aplicar búsqueda implícita
-          tanto en CLI como en API. - Limitar el descubrimiento al CLI y hacer explícita la raíz
-          programática.
-        </p>
+        <ul>
+          <li>Resolver cada path contra el <code>cwd</code> en el momento de usarlo.</li>
+          <li>Aplicar búsqueda implícita tanto en CLI como en API.</li>
+          <li>Limitar el descubrimiento al CLI y hacer explícita la raíz programática.</li>
+        </ul>
         <p>
           Se eligió la tercera opción porque conserva una experiencia cómoda en terminal y elimina
           dependencias ambientales ocultas en integraciones programáticas y operaciones largas.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - `--config` fija como raíz el directorio de ese archivo. - Sin ese flag, el CLI busca
-          hacia arriba el config más cercano. - Si no existe config, el CLI usa su `cwd` inicial
-          como raíz. - `createProject({root})` exige una ruta absoluta. - `entry`, `staticDir` y
-          otras rutas relativas se resuelven contra la raíz congelada. - Cambiar el `cwd` después de
-          crear el proyecto no cambia sus recursos.
-        </p>
+        <ul>
+          <li><code>--config</code> fija como raíz el directorio de ese archivo.</li>
+          <li>Sin ese flag, el CLI busca hacia arriba el config más cercano.</li>
+          <li>Si no existe config, el CLI usa su <code>cwd</code> inicial como raíz.</li>
+          <li><code>createProject({root})</code> exige una ruta absoluta.</li>
+          <li>
+            <code>entry</code>, <code>staticDir</code> y otras rutas relativas se resuelven contra
+            la raíz congelada.
+          </li>
+          <li>Cambiar el <code>cwd</code> después de crear el proyecto no cambia sus recursos.</li>
+        </ul>
       </article>
     </main>
   </body>

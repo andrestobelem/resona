@@ -10,36 +10,60 @@
     <main>
       <p class="source-path">docs/adr/0032-deterministic-note-occurrence-and-ordering.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="las-ocurrencias-y-el-orden-de-notas-son-deterministas">
           Las ocurrencias y el orden de notas son deterministas
         </h1>
         <p>
-          Cada nota recibe una identidad interna derivada de la ruta canónica de su `EventClip` y de
-          su ordinal original en la colección. En un mismo frame, el planificador ordena primero las
-          liberaciones y después los ataques; cada grupo se desempata por ruta y ordinal.
+          Cada nota recibe una identidad interna derivada de la ruta canónica de su
+          <code>EventClip</code> y de su ordinal original en la colección. En un mismo frame, el
+          planificador ordena primero las liberaciones y después los ataques; cada grupo se
+          desempata por ruta y ordinal.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Exigir un ID público y manual para cada nota. - Depender del orden en que React, objetos
-          o estructuras internas entreguen los eventos. - Derivar una identidad interna y definir un
-          orden total durante la planificación.
-        </p>
+        <ul>
+          <li>Exigir un ID público y manual para cada nota.</li>
+          <li>
+            Depender del orden en que React, objetos o estructuras internas entreguen los eventos.
+          </li>
+          <li>Derivar una identidad interna y definir un orden total durante la planificación.</li>
+        </ul>
         <p>
           Se eligió la tercera opción porque distingue notas iguales superpuestas sin volver verbosa
           la autoría ni permitir que detalles accidentales de implementación cambien el resultado.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - El autor no declara IDs por nota en el MVP. - La identidad de ocurrencia no es una
-          referencia pública estable entre ediciones. - Reordenar deliberadamente la colección puede
-          cambiar su orden de ejecución. - Una liberación ocurre antes que un ataque ubicado en el
-          mismo frame. - Ruta canónica y ordinal original resuelven cualquier empate restante. -
-          Instrumentos reciben un stream totalmente ordenado y pueden asociar voces por ocurrencia.
-          - El stream denso que materializa estas reglas se fija en el [ADR
-          0073](0073-dense-instrument-attack-release-events.md). - La comparación canónica de rutas
-          se fija en el [ADR 0077](0077-canonical-node-paths-and-source-locations.md).
-        </p>
+        <ul>
+          <li>El autor no declara IDs por nota en el MVP.</li>
+          <li>La identidad de ocurrencia no es una referencia pública estable entre ediciones.</li>
+          <li>Reordenar deliberadamente la colección puede cambiar su orden de ejecución.</li>
+          <li>Una liberación ocurre antes que un ataque ubicado en el mismo frame.</li>
+          <li>Ruta canónica y ordinal original resuelven cualquier empate restante.</li>
+          <li>
+            Instrumentos reciben un stream totalmente ordenado y pueden asociar voces por
+            ocurrencia.
+          </li>
+          <li>
+            El stream denso que materializa estas reglas se fija en el
+            <a href="0073-dense-instrument-attack-release-events.html">ADR 0073</a>.
+          </li>
+          <li>
+            La comparación canónica de rutas se fija en el
+            <a href="0077-canonical-node-paths-and-source-locations.html">ADR 0077</a>.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

@@ -10,11 +10,17 @@
     <main>
       <p class="source-path">.agents/skills/handoff/SKILL.md</p>
       <article>
-        <p>
-          --- name: handoff description: Compact the current conversation into a handoff document
-          for another agent to pick up. argument-hint: &quot;What will the next session be used
-          for?&quot; disable-model-invocation: true ---
-        </p>
+        <aside class="frontmatter">
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+name: handoff
+description: Compact the current conversation into a handoff document for another agent to pick up.
+argument-hint: &quot;What will the next session be used for?&quot;
+disable-model-invocation: true
+---</code></pre>
+          </details>
+        </aside>
         <p>
           Write a handoff document summarising the current conversation so a fresh agent can
           continue the work. Save to the temporary directory of the user's OS - not the current

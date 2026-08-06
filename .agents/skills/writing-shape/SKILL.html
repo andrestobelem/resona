@@ -10,62 +10,88 @@
     <main>
       <p class="source-path">.agents/skills/writing-shape/SKILL.md</p>
       <article>
-        <p>
-          --- name: writing-shape description: Writing, exploit — shape raw material into an
-          article, paragraph by paragraph. disable-model-invocation: true ---
-        </p>
-        <p>&lt;what-to-do&gt;</p>
+        <aside class="frontmatter">
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+name: writing-shape
+description: Writing, exploit — shape raw material into an article, paragraph by paragraph.
+disable-model-invocation: true
+---</code></pre>
+          </details>
+        </aside>
+        &lt;what-to-do&gt;
         <p>
           The user has passed (or will pass) a markdown file of raw material. Treat it as the input
           pile — anything from a tidy list of fragments to a wall of unstructured prose to a
           transcript. The format does not matter. Read it end-to-end before doing anything else.
         </p>
         <p>
-          Then run a shaping session that produces a separate article document. This is **exploit**:
-          the exploring is done, the pile is fixed — commit to a structure and mine the pile to fill
-          it. Do not edit the raw material file — it is read-only to this skill.
+          Then run a shaping session that produces a separate article document. This is
+          <strong>exploit</strong>: the exploring is done, the pile is fixed — commit to a structure
+          and mine the pile to fill it. Do not edit the raw material file — it is read-only to this
+          skill.
         </p>
         <p>If the user did not say where to save the article, ask once and remember the path.</p>
-        <p>&lt;/what-to-do&gt;</p>
-        <p>&lt;supporting-info&gt;</p>
+        &lt;/what-to-do&gt; &lt;supporting-info&gt;
         <h2 id="the-loop">The loop</h2>
-        <p>
-          1. **Read the pile.** Read the input file in full. Form a sense of what's in it. 2.
-          **Establish the prerequisites.** Settle with the user what the reader knows walking in —
-          the concepts that are **grounded** from the start. Everything else must be grounded by a
-          block before a later block can lean on it. See [Grounding](#grounding). 3. **Draft 2–3
-          candidate openings.** Each opening should imply a different thesis or angle for the
-          article. Show all of them. Force the user to pick or compose a hybrid. The chosen opening
-          defines what the rest of the article must do. 4. **Grow paragraph by paragraph.** After
-          the opening lands, ask &quot;given this opening, what does the reader need to hear
-          next?&quot; Pull material from the pile to answer. The next block may only lean on
-          grounded concepts, and grounds new ones as it lands. Argue about the form the next block
-          takes — a paragraph, a list, a table, a callout, a quote, a code block. Each format choice
-          should be deliberate and defensible. 5. **Append to the article file as you go.** Don't
-          batch. Write each agreed paragraph or block immediately so the user can see the article
-          taking shape. 6. **Loop step 4 until the article is done.** The user decides when it's
-          done.
-        </p>
+        <ol>
+          <li>
+            <strong>Read the pile.</strong> Read the input file in full. Form a sense of what's in
+            it.
+          </li>
+          <li>
+            <strong>Establish the prerequisites.</strong> Settle with the user what the reader knows
+            walking in — the concepts that are <strong>grounded</strong> from the start. Everything
+            else must be grounded by a block before a later block can lean on it. See
+            <a href="SKILL.html#grounding">Grounding</a>.
+          </li>
+          <li>
+            <strong>Draft 2–3 candidate openings.</strong> Each opening should imply a different
+            thesis or angle for the article. Show all of them. Force the user to pick or compose a
+            hybrid. The chosen opening defines what the rest of the article must do.
+          </li>
+          <li>
+            <strong>Grow paragraph by paragraph.</strong> After the opening lands, ask &quot;given
+            this opening, what does the reader need to hear next?&quot; Pull material from the pile
+            to answer. The next block may only lean on grounded concepts, and grounds new ones as it
+            lands. Argue about the form the next block takes — a paragraph, a list, a table, a
+            callout, a quote, a code block. Each format choice should be deliberate and defensible.
+          </li>
+          <li>
+            <strong>Append to the article file as you go.</strong> Don't batch. Write each agreed
+            paragraph or block immediately so the user can see the article taking shape.
+          </li>
+          <li>
+            <strong>Loop step 4 until the article is done.</strong> The user decides when it's done.
+          </li>
+        </ol>
         <h2 id="grounding">Grounding</h2>
         <p>
-          Every **concept** has to be **grounded** before a block can lean on it: the reader either
-          walked in knowing it or met it in an earlier block. A block that reaches for an ungrounded
-          concept loses the reader. The unit is the concept, not the word for it — a block can lean
-          on an idea the reader lacks even with no jargon in sight. Where a concept has a name — a
-          **term** — grounding it means landing the idea and the term together.
+          Every <strong>concept</strong> has to be <strong>grounded</strong> before a block can lean
+          on it: the reader either walked in knowing it or met it in an earlier block. A block that
+          reaches for an ungrounded concept loses the reader. The unit is the concept, not the word
+          for it — a block can lean on an idea the reader lacks even with no jargon in sight. Where
+          a concept has a name — a <strong>term</strong> — grounding it means landing the idea and
+          the term together.
         </p>
         <p>A concept gets grounded one of two ways:</p>
-        <p>
-          - **Prerequisite** — grounded before the opening. The reader brings it. Fixed at the
-          start. - **Introduced** — a block establishes it, and from then on it's grounded for the
-          rest of the article.
-        </p>
+        <ul>
+          <li>
+            <strong>Prerequisite</strong> — grounded before the opening. The reader brings it. Fixed
+            at the start.
+          </li>
+          <li>
+            <strong>Introduced</strong> — a block establishes it, and from then on it's grounded for
+            the rest of the article.
+          </li>
+        </ul>
         <p>
           Keep a running list of what's grounded. When you ask &quot;what does the reader need to
           hear next?&quot;, an ungrounded concept the next move needs is itself the answer: ground
           it first — here or in an earlier block — or you can't make the move. This is the
-          gap-naming of [Pulling from the pile](#pulling-from-the-pile) one level up: there the pile
-          is missing material; here the article is missing a foundation.
+          gap-naming of <a href="SKILL.html#pulling-from-the-pile">Pulling from the pile</a> one
+          level up: there the pile is missing material; here the article is missing a foundation.
         </p>
         <p>
           The lever is what you make a prerequisite versus what you ground inside the article.
@@ -80,13 +106,18 @@
           transitions slide. If a paragraph doesn't earn its place, cut it.
         </p>
         <p>Specific moves to keep using:</p>
-        <p>
-          - &quot;What does this paragraph do for the reader that the previous one didn't?&quot; -
-          &quot;If I cut this, what breaks?&quot; - &quot;Is this prose, or should it be a list? Why
-          prose?&quot; - &quot;This sentence is doing two jobs — split it or pick one.&quot; -
-          &quot;The opening promised X. We've drifted to Y. Either re-thread it or change the
-          opening.&quot;
-        </p>
+        <ul>
+          <li>
+            &quot;What does this paragraph do for the reader that the previous one didn't?&quot;
+          </li>
+          <li>&quot;If I cut this, what breaks?&quot;</li>
+          <li>&quot;Is this prose, or should it be a list? Why prose?&quot;</li>
+          <li>&quot;This sentence is doing two jobs — split it or pick one.&quot;</li>
+          <li>
+            &quot;The opening promised X. We've drifted to Y. Either re-thread it or change the
+            opening.&quot;
+          </li>
+        </ul>
         <h2 id="pulling-from-the-pile">Pulling from the pile</h2>
         <p>
           Treat the raw material as a quarry, not a script. Pull a fragment, rework it to fit the
@@ -103,17 +134,30 @@
           When choosing how to render a block, weigh these tradeoffs out loud with the user, not
           silently:
         </p>
-        <p>
-          - **Prose vs. list.** Prose carries argument; lists carry parallel items. If items aren't
-          truly parallel, prose is better. If they are, a list is faster to scan. - **Inline vs.
-          callout.** Tips, warnings, and asides go in callouts (`&gt; [!TIP]`, `&gt; [!NOTE]`) — but
-          only if they'd genuinely derail the main argument inline. Otherwise leave them inline. -
-          **Table vs. repeated structure.** If the same shape repeats 3+ times with the same fields,
-          a table. Otherwise prose with bold leads. - **Quote vs. paraphrase.** Quote when the
-          original wording is the point. Paraphrase when only the idea matters. - **Code block vs.
-          inline code.** Multi-line, runnable, or illustrative → block. Single token or identifier →
-          inline.
-        </p>
+        <ul>
+          <li>
+            <strong>Prose vs. list.</strong> Prose carries argument; lists carry parallel items. If
+            items aren't truly parallel, prose is better. If they are, a list is faster to scan.
+          </li>
+          <li>
+            <strong>Inline vs. callout.</strong> Tips, warnings, and asides go in callouts (<code
+              >&gt; [!TIP]</code
+            >, <code>&gt; [!NOTE]</code>) — but only if they'd genuinely derail the main argument
+            inline. Otherwise leave them inline.
+          </li>
+          <li>
+            <strong>Table vs. repeated structure.</strong> If the same shape repeats 3+ times with
+            the same fields, a table. Otherwise prose with bold leads.
+          </li>
+          <li>
+            <strong>Quote vs. paraphrase.</strong> Quote when the original wording is the point.
+            Paraphrase when only the idea matters.
+          </li>
+          <li>
+            <strong>Code block vs. inline code.</strong> Multi-line, runnable, or illustrative →
+            block. Single token or identifier → inline.
+          </li>
+        </ul>
         <h2 id="writing-rhythm">Writing rhythm</h2>
         <p>
           Append to the article file as each block is agreed. Re-read the file from disk before
@@ -121,12 +165,18 @@
           wants a paragraph rewritten, edit that specific paragraph in place; leave the rest alone.
         </p>
         <h2 id="out-of-scope">Out of scope</h2>
-        <p>
-          - Mining for new fragments that aren't in the pile (handle gaps as in &quot;Pulling from
-          the pile&quot;). - Editing the raw material file. - Publishing, formatting for a specific
-          platform, or adding frontmatter the user didn't ask for.
-        </p>
-        <p>&lt;/supporting-info&gt;</p>
+        <ul>
+          <li>
+            Mining for new fragments that aren't in the pile (handle gaps as in &quot;Pulling from
+            the pile&quot;).
+          </li>
+          <li>Editing the raw material file.</li>
+          <li>
+            Publishing, formatting for a specific platform, or adding frontmatter the user didn't
+            ask for.
+          </li>
+        </ul>
+        &lt;/supporting-info&gt;
       </article>
     </main>
   </body>

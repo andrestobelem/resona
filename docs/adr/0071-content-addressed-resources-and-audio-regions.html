@@ -10,7 +10,19 @@
     <main>
       <p class="source-path">docs/adr/0071-content-addressed-resources-and-audio-regions.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="executionplan-v1-separa-recursos-direccionados-y-regiones-de-audio">
           ExecutionPlan v1 separa recursos direccionados y regiones de audio
         </h1>
@@ -19,20 +31,19 @@
           colocación ejecutable los referencia por índice y expresa todo su tiempo en frames del
           plan.
         </p>
-        <pre><code class="language-ts">
-type Sha256Hash = `sha256:${string}`;
-type ResourceIndex = number;
+        <pre><code class="language-ts"><span class="token keyword">type</span> Sha256Hash = <span class="token string">`sha256:${string}`</span>;
+<span class="token keyword">type</span> ResourceIndex = number;
 
-type ResolvedResourcePlan = Readonly&lt;{
-  type: &quot;wav&quot;;
+<span class="token keyword">type</span> ResolvedResourcePlan = Readonly&lt;{
+  <span class="token keyword">type</span>: <span class="token string">&quot;wav&quot;</span>;
   hash: Sha256Hash;
-  channels: 1 | 2;
+  channels: <span class="token number">1</span> | <span class="token number">2</span>;
   sampleRate: 48_000;
   frameCount: number;
 }&gt;;
 
-type AudioRegionPlan = Readonly&lt;{
-  type: &quot;audio-region&quot;;
+<span class="token keyword">type</span> AudioRegionPlan = Readonly&lt;{
+  <span class="token keyword">type</span>: <span class="token string">&quot;audio-region&quot;</span>;
   resource: ResourceIndex;
   destination: ProcessorIndex;
   startFrame: number;
@@ -40,45 +51,82 @@ type AudioRegionPlan = Readonly&lt;{
   sourceOffsetFrame: number;
   loop: boolean;
 }&gt;;
-        </code></pre>
+</code></pre>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Guardar el path o URL del WAV en cada clip y resolverlo durante la ejecución. - Duplicar
-          metadata o buffers del recurso dentro de cada región. - Separar una tabla única por hash
-          de una tabla densa de colocaciones por índice.
-        </p>
+        <ul>
+          <li>Guardar el path o URL del WAV en cada clip y resolverlo durante la ejecución.</li>
+          <li>Duplicar metadata o buffers del recurso dentro de cada región.</li>
+          <li>Separar una tabla única por hash de una tabla densa de colocaciones por índice.</li>
+        </ul>
         <p>
           Se eligió la tercera opción. El plan conserva identidad y metadata suficientes para
           validar su payload sin acoplar el motor al filesystem ni duplicar recursos reutilizados.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - `resources` contiene una entrada por hash utilizado por alguna región después del
-          recorte. - La IR y todas sus referencias se validan antes del recorte según el [ADR
-          0072](0072-validate-before-pruning-execution-plan.md). - Las entradas se deduplican por
-          hash y se ordenan lexicográficamente por él. - El hash tiene la forma exacta
-          `sha256:[0-9a-f]{64}` y representa los bytes fuente del WAV. - `frameCount` es un entero
-          seguro positivo; `channels` es `1 | 2` y `sampleRate` es `48_000`. - Un `ResourceIndex` es
-          una posición válida en `resources` y solo tiene significado dentro de ese plan. - Paths,
-          URLs, bytes fuente y buffers decodificados no forman parte del plan. La preparación asocia
-          el descriptor con el buffer obtenido de los bytes hasheados; antes de ejecutar se validan
-          canales y cantidad de frames sin volver a leer el path. - Cada muestra del buffer
-          decodificado se canoniza y valida según el [ADR
-          0078](0078-explicit-float32-audio-boundaries.md). - Cada región referencia un recurso y el
-          sumador no master de una pista de audio. - Inicio, duración y offset son enteros seguros
-          no negativos; cada región conservada tiene duración positiva, su offset es menor que
-          `frameCount` y su final no supera `nominalDurationFrames`. - El planificador intersecta
-          cada clip con los rangos activos de sus secuencias y la duración nominal. Omite las
-          regiones que quedan en cero frames, aunque conserva la cadena de la pista. - Sin loop, el
-          índice leído es `sourceOffsetFrame + (frame - startFrame)`; después de `frameCount` la
-          contribución es cero y se conserva la advertencia de planificación. - Con loop, el índice
-          leído es `sourceOffsetFrame + ((frame - startFrame) % (frameCount - sourceOffsetFrame))` y
-          se repite sin crossfade durante toda la duración de la región. - No existe resampling:
-          cada frame de recurso corresponde a uno del plan. - `audioRegions` se ordena por destino,
-          inicio y ordinal de encuentro en un recorrido en profundidad que respeta `children` y
-          `clips`. - Regiones idénticas no se deduplican: cada una conserva una contribución
-          independiente. - El orden de tabla determina la suma de regiones activas simultáneamente.
-        </p>
+        <ul>
+          <li>
+            <code>resources</code> contiene una entrada por hash utilizado por alguna región después
+            del recorte.
+          </li>
+          <li>
+            La IR y todas sus referencias se validan antes del recorte según el
+            <a href="0072-validate-before-pruning-execution-plan.html">ADR 0072</a>.
+          </li>
+          <li>Las entradas se deduplican por hash y se ordenan lexicográficamente por él.</li>
+          <li>
+            El hash tiene la forma exacta <code>sha256:[0-9a-f]{64}</code> y representa los bytes
+            fuente del WAV.
+          </li>
+          <li>
+            <code>frameCount</code> es un entero seguro positivo; <code>channels</code> es
+            <code>1 | 2</code> y <code>sampleRate</code> es <code>48_000</code>.
+          </li>
+          <li>
+            Un <code>ResourceIndex</code> es una posición válida en <code>resources</code> y solo
+            tiene significado dentro de ese plan.
+          </li>
+          <li>
+            Paths, URLs, bytes fuente y buffers decodificados no forman parte del plan. La
+            preparación asocia el descriptor con el buffer obtenido de los bytes hasheados; antes de
+            ejecutar se validan canales y cantidad de frames sin volver a leer el path.
+          </li>
+          <li>
+            Cada muestra del buffer decodificado se canoniza y valida según el
+            <a href="0078-explicit-float32-audio-boundaries.html">ADR 0078</a>.
+          </li>
+          <li>Cada región referencia un recurso y el sumador no master de una pista de audio.</li>
+          <li>
+            Inicio, duración y offset son enteros seguros no negativos; cada región conservada tiene
+            duración positiva, su offset es menor que <code>frameCount</code> y su final no supera
+            <code>nominalDurationFrames</code>.
+          </li>
+          <li>
+            El planificador intersecta cada clip con los rangos activos de sus secuencias y la
+            duración nominal. Omite las regiones que quedan en cero frames, aunque conserva la
+            cadena de la pista.
+          </li>
+          <li>
+            Sin loop, el índice leído es <code>sourceOffsetFrame + (frame - startFrame)</code>;
+            después de <code>frameCount</code> la contribución es cero y se conserva la advertencia
+            de planificación.
+          </li>
+          <li>
+            Con loop, el índice leído es
+            <code
+              >sourceOffsetFrame + ((frame - startFrame) % (frameCount - sourceOffsetFrame))</code
+            >
+            y se repite sin crossfade durante toda la duración de la región.
+          </li>
+          <li>No existe resampling: cada frame de recurso corresponde a uno del plan.</li>
+          <li>
+            <code>audioRegions</code> se ordena por destino, inicio y ordinal de encuentro en un
+            recorrido en profundidad que respeta <code>children</code> y <code>clips</code>.
+          </li>
+          <li>
+            Regiones idénticas no se deduplican: cada una conserva una contribución independiente.
+          </li>
+          <li>El orden de tabla determina la suma de regiones activas simultáneamente.</li>
+        </ul>
       </article>
     </main>
   </body>

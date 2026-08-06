@@ -10,15 +10,28 @@
     <main>
       <p class="source-path">docs/adr/0062-hierarchical-ir-and-dense-execution-plan.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="compositionir-es-jerarquica-y-executionplan-es-denso">
           CompositionIR es jerárquica y ExecutionPlan es denso
         </h1>
         <p>
-          `CompositionIR` conserva una jerarquía semántica orientada a inspección: secuencias,
-          pistas, clips, instrumentos, efectos y automatizaciones con IDs y rutas estables.
-          `ExecutionPlan` compila esa estructura a arrays densos, referencias por índice, orden
-          topológico y tiempo en frames para los motores de Studio y render offline.
+          <code>CompositionIR</code> conserva una jerarquía semántica orientada a inspección:
+          secuencias, pistas, clips, instrumentos, efectos y automatizaciones con IDs y rutas
+          estables. <code>ExecutionPlan</code> compila esa estructura a arrays densos, referencias
+          por índice, orden topológico y tiempo en frames para los motores de Studio y render
+          offline.
         </p>
         <p>
           Ambos contratos son serializables, inmutables y tienen discriminante de formato y versión
@@ -26,12 +39,14 @@
           pero no modifica la identidad musical.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Aplanar la IR y publicar el plan como un programa de instrucciones u opcodes. -
-          Representar tanto IR como plan mediante el mismo grafo normalizado y extensible. - Usar
-          una representación especializada para cada consumidor y concentrar la traducción en el
-          planificador.
-        </p>
+        <ul>
+          <li>Aplanar la IR y publicar el plan como un programa de instrucciones u opcodes.</li>
+          <li>Representar tanto IR como plan mediante el mismo grafo normalizado y extensible.</li>
+          <li>
+            Usar una representación especializada para cada consumidor y concentrar la traducción en
+            el planificador.
+          </li>
+        </ul>
         <p>
           Se eligió la tercera opción porque Studio necesita preservar significado y jerarquía,
           mientras que el motor necesita recorridos predecibles sin reconstruir decisiones
@@ -39,31 +54,55 @@
           de audio recorriera un modelo editorial genérico.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - `CompositionIR` usa `format: &quot;resona/composition-ir&quot;`, `schemaVersion` y una
-          raíz jerárquica de secuencias y pistas discriminadas por dominio de señal. - Nodos
-          públicos conservan ID, ruta canónica y ubicación fuente opcional. - La forma exacta de
-          paths y ubicaciones se fija en el [ADR
-          0077](0077-canonical-node-paths-and-source-locations.md). - `ExecutionPlan` usa `format:
-          &quot;resona/execution-plan&quot;`, su propia `schemaVersion` y arrays densos de
-          procesadores, rutas, regiones, eventos, automatizaciones y recursos. - Procesadores
-          aparecen en orden topológico y se referencian por índices locales al plan. - Los índices
-          pueden cambiar al recompilar y nunca sustituyen las rutas estables de la IR. - Una tabla
-          `trace` opcional enlaza índices del plan con rutas de IR para diagnósticos y queda fuera
-          de la identidad musical. - El plan contiene frames enteros y hashes de recursos; buffers,
-          handles y estado DSP vivo pertenecen al payload o al motor, no al contrato serializable. -
-          El planificador es el único módulo que traduce semántica jerárquica a ejecución densa. -
-          El vocabulario cerrado de `CompositionIR` v1 se fija en el [ADR
-          0063](0063-closed-composition-ir-v1-vocabulary.md). La cabecera y la frontera exacta de
-          `ExecutionPlan` v1 se fijan en el [ADR
-          0069](0069-execution-plan-v1-header-and-table-boundary.md), y sus procesadores y rutas en
-          el [ADR 0070](0070-closed-execution-plan-v1-processors-and-routing.md). Los recursos y
-          regiones se fijan en el [ADR 0071](0071-content-addressed-resources-and-audio-regions.md),
-          los eventos en el [ADR 0073](0073-dense-instrument-attack-release-events.md) y la
-          automatización en el [ADR 0075](0075-frame-resolved-gain-automation-points.md). La
-          procedencia opcional se fija en el [ADR
-          0076](0076-complete-non-operational-execution-plan-trace.md).
-        </p>
+        <ul>
+          <li>
+            <code>CompositionIR</code> usa <code>format: &quot;resona/composition-ir&quot;</code>,
+            <code>schemaVersion</code> y una raíz jerárquica de secuencias y pistas discriminadas
+            por dominio de señal.
+          </li>
+          <li>Nodos públicos conservan ID, ruta canónica y ubicación fuente opcional.</li>
+          <li>
+            La forma exacta de paths y ubicaciones se fija en el
+            <a href="0077-canonical-node-paths-and-source-locations.html">ADR 0077</a>.
+          </li>
+          <li>
+            <code>ExecutionPlan</code> usa <code>format: &quot;resona/execution-plan&quot;</code>,
+            su propia <code>schemaVersion</code> y arrays densos de procesadores, rutas, regiones,
+            eventos, automatizaciones y recursos.
+          </li>
+          <li>
+            Procesadores aparecen en orden topológico y se referencian por índices locales al plan.
+          </li>
+          <li>
+            Los índices pueden cambiar al recompilar y nunca sustituyen las rutas estables de la IR.
+          </li>
+          <li>
+            Una tabla <code>trace</code> opcional enlaza índices del plan con rutas de IR para
+            diagnósticos y queda fuera de la identidad musical.
+          </li>
+          <li>
+            El plan contiene frames enteros y hashes de recursos; buffers, handles y estado DSP vivo
+            pertenecen al payload o al motor, no al contrato serializable.
+          </li>
+          <li>
+            El planificador es el único módulo que traduce semántica jerárquica a ejecución densa.
+          </li>
+          <li>
+            El vocabulario cerrado de <code>CompositionIR</code> v1 se fija en el
+            <a href="0063-closed-composition-ir-v1-vocabulary.html">ADR 0063</a>. La cabecera y la
+            frontera exacta de <code>ExecutionPlan</code> v1 se fijan en el
+            <a href="0069-execution-plan-v1-header-and-table-boundary.html">ADR 0069</a>, y sus
+            procesadores y rutas en el
+            <a href="0070-closed-execution-plan-v1-processors-and-routing.html">ADR 0070</a>. Los
+            recursos y regiones se fijan en el
+            <a href="0071-content-addressed-resources-and-audio-regions.html">ADR 0071</a>, los
+            eventos en el <a href="0073-dense-instrument-attack-release-events.html">ADR 0073</a> y
+            la automatización en el
+            <a href="0075-frame-resolved-gain-automation-points.html">ADR 0075</a>. La procedencia
+            opcional se fija en el
+            <a href="0076-complete-non-operational-execution-plan-trace.html">ADR 0076</a>.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

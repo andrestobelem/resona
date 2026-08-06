@@ -11,12 +11,13 @@
       <p class="source-path">README.md</p>
       <article>
         <h1 id="resona">Resona</h1>
+        <blockquote>
+          <p>Estado: exploración inicial. El repositorio todavía no contiene una implementación.</p>
+        </blockquote>
         <p>
-          &gt; Estado: exploración inicial. El repositorio todavía no contiene una implementación.
-        </p>
-        <p>
-          Resona busca ser **el Remotion de la música**: un framework code-first para definir,
-          previsualizar y renderizar composiciones musicales programables con audio, MIDI y efectos.
+          Resona busca ser <strong>el Remotion de la música</strong>: un framework code-first para
+          definir, previsualizar y renderizar composiciones musicales programables con audio, MIDI y
+          efectos.
         </p>
         <p>
           La fuente del proyecto es una combinación versionable de código y datos declarativos, no
@@ -24,40 +25,53 @@
           debería alimentar tanto la experiencia de desarrollo como el render final.
         </p>
         <h2 id="que-queremos-construir">Qué queremos construir</h2>
-        <p>
-          - Una API declarativa y componible para expresar estructura musical y procesamiento. -
-          Audio, MIDI, instrumentos y efectos como conceptos de primera clase. - Un Studio para
-          reproducir, inspeccionar y depurar composiciones durante el desarrollo. - Un renderer para
-          producir audio de manera reproducible desde una CLI o una API. - Composiciones
-          parametrizables, versionables y automatizables con herramientas de desarrollo normales.
-        </p>
+        <ul>
+          <li>
+            Una API declarativa y componible para expresar estructura musical y procesamiento.
+          </li>
+          <li>Audio, MIDI, instrumentos y efectos como conceptos de primera clase.</li>
+          <li>
+            Un Studio para reproducir, inspeccionar y depurar composiciones durante el desarrollo.
+          </li>
+          <li>Un renderer para producir audio de manera reproducible desde una CLI o una API.</li>
+          <li>
+            Composiciones parametrizables, versionables y automatizables con herramientas de
+            desarrollo normales.
+          </li>
+        </ul>
         <h2 id="ejemplo-conceptual">Ejemplo conceptual</h2>
         <p>
           La API todavía no está definida. Este ejemplo solo muestra la experiencia que buscamos:
         </p>
-        <pre><code class="language-tsx">
-&lt;Composition id=&quot;Demo&quot; component={Demo} bpm={120} durationInBars={32} /&gt;
+        <pre><code class="language-tsx">&lt;Composition id=<span class="token string">&quot;Demo&quot;</span> component={Demo} bpm={<span class="token number">120</span>} durationInBars={<span class="token number">32</span>} /&gt;
 
-const Demo = () =&gt; (
-  &lt;MidiTrack instrument={&lt;Synth preset=&quot;AnalogBass&quot; /&gt;}&gt;
-    &lt;MidiClip from=&quot;1:1:0&quot; notes={bassline} /&gt;
-    &lt;Delay mix={0.2} /&gt;
+<span class="token keyword">const</span> Demo = () =&gt; (
+  &lt;MidiTrack instrument={&lt;Synth preset=<span class="token string">&quot;AnalogBass&quot;</span> /&gt;}&gt;
+    &lt;MidiClip <span class="token keyword">from</span>=<span class="token string">&quot;1:1:0&quot;</span> notes={bassline} /&gt;
+    &lt;Delay mix={<span class="token number">0.2</span>} /&gt;
   &lt;/MidiTrack&gt;
 );
-        </code></pre>
+</code></pre>
         <p>
-          La versión completa y sus supuestos están en la [visión de
-          producto](docs/product.md#interfaz-conceptual).
+          La versión completa y sus supuestos están en la
+          <a href="docs/product.html#interfaz-conceptual">visión de producto</a>.
         </p>
         <h2 id="documentacion">Documentación</h2>
-        <p>
-          - [Visión de producto](docs/product.md) - [Arquitectura propuesta](docs/architecture.md) -
-          [Estudio de Remotion aplicado a Resona](docs/research/remotion-study.md) - [Lenguaje del
-          dominio](CONTEXT.md) - [ADR 0001: la fuente versionable es la única fuente de
-          verdad](docs/adr/0001-versionable-source-as-source-of-truth.md)
-        </p>
+        <ul>
+          <li><a href="docs/product.html">Visión de producto</a></li>
+          <li><a href="docs/architecture.html">Arquitectura propuesta</a></li>
+          <li>
+            <a href="docs/research/remotion-study.html">Estudio de Remotion aplicado a Resona</a>
+          </li>
+          <li><a href="CONTEXT.html">Lenguaje del dominio</a></li>
+          <li>
+            <a href="docs/adr/0001-versionable-source-as-source-of-truth.html"
+              >ADR 0001: la fuente versionable es la única fuente de verdad</a
+            >
+          </li>
+        </ul>
         <h2 id="licencia">Licencia</h2>
-        <p>[MIT](LICENSE)</p>
+        <p><a href="LICENSE">MIT</a></p>
       </article>
     </main>
   </body>

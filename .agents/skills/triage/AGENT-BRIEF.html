@@ -13,58 +13,76 @@
         <h1 id="writing-agent-briefs">Writing Agent Briefs</h1>
         <p>
           An agent brief is a structured comment posted on a GitHub issue or PR when it moves to
-          `ready-for-agent`. It is the authoritative specification that an AFK agent will work from.
-          The original body and discussion are context — the agent brief is the contract.
+          <code>ready-for-agent</code>. It is the authoritative specification that an AFK agent will
+          work from. The original body and discussion are context — the agent brief is the contract.
         </p>
         <p>
-          The brief states **what the agent should do**, which stretches to both surfaces: for an
-          issue, that's building the change from nothing; for a PR, it's what's left to do *to the
-          existing diff* — finish it, close gaps, address review points. Same principles either way;
-          the PR example below shows the difference.
+          The brief states <strong>what the agent should do</strong>, which stretches to both
+          surfaces: for an issue, that's building the change from nothing; for a PR, it's what's
+          left to do <em>to the existing diff</em> — finish it, close gaps, address review points.
+          Same principles either way; the PR example below shows the difference.
         </p>
         <h2 id="principles">Principles</h2>
         <h3 id="durability-over-precision">Durability over precision</h3>
         <p>
-          The issue may sit in `ready-for-agent` for days or weeks. The codebase will change in the
-          meantime. Write the brief so it stays useful even as files are renamed, moved, or
-          refactored.
+          The issue may sit in <code>ready-for-agent</code> for days or weeks. The codebase will
+          change in the meantime. Write the brief so it stays useful even as files are renamed,
+          moved, or refactored.
         </p>
-        <p>
-          - **Do** describe interfaces, types, and behavioral contracts - **Do** name specific
-          types, function signatures, or config shapes that the agent should look for or modify -
-          **Don't** reference file paths — they go stale - **Don't** reference line numbers -
-          **Don't** assume the current implementation structure will remain the same
-        </p>
+        <ul>
+          <li><strong>Do</strong> describe interfaces, types, and behavioral contracts</li>
+          <li>
+            <strong>Do</strong> name specific types, function signatures, or config shapes that the
+            agent should look for or modify
+          </li>
+          <li><strong>Don't</strong> reference file paths — they go stale</li>
+          <li><strong>Don't</strong> reference line numbers</li>
+          <li>
+            <strong>Don't</strong> assume the current implementation structure will remain the same
+          </li>
+        </ul>
         <h3 id="behavioral-not-procedural">Behavioral, not procedural</h3>
         <p>
-          Describe **what** the system should do, not **how** to implement it. The agent will
-          explore the codebase fresh and make its own implementation decisions.
+          Describe <strong>what</strong> the system should do, not <strong>how</strong> to implement
+          it. The agent will explore the codebase fresh and make its own implementation decisions.
         </p>
-        <p>
-          - **Good:** &quot;The `SkillConfig` type should accept an optional `schedule` field of
-          type `CronExpression`&quot; - **Bad:** &quot;Open src/types/skill.ts and add a schedule
-          field on line 42&quot; - **Good:** &quot;When a user runs `/triage` with no arguments,
-          they should see a summary of issues needing attention&quot; - **Bad:** &quot;Add a switch
-          statement in the main handler function&quot;
-        </p>
+        <ul>
+          <li>
+            <strong>Good:</strong> &quot;The <code>SkillConfig</code> type should accept an optional
+            <code>schedule</code> field of type <code>CronExpression</code>&quot;
+          </li>
+          <li>
+            <strong>Bad:</strong> &quot;Open src/types/skill.ts and add a schedule field on line
+            42&quot;
+          </li>
+          <li>
+            <strong>Good:</strong> &quot;When a user runs <code>/triage</code> with no arguments,
+            they should see a summary of issues needing attention&quot;
+          </li>
+          <li>
+            <strong>Bad:</strong> &quot;Add a switch statement in the main handler function&quot;
+          </li>
+        </ul>
         <h3 id="complete-acceptance-criteria">Complete acceptance criteria</h3>
         <p>
           The agent needs to know when it's done. Every agent brief must have concrete, testable
           acceptance criteria. Each criterion should be independently verifiable.
         </p>
-        <p>
-          - **Good:** &quot;Running `gh issue list --label needs-triage` returns issues that have
-          been through initial classification&quot; - **Bad:** &quot;Triage should work
-          correctly&quot;
-        </p>
+        <ul>
+          <li>
+            <strong>Good:</strong> &quot;Running
+            <code>gh issue list --label needs-triage</code> returns issues that have been through
+            initial classification&quot;
+          </li>
+          <li><strong>Bad:</strong> &quot;Triage should work correctly&quot;</li>
+        </ul>
         <h3 id="explicit-scope-boundaries">Explicit scope boundaries</h3>
         <p>
           State what is out of scope. This prevents the agent from gold-plating or making
           assumptions about adjacent features.
         </p>
         <h2 id="template">Template</h2>
-        <pre><code class="language-markdown">
-## Agent Brief
+        <pre><code class="language-markdown">## Agent Brief
 
 **Category:** bug / enhancement
 **Summary:** one-line description of what needs to happen
@@ -90,11 +108,10 @@ Be specific about edge cases and error conditions.
 **Out of scope:**
 - Thing that should NOT be changed or addressed in this issue
 - Adjacent feature that might seem related but is separate
-        </code></pre>
+</code></pre>
         <h2 id="examples">Examples</h2>
         <h3 id="good-agent-brief-bug">Good agent brief (bug)</h3>
-        <pre><code class="language-markdown">
-## Agent Brief
+        <pre><code class="language-markdown">## Agent Brief
 
 **Category:** bug
 **Summary:** Skill description truncation drops mid-word, producing broken output
@@ -124,10 +141,9 @@ and append &quot;...&quot; to indicate truncation.
 **Out of scope:**
 - Changing the 1024 char limit itself
 - Multi-line description support
-        </code></pre>
+</code></pre>
         <h3 id="good-agent-brief-enhancement">Good agent brief (enhancement)</h3>
-        <pre><code class="language-markdown">
-## Agent Brief
+        <pre><code class="language-markdown">## Agent Brief
 
 **Category:** enhancement
 **Summary:** Add `.out-of-scope/` directory support for tracking rejected feature requests
@@ -163,14 +179,13 @@ checked for matches.
 - Automated matching (human confirms the match)
 - Reopening previously rejected features
 - Bug reports (only enhancement rejections go to `.out-of-scope/`)
-        </code></pre>
+</code></pre>
         <h3 id="good-agent-brief-pr">Good agent brief (PR)</h3>
         <p>
           For a PR, &quot;Current behavior&quot; describes the state of the diff, and the brief asks
           the agent to finish or fix it rather than build from scratch.
         </p>
-        <pre><code class="language-markdown">
-## Agent Brief
+        <pre><code class="language-markdown">## Agent Brief
 
 **Category:** enhancement
 **Summary:** Finish the contributor's `--json` output flag for `triage list`
@@ -200,10 +215,9 @@ is untouched when the flag is absent.
 **Out of scope:**
 - Adding `--json` to any other command
 - Changing the JSON shape of the success payload the PR already defined
-        </code></pre>
+</code></pre>
         <h3 id="bad-agent-brief">Bad agent brief</h3>
-        <pre><code class="language-markdown">
-## Agent Brief
+        <pre><code class="language-markdown">## Agent Brief
 
 **Summary:** Fix the triage bug
 
@@ -214,12 +228,16 @@ The function around line 150 has the issue.
 **Files to change:**
 - src/triage/handler.ts (line 150)
 - src/types.ts (line 42)
-        </code></pre>
-        <p>
-          This is bad because: - No category - Vague description (&quot;the triage thing is
-          broken&quot;) - References file paths and line numbers that will go stale - No acceptance
-          criteria - No scope boundaries - No description of current vs desired behavior
-        </p>
+</code></pre>
+        <p>This is bad because:</p>
+        <ul>
+          <li>No category</li>
+          <li>Vague description (&quot;the triage thing is broken&quot;)</li>
+          <li>References file paths and line numbers that will go stale</li>
+          <li>No acceptance criteria</li>
+          <li>No scope boundaries</li>
+          <li>No description of current vs desired behavior</li>
+        </ul>
       </article>
     </main>
   </body>

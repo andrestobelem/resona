@@ -10,35 +10,54 @@
     <main>
       <p class="source-path">docs/adr/0028-tsx-structures-typed-musical-event-data.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="tsx-estructura-colecciones-tipadas-de-eventos-musicales">
           TSX estructura colecciones tipadas de eventos musicales
         </h1>
         <p>
           TSX declara composiciones, secuencias, pistas y clips. Las notas y otros eventos densos
-          son datos musicales tipados, serializables e inmutables entregados a un `EventClip`, no un
-          componente React por evento.
+          son datos musicales tipados, serializables e inmutables entregados a un
+          <code>EventClip</code>, no un componente React por evento.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Representar cada nota y control como un nodo JSX. - Mantener formatos distintos para
-          eventos generados e importados desde MIDI. - Usar JSX para estructura y un único modelo de
-          datos para eventos densos.
-        </p>
+        <ul>
+          <li>Representar cada nota y control como un nodo JSX.</li>
+          <li>Mantener formatos distintos para eventos generados e importados desde MIDI.</li>
+          <li>Usar JSX para estructura y un único modelo de datos para eventos densos.</li>
+        </ul>
         <p>
           Se eligió la tercera opción para mantener pequeño el árbol React y hacer que composición
           algorítmica, importación, planificación y tests compartan una representación.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - Un generador devuelve una colección de eventos sin necesitar React. - Un importador MIDI
-          normaliza al mismo modelo antes de llegar al planificador. - `EventClip` ubica
-          temporalmente la colección dentro de la estructura TSX. - `CompositionIR` captura los
-          eventos normalizados y no mensajes MIDI crudos. - Instrumentos internos solo consumen
-          eventos musicales. - El primer evento público, una nota expresada como intervalo, se
-          define en el [ADR 0029](0029-public-notes-are-interval-events.md). - Los nombres concretos
-          del clip y los helpers se validarán durante el prototipo.
-        </p>
+        <ul>
+          <li>Un generador devuelve una colección de eventos sin necesitar React.</li>
+          <li>Un importador MIDI normaliza al mismo modelo antes de llegar al planificador.</li>
+          <li>
+            <code>EventClip</code> ubica temporalmente la colección dentro de la estructura TSX.
+          </li>
+          <li>
+            <code>CompositionIR</code> captura los eventos normalizados y no mensajes MIDI crudos.
+          </li>
+          <li>Instrumentos internos solo consumen eventos musicales.</li>
+          <li>
+            El primer evento público, una nota expresada como intervalo, se define en el
+            <a href="0029-public-notes-are-interval-events.html">ADR 0029</a>.
+          </li>
+          <li>Los nombres concretos del clip y los helpers se validarán durante el prototipo.</li>
+        </ul>
       </article>
     </main>
   </body>

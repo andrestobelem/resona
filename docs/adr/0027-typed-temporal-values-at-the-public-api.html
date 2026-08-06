@@ -10,7 +10,19 @@
     <main>
       <p class="source-path">docs/adr/0027-typed-temporal-values-at-the-public-api.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="la-api-publica-usa-valores-temporales-tipados">
           La API pública usa valores temporales tipados
         </h1>
@@ -20,24 +32,29 @@
           strings crudos en props temporales.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Usar números y documentar una unidad implícita por prop. - Usar strings musicales o
-          absolutos directamente en toda la API. - Construir valores tipados en TypeScript y parsear
-          strings solo en adaptadores de borde.
-        </p>
+        <ul>
+          <li>Usar números y documentar una unidad implícita por prop.</li>
+          <li>Usar strings musicales o absolutos directamente en toda la API.</li>
+          <li>
+            Construir valores tipados en TypeScript y parsear strings solo en adaptadores de borde.
+          </li>
+        </ul>
         <p>
           Se eligió la tercera opción porque mantiene una autoría legible sin permitir que posición,
           duración o unidad se confundan silenciosamente dentro del modelo.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - Helpers separados construyen posiciones y duraciones. - Ambos tipos conservan su unidad
-          y admiten serialización sin perder significado. - TSX rechaza números y strings crudos
-          para valores temporales. - CLI y configuración pueden parsear formas como `5:1:0` antes de
-          invocar el dominio. - Los nombres exactos de los helpers se ajustarán con pruebas de uso
-          del prototipo. - El planificador continúa normalizando una sola vez a frames de muestras
-          enteros.
-        </p>
+        <ul>
+          <li>Helpers separados construyen posiciones y duraciones.</li>
+          <li>Ambos tipos conservan su unidad y admiten serialización sin perder significado.</li>
+          <li>TSX rechaza números y strings crudos para valores temporales.</li>
+          <li>
+            CLI y configuración pueden parsear formas como <code>5:1:0</code> antes de invocar el
+            dominio.
+          </li>
+          <li>Los nombres exactos de los helpers se ajustarán con pruebas de uso del prototipo.</li>
+          <li>El planificador continúa normalizando una sola vez a frames de muestras enteros.</li>
+        </ul>
       </article>
     </main>
   </body>

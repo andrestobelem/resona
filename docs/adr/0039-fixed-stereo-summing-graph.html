@@ -10,7 +10,19 @@
     <main>
       <p class="source-path">docs/adr/0039-fixed-stereo-summing-graph.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="el-grafo-del-mvp-es-estereo-y-suma-sin-procesamiento-oculto">
           El grafo del MVP es estéreo y suma sin procesamiento oculto
         </h1>
@@ -20,24 +32,34 @@
           suman muestras directamente.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Propagar layouts variables y adaptar canales en cada conexión. - Ejecutar internamente
-          en mono y convertir solo al exportar. - Normalizar todas las fuentes a un grafo estéreo
-          fijo.
-        </p>
+        <ul>
+          <li>Propagar layouts variables y adaptar canales en cada conexión.</li>
+          <li>Ejecutar internamente en mono y convertir solo al exportar.</li>
+          <li>Normalizar todas las fuentes a un grafo estéreo fijo.</li>
+        </ul>
         <p>
           Se eligió la tercera opción porque cubre los recursos acordados y reduce el contrato de
           cada procesador sin perder la información de fuentes estéreo.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - La salida mono del sintetizador se duplica a ambos canales. - `Gain` y `Delay` mantienen
-          estado y procesamiento independiente por canal. - Voces, clips y pistas se suman muestra a
-          muestra; los slots de voz usan índice ascendente. - El master no normaliza, limita ni
-          recorta automáticamente. - El WAV float puede contener muestras fuera de `[-1, 1]`. - Pan,
-          surround y layouts adicionales quedan fuera del MVP. - El orden y el redondeo de cada
-          aporte a una suma se fijan en el [ADR 0078](0078-explicit-float32-audio-boundaries.md).
-        </p>
+        <ul>
+          <li>La salida mono del sintetizador se duplica a ambos canales.</li>
+          <li>
+            <code>Gain</code> y <code>Delay</code> mantienen estado y procesamiento independiente
+            por canal.
+          </li>
+          <li>
+            Voces, clips y pistas se suman muestra a muestra; los slots de voz usan índice
+            ascendente.
+          </li>
+          <li>El master no normaliza, limita ni recorta automáticamente.</li>
+          <li>El WAV float puede contener muestras fuera de <code>[-1, 1]</code>.</li>
+          <li>Pan, surround y layouts adicionales quedan fuera del MVP.</li>
+          <li>
+            El orden y el redondeo de cada aporte a una suma se fijan en el
+            <a href="0078-explicit-float32-audio-boundaries.html">ADR 0078</a>.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

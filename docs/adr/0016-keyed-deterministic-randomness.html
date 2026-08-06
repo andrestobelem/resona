@@ -10,7 +10,19 @@
     <main>
       <p class="source-path">docs/adr/0016-keyed-deterministic-randomness.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="la-aleatoriedad-es-determinista-y-direccionada-por-claves">
           La aleatoriedad es determinista y direccionada por claves
         </h1>
@@ -20,23 +32,31 @@
           de evaluación.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Permitir `Math.random()` y documentar que el resultado no es reproducible. - Usar un
-          único generador con seed que avance secuencialmente. - Derivar valores y streams
-          explícitos mediante claves jerárquicas.
-        </p>
+        <ul>
+          <li>
+            Permitir <code>Math.random()</code> y documentar que el resultado no es reproducible.
+          </li>
+          <li>Usar un único generador con seed que avance secuencialmente.</li>
+          <li>Derivar valores y streams explícitos mediante claves jerárquicas.</li>
+        </ul>
         <p>
           Se eligió la tercera opción para que insertar o eliminar una llamada no cambie valores
           aleatorios no relacionados y para que React, Studio y renderer no dependan del orden de
           evaluación.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - La ruta pública del nodo forma parte de su dominio de aleatoriedad. - Cada uso declara
-          una clave estable; los streams secuenciales se crean explícitamente con una clave propia.
-          - El algoritmo de derivación se versiona para detectar cambios de resultado. - Una regla
-          de lint prohíbe `Math.random()` en código que afecta una composición.
-        </p>
+        <ul>
+          <li>La ruta pública del nodo forma parte de su dominio de aleatoriedad.</li>
+          <li>
+            Cada uso declara una clave estable; los streams secuenciales se crean explícitamente con
+            una clave propia.
+          </li>
+          <li>El algoritmo de derivación se versiona para detectar cambios de resultado.</li>
+          <li>
+            Una regla de lint prohíbe <code>Math.random()</code> en código que afecta una
+            composición.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

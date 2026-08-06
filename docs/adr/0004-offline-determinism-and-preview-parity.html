@@ -10,7 +10,19 @@
     <main>
       <p class="source-path">docs/adr/0004-offline-determinism-and-preview-parity.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="determinismo-offline-exacto-y-paridad-semantica-con-studio">
           Determinismo offline exacto y paridad semántica con Studio
         </h1>
@@ -21,26 +33,40 @@
           tolerancia documentada.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Exigir solamente una equivalencia perceptual entre todas las ejecuciones. - Exigir
-          muestras idénticas entre renders offline equivalentes y paridad semántica entre Studio y
-          renderer. - Exigir resultados bit a bit entre navegador, Node y todas las plataformas.
-        </p>
+        <ul>
+          <li>Exigir solamente una equivalencia perceptual entre todas las ejecuciones.</li>
+          <li>
+            Exigir muestras idénticas entre renders offline equivalentes y paridad semántica entre
+            Studio y renderer.
+          </li>
+          <li>Exigir resultados bit a bit entre navegador, Node y todas las plataformas.</li>
+        </ul>
         <p>
           Se eligió la segunda opción porque hace confiable la automatización sin convertir las
           diferencias entre runtimes de audio y plataformas en una promesa prematura o inviable.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - Dos renders se consideran equivalentes cuando coinciden la versión de Resona,
-          plataforma, backend, fuente, inputs, assets, seed y configuración de render. - Studio y
-          renderer deben conservar eventos, timing, enrutamiento, automatización y semántica de
-          estado. - La tolerancia numérica concreta entre preview y render está definida en el [ADR
-          0058](0058-studio-render-numeric-parity-budget.md). - No se promete igualdad bit a bit
-          entre navegador y Node ni entre plataformas diferentes. - Cambiar cualquiera de las
-          condiciones de equivalencia puede cambiar las muestras y debe quedar visible en la
-          configuración o metadata del artefacto.
-        </p>
+        <ul>
+          <li>
+            Dos renders se consideran equivalentes cuando coinciden la versión de Resona,
+            plataforma, backend, fuente, inputs, assets, seed y configuración de render.
+          </li>
+          <li>
+            Studio y renderer deben conservar eventos, timing, enrutamiento, automatización y
+            semántica de estado.
+          </li>
+          <li>
+            La tolerancia numérica concreta entre preview y render está definida en el
+            <a href="0058-studio-render-numeric-parity-budget.html">ADR 0058</a>.
+          </li>
+          <li>
+            No se promete igualdad bit a bit entre navegador y Node ni entre plataformas diferentes.
+          </li>
+          <li>
+            Cambiar cualquiera de las condiciones de equivalencia puede cambiar las muestras y debe
+            quedar visible en la configuración o metadata del artefacto.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

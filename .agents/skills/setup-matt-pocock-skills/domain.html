@@ -16,31 +16,38 @@
           the codebase.
         </p>
         <h2 id="before-exploring-read-these">Before exploring, read these</h2>
+        <ul>
+          <li>
+            <strong><code>CONTEXT.md</code></strong> at the repo root, or
+          </li>
+          <li>
+            <strong><code>CONTEXT-MAP.md</code></strong> at the repo root if it exists — it points
+            at one <code>CONTEXT.md</code> per context. Read each one relevant to the topic.
+          </li>
+          <li>
+            <strong><code>docs/adr/</code></strong> — read ADRs that touch the area you're about to
+            work in. In multi-context repos, also check
+            <code>src/&lt;context&gt;/docs/adr/</code> for context-scoped decisions.
+          </li>
+        </ul>
         <p>
-          - **`CONTEXT.md`** at the repo root, or - **`CONTEXT-MAP.md`** at the repo root if it
-          exists — it points at one `CONTEXT.md` per context. Read each one relevant to the topic. -
-          **`docs/adr/`** — read ADRs that touch the area you're about to work in. In multi-context
-          repos, also check `src/&lt;context&gt;/docs/adr/` for context-scoped decisions.
-        </p>
-        <p>
-          If any of these files don't exist, **proceed silently**. Don't flag their absence; don't
-          suggest creating them upfront. The `/domain-modeling` skill (reached via
-          `/grill-with-docs` and `/improve-codebase-architecture`) creates them lazily when terms or
-          decisions actually get resolved.
+          If any of these files don't exist, <strong>proceed silently</strong>. Don't flag their
+          absence; don't suggest creating them upfront. The <code>/domain-modeling</code> skill
+          (reached via <code>/grill-with-docs</code> and
+          <code>/improve-codebase-architecture</code>) creates them lazily when terms or decisions
+          actually get resolved.
         </p>
         <h2 id="file-structure">File structure</h2>
         <p>Single-context repo (most repos):</p>
-        <pre><code>
-/
+        <pre><code>/
 ├── CONTEXT.md
 ├── docs/adr/
 │   ├── 0001-event-sourced-orders.md
 │   └── 0002-postgres-for-write-model.md
 └── src/
-        </code></pre>
-        <p>Multi-context repo (presence of `CONTEXT-MAP.md` at the root):</p>
-        <pre><code>
-/
+</code></pre>
+        <p>Multi-context repo (presence of <code>CONTEXT-MAP.md</code> at the root):</p>
+        <pre><code>/
 ├── CONTEXT-MAP.md
 ├── docs/adr/                          ← system-wide decisions
 └── src/
@@ -50,24 +57,26 @@
     └── billing/
         ├── CONTEXT.md
         └── docs/adr/
-        </code></pre>
-        <h2 id="use-the-glossary-s-vocabulary">Use the glossary's vocabulary</h2>
+</code></pre>
+        <h2 id="use-the-glossarys-vocabulary">Use the glossary's vocabulary</h2>
         <p>
           When your output names a domain concept (in an issue title, a refactor proposal, a
-          hypothesis, a test name), use the term as defined in `CONTEXT.md`. Don't drift to synonyms
-          the glossary explicitly avoids.
+          hypothesis, a test name), use the term as defined in <code>CONTEXT.md</code>. Don't drift
+          to synonyms the glossary explicitly avoids.
         </p>
         <p>
           If the concept you need isn't in the glossary yet, that's a signal — either you're
           inventing language the project doesn't use (reconsider) or there's a real gap (note it for
-          `/domain-modeling`).
+          <code>/domain-modeling</code>).
         </p>
         <h2 id="flag-adr-conflicts">Flag ADR conflicts</h2>
         <p>
           If your output contradicts an existing ADR, surface it explicitly rather than silently
           overriding:
         </p>
-        <p>&gt; _Contradicts ADR-0007 (event-sourced orders) — but worth reopening because…_</p>
+        <blockquote>
+          <p><em>Contradicts ADR-0007 (event-sourced orders) — but worth reopening because…</em></p>
+        </blockquote>
       </article>
     </main>
   </body>

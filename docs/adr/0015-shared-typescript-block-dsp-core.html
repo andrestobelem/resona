@@ -10,38 +10,65 @@
     <main>
       <p class="source-path">docs/adr/0015-shared-typescript-block-dsp-core.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="el-mvp-comparte-un-nucleo-dsp-typescript-por-bloques">
           El MVP comparte un núcleo DSP TypeScript por bloques
         </h1>
         <p>
           Studio y renderer usan un único núcleo DSP escrito en TypeScript que consume un
-          `ExecutionPlan` y procesa bloques `Float32`. Un adaptador lo aloja en un `AudioWorklet` y
-          otro lo ejecuta offline en Node.
+          <code>ExecutionPlan</code> y procesa bloques <code>Float32</code>. Un adaptador lo aloja
+          en un <code>AudioWorklet</code> y otro lo ejecuta offline en Node.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Usar nodos Web Audio en Studio y otra implementación DSP en Node. - Construir desde el
-          inicio un núcleo nativo o Rust/WASM. - Validar primero la semántica con un núcleo
-          TypeScript compartido y dos adaptadores.
-        </p>
+        <ul>
+          <li>Usar nodos Web Audio en Studio y otra implementación DSP en Node.</li>
+          <li>Construir desde el inicio un núcleo nativo o Rust/WASM.</li>
+          <li>
+            Validar primero la semántica con un núcleo TypeScript compartido y dos adaptadores.
+          </li>
+        </ul>
         <p>
           Se eligió la tercera opción para maximizar paridad y velocidad de aprendizaje en el corte
           vertical sin introducir antes de medir la complejidad de una toolchain nativa.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - El núcleo no depende de DOM, Web Audio ni APIs de Node. - Web Audio entrega la señal al
-          dispositivo, pero no implementa el sintetizador ni los efectos del MVP. - Node puede
-          avanzar el mismo núcleo más rápido que tiempo real. - El núcleo acepta cualquier cantidad
-          positiva de frames y produce el mismo resultado para un rango independientemente de su
-          partición en bloques. - Las señales, el estado de audio y los cálculos locales respetan
-          las fronteras numéricas del [ADR 0078](0078-explicit-float32-audio-boundaries.md). - Las
-          restricciones de tiempo real del `AudioWorklet` forman parte de la interfaz del módulo: no
-          hay I/O, locks, evaluación TSX ni asignaciones impredecibles en el callback. - WASM o un
-          motor nativo pueden reemplazar el núcleo detrás de la seam de `ExecutionPlan` si las
-          mediciones lo justifican.
-        </p>
+        <ul>
+          <li>El núcleo no depende de DOM, Web Audio ni APIs de Node.</li>
+          <li>
+            Web Audio entrega la señal al dispositivo, pero no implementa el sintetizador ni los
+            efectos del MVP.
+          </li>
+          <li>Node puede avanzar el mismo núcleo más rápido que tiempo real.</li>
+          <li>
+            El núcleo acepta cualquier cantidad positiva de frames y produce el mismo resultado para
+            un rango independientemente de su partición en bloques.
+          </li>
+          <li>
+            Las señales, el estado de audio y los cálculos locales respetan las fronteras numéricas
+            del <a href="0078-explicit-float32-audio-boundaries.html">ADR 0078</a>.
+          </li>
+          <li>
+            Las restricciones de tiempo real del <code>AudioWorklet</code> forman parte de la
+            interfaz del módulo: no hay I/O, locks, evaluación TSX ni asignaciones impredecibles en
+            el callback.
+          </li>
+          <li>
+            WASM o un motor nativo pueden reemplazar el núcleo detrás de la seam de
+            <code>ExecutionPlan</code> si las mediciones lo justifican.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

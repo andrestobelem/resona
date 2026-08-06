@@ -10,25 +10,36 @@
     <main>
       <p class="source-path">docs/adr/0069-execution-plan-v1-header-and-table-boundary.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="executionplan-v1-fija-su-cabecera-y-la-frontera-de-sus-tablas">
           ExecutionPlan v1 fija su cabecera y la frontera de sus tablas
         </h1>
         <p>
-          `ExecutionPlan` describe la composición nominal completa en una forma ejecutable,
-          serializable e inmutable. Studio y render offline consumen el mismo plan a 48&amp;nbsp;kHz
-          estéreo; las diferencias operativas de cada ejecución no modifican este contrato.
+          <code>ExecutionPlan</code> describe la composición nominal completa en una forma
+          ejecutable, serializable e inmutable. Studio y render offline consumen el mismo plan a
+          48 kHz estéreo; las diferencias operativas de cada ejecución no modifican este contrato.
         </p>
         <p>La cabecera v1 es:</p>
-        <pre><code class="language-ts">
-type ProcessorIndex = number;
+        <pre><code class="language-ts"><span class="token keyword">type</span> ProcessorIndex = number;
 
-type ExecutionPlan = Readonly&lt;{
-  format: &quot;resona/execution-plan&quot;;
-  schemaVersion: 1;
+<span class="token keyword">type</span> ExecutionPlan = Readonly&lt;{
+  format: <span class="token string">&quot;resona/execution-plan&quot;</span>;
+  schemaVersion: <span class="token number">1</span>;
   compositionId: string;
   sampleRate: 48_000;
-  channels: 2;
+  channels: <span class="token number">2</span>;
   nominalDurationFrames: number;
   masterProcessor: ProcessorIndex;
 
@@ -41,41 +52,75 @@ type ExecutionPlan = Readonly&lt;{
 
   trace?: readonly PlanTrace[];
 }&gt;;
-        </code></pre>
+</code></pre>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Incluir en el plan el rango solicitado, colas, encoding, callbacks y tamaño de bloque
-          para convertirlo en una descripción completa de cada trabajo de render. - Conservar sample
-          rate y canales configurables dentro del plan, aunque el primer motor solo admita una
-          combinación. - Fijar un contrato nominal a 48&amp;nbsp;kHz estéreo y dejar las decisiones
-          de cada trabajo en `RenderSpec`, el adaptador y el motor.
-        </p>
+        <ul>
+          <li>
+            Incluir en el plan el rango solicitado, colas, encoding, callbacks y tamaño de bloque
+            para convertirlo en una descripción completa de cada trabajo de render.
+          </li>
+          <li>
+            Conservar sample rate y canales configurables dentro del plan, aunque el primer motor
+            solo admita una combinación.
+          </li>
+          <li>
+            Fijar un contrato nominal a 48 kHz estéreo y dejar las decisiones de cada trabajo en
+            <code>RenderSpec</code>, el adaptador y el motor.
+          </li>
+        </ul>
         <p>
           Se eligió la tercera opción. Un plan nominal único evita recompilar la semántica musical
           por cada rango o destino, mantiene la paridad entre Studio y render y no confunde datos
           ejecutables con estado operativo.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - `format`, `schemaVersion` y `compositionId` identifican el contrato y su composición. -
-          `sampleRate` vale `48_000` y `channels` vale `2` en v1. - `nominalDurationFrames`, todos
-          los demás frames y todos los índices son enteros seguros no negativos. - Los arrays
-          ejecutables siempre están presentes, aunque estén vacíos. - Un `ProcessorIndex` es la
-          posición en `processors`; el payload no duplica ese índice y no puede usarlo como
-          identidad estable entre planes. - `masterProcessor` referencia el sumador terminal del
-          grafo. - `trace` es una tabla diagnóstica opcional y queda fuera de la identidad musical.
-          - El plan no conserva tempo, posiciones musicales, componentes React, metadata editorial,
-          rutas físicas, buffers, handles ni estado DSP vivo. - El rango solicitado, la política de
-          colas, el formato de salida y los callbacks pertenecen a `RenderSpec` o al trabajo que lo
-          envuelve. - El tamaño de bloque y el estado mutable de ejecución pertenecen al adaptador o
-          al motor. - Los procesadores y las rutas se fijan en el [ADR
-          0070](0070-closed-execution-plan-v1-processors-and-routing.md), y los recursos y regiones
-          de audio en el [ADR 0071](0071-content-addressed-resources-and-audio-regions.md). Los
-          eventos de instrumento se fijan en el [ADR
-          0073](0073-dense-instrument-attack-release-events.md), y la automatización en el [ADR
-          0075](0075-frame-resolved-gain-automation-points.md). `trace` se fija en el [ADR
-          0076](0076-complete-non-operational-execution-plan-trace.md).
-        </p>
+        <ul>
+          <li>
+            <code>format</code>, <code>schemaVersion</code> y <code>compositionId</code> identifican
+            el contrato y su composición.
+          </li>
+          <li>
+            <code>sampleRate</code> vale <code>48_000</code> y <code>channels</code> vale
+            <code>2</code> en v1.
+          </li>
+          <li>
+            <code>nominalDurationFrames</code>, todos los demás frames y todos los índices son
+            enteros seguros no negativos.
+          </li>
+          <li>Los arrays ejecutables siempre están presentes, aunque estén vacíos.</li>
+          <li>
+            Un <code>ProcessorIndex</code> es la posición en <code>processors</code>; el payload no
+            duplica ese índice y no puede usarlo como identidad estable entre planes.
+          </li>
+          <li><code>masterProcessor</code> referencia el sumador terminal del grafo.</li>
+          <li>
+            <code>trace</code> es una tabla diagnóstica opcional y queda fuera de la identidad
+            musical.
+          </li>
+          <li>
+            El plan no conserva tempo, posiciones musicales, componentes React, metadata editorial,
+            rutas físicas, buffers, handles ni estado DSP vivo.
+          </li>
+          <li>
+            El rango solicitado, la política de colas, el formato de salida y los callbacks
+            pertenecen a <code>RenderSpec</code> o al trabajo que lo envuelve.
+          </li>
+          <li>
+            El tamaño de bloque y el estado mutable de ejecución pertenecen al adaptador o al motor.
+          </li>
+          <li>
+            Los procesadores y las rutas se fijan en el
+            <a href="0070-closed-execution-plan-v1-processors-and-routing.html">ADR 0070</a>, y los
+            recursos y regiones de audio en el
+            <a href="0071-content-addressed-resources-and-audio-regions.html">ADR 0071</a>. Los
+            eventos de instrumento se fijan en el
+            <a href="0073-dense-instrument-attack-release-events.html">ADR 0073</a>, y la
+            automatización en el
+            <a href="0075-frame-resolved-gain-automation-points.html">ADR 0075</a>.
+            <code>trace</code> se fija en el
+            <a href="0076-complete-non-operational-execution-plan-trace.html">ADR 0076</a>.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

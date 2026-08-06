@@ -10,10 +10,9 @@
     <main>
       <p class="source-path">.agents/skills/domain-modeling/CONTEXT-FORMAT.md</p>
       <article>
-        <h1 id="context-md-format">CONTEXT.md Format</h1>
+        <h1 id="contextmd-format">CONTEXT.md Format</h1>
         <h2 id="structure">Structure</h2>
-        <pre><code class="language-md">
-# {Context Name}
+        <pre><code class="language-md"># {Context Name}
 
 {One or two sentence description of what this context is and why it exists.}
 
@@ -30,26 +29,38 @@ _Avoid_: Bill, payment request
 **Customer**:
 A person or organization that places orders.
 _Avoid_: Client, buyer, account
-        </code></pre>
+</code></pre>
         <h2 id="rules">Rules</h2>
-        <p>
-          - **Be opinionated.** When multiple words exist for the same concept, pick the best one
-          and list the others under `_Avoid_`. - **Keep definitions tight.** One or two sentences
-          max. Define what it IS, not what it does. - **Only include terms specific to this
-          project's context.** General programming concepts (timeouts, error types, utility
-          patterns) don't belong even if the project uses them extensively. Before adding a term,
-          ask: is this a concept unique to this context, or a general programming concept? Only the
-          former belongs. - **Group terms under subheadings** when natural clusters emerge. If all
-          terms belong to a single cohesive area, a flat list is fine.
-        </p>
+        <ul>
+          <li>
+            <strong>Be opinionated.</strong> When multiple words exist for the same concept, pick
+            the best one and list the others under <code>_Avoid_</code>.
+          </li>
+          <li>
+            <strong>Keep definitions tight.</strong> One or two sentences max. Define what it IS,
+            not what it does.
+          </li>
+          <li>
+            <strong>Only include terms specific to this project's context.</strong> General
+            programming concepts (timeouts, error types, utility patterns) don't belong even if the
+            project uses them extensively. Before adding a term, ask: is this a concept unique to
+            this context, or a general programming concept? Only the former belongs.
+          </li>
+          <li>
+            <strong>Group terms under subheadings</strong> when natural clusters emerge. If all
+            terms belong to a single cohesive area, a flat list is fine.
+          </li>
+        </ul>
         <h2 id="single-vs-multi-context-repos">Single vs multi-context repos</h2>
-        <p>**Single context (most repos):** One `CONTEXT.md` at the repo root.</p>
         <p>
-          **Multiple contexts:** A `CONTEXT-MAP.md` at the repo root lists the contexts, where they
-          live, and how they relate to each other:
+          <strong>Single context (most repos):</strong> One <code>CONTEXT.md</code> at the repo
+          root.
         </p>
-        <pre><code class="language-md">
-# Context Map
+        <p>
+          <strong>Multiple contexts:</strong> A <code>CONTEXT-MAP.md</code> at the repo root lists
+          the contexts, where they live, and how they relate to each other:
+        </p>
+        <pre><code class="language-md"># Context Map
 
 ## Contexts
 
@@ -62,13 +73,16 @@ _Avoid_: Client, buyer, account
 - **Ordering → Fulfillment**: Ordering emits `OrderPlaced` events; Fulfillment consumes them to start picking
 - **Fulfillment → Billing**: Fulfillment emits `ShipmentDispatched` events; Billing consumes them to generate invoices
 - **Ordering ↔ Billing**: Shared types for `CustomerId` and `Money`
-        </code></pre>
+</code></pre>
         <p>The skill infers which structure applies:</p>
-        <p>
-          - If `CONTEXT-MAP.md` exists, read it to find contexts - If only a root `CONTEXT.md`
-          exists, single context - If neither exists, create a root `CONTEXT.md` lazily when the
-          first term is resolved
-        </p>
+        <ul>
+          <li>If <code>CONTEXT-MAP.md</code> exists, read it to find contexts</li>
+          <li>If only a root <code>CONTEXT.md</code> exists, single context</li>
+          <li>
+            If neither exists, create a root <code>CONTEXT.md</code> lazily when the first term is
+            resolved
+          </li>
+        </ul>
         <p>
           When multiple contexts exist, infer which one the current topic relates to. If unclear,
           ask.

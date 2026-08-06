@@ -10,32 +10,53 @@
     <main>
       <p class="source-path">docs/adr/0031-normalized-linear-note-velocity.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="velocity-es-un-escalar-normalizado-y-lineal">
           Velocity es un escalar normalizado y lineal
         </h1>
         <p>
-          La velocity pública de una nota pertenece al intervalo cerrado `[0, 1]`, tiene default `1`
-          y escala linealmente la amplitud de la envolvente del sintetizador mínimo.
+          La velocity pública de una nota pertenece al intervalo cerrado <code>[0, 1]</code>, tiene
+          default <code>1</code> y escala linealmente la amplitud de la envolvente del sintetizador
+          mínimo.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Exponer directamente la escala MIDI `0…127`. - Usar un escalar normalizado y dejar su
-          curva indefinida. - Usar un escalar normalizado con semántica lineal explícita en el
-          instrumento inicial.
-        </p>
+        <ul>
+          <li>Exponer directamente la escala MIDI <code>0…127</code>.</li>
+          <li>Usar un escalar normalizado y dejar su curva indefinida.</li>
+          <li>
+            Usar un escalar normalizado con semántica lineal explícita en el instrumento inicial.
+          </li>
+        </ul>
         <p>
           Se eligió la tercera opción para desacoplar el dominio de MIDI y hacer reproducible el
           efecto audible del parámetro sin introducir todavía curvas configurables.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - Una nota sin velocity declara implícitamente `1`. - Los valores fuera de `[0, 1]` fallan
-          durante validación. - MIDI `1…127` se convierte mediante `n / 127`. - MIDI `note-on` con
-          velocity `0` se interpreta como `note-off` durante importación. - El `PolySynth` del MVP
-          multiplica linealmente la envolvente por velocity. - Curvas perceptuales o específicas de
-          instrumento quedan fuera del primer hito.
-        </p>
+        <ul>
+          <li>Una nota sin velocity declara implícitamente <code>1</code>.</li>
+          <li>Los valores fuera de <code>[0, 1]</code> fallan durante validación.</li>
+          <li>MIDI <code>1…127</code> se convierte mediante <code>n / 127</code>.</li>
+          <li>
+            MIDI <code>note-on</code> con velocity <code>0</code> se interpreta como
+            <code>note-off</code> durante importación.
+          </li>
+          <li>
+            El <code>PolySynth</code> del MVP multiplica linealmente la envolvente por velocity.
+          </li>
+          <li>Curvas perceptuales o específicas de instrumento quedan fuera del primer hito.</li>
+        </ul>
       </article>
     </main>
   </body>

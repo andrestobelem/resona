@@ -10,16 +10,27 @@
     <main>
       <p class="source-path">docs/adr/0067-closed-composition-ir-v1-processor-payloads.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="compositionir-v1-fija-payloads-cerrados-de-procesadores">
           CompositionIR v1 fija payloads cerrados de procesadores
         </h1>
         <p>Instrumento y efectos usan estas formas:</p>
-        <pre><code class="language-ts">
-type PolySynthIR = IRNodeBase &amp; Readonly&lt;{
-  type: &quot;poly-synth&quot;;
+        <pre><code class="language-ts"><span class="token keyword">type</span> PolySynthIR = IRNodeBase &amp; Readonly&lt;{
+  <span class="token keyword">type</span>: <span class="token string">&quot;poly-synth&quot;</span>;
   maxVoices: number;
-  oscillator: &quot;sine&quot; | &quot;saw&quot; | &quot;square&quot;;
+  oscillator: <span class="token string">&quot;sine&quot;</span> | <span class="token string">&quot;saw&quot;</span> | <span class="token string">&quot;square&quot;</span>;
   envelope: Readonly&lt;{
     attack: AbsoluteDurationIR;
     decay: AbsoluteDurationIR;
@@ -28,43 +39,68 @@ type PolySynthIR = IRNodeBase &amp; Readonly&lt;{
   }&gt;;
 }&gt;;
 
-type GainIR = IRNodeBase &amp; Readonly&lt;{
-  type: &quot;gain&quot;;
+<span class="token keyword">type</span> GainIR = IRNodeBase &amp; Readonly&lt;{
+  <span class="token keyword">type</span>: <span class="token string">&quot;gain&quot;</span>;
   gain: number;
 }&gt;;
 
-type DelayIR = IRNodeBase &amp; Readonly&lt;{
-  type: &quot;delay&quot;;
+<span class="token keyword">type</span> DelayIR = IRNodeBase &amp; Readonly&lt;{
+  <span class="token keyword">type</span>: <span class="token string">&quot;delay&quot;</span>;
   time: AbsoluteDurationIR;
   feedback: number;
   mix: number;
 }&gt;;
-        </code></pre>
+</code></pre>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Usar un nodo genérico de procesador con `params: Record&lt;string, unknown&gt;`. -
-          Omitir defaults y resolverlos recién al compilar el plan. - Definir una unión exhaustiva
-          cuyos valores ya estén completos y validados.
-        </p>
+        <ul>
+          <li>
+            Usar un nodo genérico de procesador con
+            <code>params: Record&lt;string, unknown&gt;</code>.
+          </li>
+          <li>Omitir defaults y resolverlos recién al compilar el plan.</li>
+          <li>Definir una unión exhaustiva cuyos valores ya estén completos y validados.</li>
+        </ul>
         <p>
           Se eligió la tercera opción para que Studio y el planificador puedan inspeccionar y
           validar cada procesador exhaustivamente sin un registro dinámico ni otra fase de defaults
           ocultos.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - Todos los defaults del sintetizador, envolvente y efectos están materializados en la IR.
-          - `maxVoices` es un entero seguro positivo. - Attack, decay y release son duraciones
-          absolutas no negativas; sustain pertenece a `[0, 1]`. - `gain` es finito, no negativo y su
-          conversión a `Float32` también debe ser finita. - Delay exige tiempo positivo, `feedback`
-          en `[0, 1)` y `mix` en `[0, 1]`. - El parámetro automatizable de `GainIR` se identifica
-          como `&quot;gain&quot;`. - Delay no admite automatización en v1. - No existen parámetros
-          desconocidos: agregar campos o procesadores requiere evolucionar el schema. - La forma de
-          automatizar `GainIR.gain` se fija en el [ADR
-          0068](0068-explicit-gain-automation-lanes-in-composition-ir.md). - La canonización de
-          parámetros al compilar el plan se fija en el [ADR
-          0078](0078-explicit-float32-audio-boundaries.md).
-        </p>
+        <ul>
+          <li>
+            Todos los defaults del sintetizador, envolvente y efectos están materializados en la IR.
+          </li>
+          <li><code>maxVoices</code> es un entero seguro positivo.</li>
+          <li>
+            Attack, decay y release son duraciones absolutas no negativas; sustain pertenece a
+            <code>[0, 1]</code>.
+          </li>
+          <li>
+            <code>gain</code> es finito, no negativo y su conversión a <code>Float32</code> también
+            debe ser finita.
+          </li>
+          <li>
+            Delay exige tiempo positivo, <code>feedback</code> en <code>[0, 1)</code> y
+            <code>mix</code> en <code>[0, 1]</code>.
+          </li>
+          <li>
+            El parámetro automatizable de <code>GainIR</code> se identifica como
+            <code>&quot;gain&quot;</code>.
+          </li>
+          <li>Delay no admite automatización en v1.</li>
+          <li>
+            No existen parámetros desconocidos: agregar campos o procesadores requiere evolucionar
+            el schema.
+          </li>
+          <li>
+            La forma de automatizar <code>GainIR.gain</code> se fija en el
+            <a href="0068-explicit-gain-automation-lanes-in-composition-ir.html">ADR 0068</a>.
+          </li>
+          <li>
+            La canonización de parámetros al compilar el plan se fija en el
+            <a href="0078-explicit-float32-audio-boundaries.html">ADR 0078</a>.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

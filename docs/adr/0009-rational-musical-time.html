@@ -10,7 +10,19 @@
     <main>
       <p class="source-path">docs/adr/0009-rational-musical-time.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="el-tiempo-musical-normalizado-es-racional">
           El tiempo musical normalizado es racional
         </h1>
@@ -20,24 +32,37 @@
           ocurre una sola vez al compilar el plan de ejecución.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Convertir temprano a segundos en punto flotante. - Usar una grilla fija de ticks por
-          nota negra. - Conservar una fracción exacta hasta la frontera del plan de ejecución.
-        </p>
+        <ul>
+          <li>Convertir temprano a segundos en punto flotante.</li>
+          <li>Usar una grilla fija de ticks por nota negra.</li>
+          <li>Conservar una fracción exacta hasta la frontera del plan de ejecución.</li>
+        </ul>
         <p>
           Se eligió la tercera opción para evitar error acumulado, representar tuplets sin depender
           de una resolución fija y mantener el núcleo independiente del PPQ de archivos MIDI.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - Barras, pulsos y subdivisiones se resuelven contra la métrica antes de obtener la
-          fracción normalizada. - Cada adaptador MIDI convierte desde su propia resolución hacia el
-          tiempo racional. - El plan de ejecución no recibe posiciones musicales ambiguas: recibe
-          frames de muestras enteros. - Una fracción de muestra se redondea al entero más cercano y
-          un empate exacto elige el frame par; todas las fronteras temporales usan la misma función.
-          - La forma serializable concreta de la IR se define en el [ADR
-          0064](0064-canonical-rational-time-in-composition-ir.md).
-        </p>
+        <ul>
+          <li>
+            Barras, pulsos y subdivisiones se resuelven contra la métrica antes de obtener la
+            fracción normalizada.
+          </li>
+          <li>
+            Cada adaptador MIDI convierte desde su propia resolución hacia el tiempo racional.
+          </li>
+          <li>
+            El plan de ejecución no recibe posiciones musicales ambiguas: recibe frames de muestras
+            enteros.
+          </li>
+          <li>
+            Una fracción de muestra se redondea al entero más cercano y un empate exacto elige el
+            frame par; todas las fronteras temporales usan la misma función.
+          </li>
+          <li>
+            La forma serializable concreta de la IR se define en el
+            <a href="0064-canonical-rational-time-in-composition-ir.html">ADR 0064</a>.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

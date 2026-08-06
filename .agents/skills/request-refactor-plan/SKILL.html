@@ -10,43 +10,67 @@
     <main>
       <p class="source-path">.agents/skills/request-refactor-plan/SKILL.md</p>
       <article>
-        <p>
-          --- name: request-refactor-plan description: Create a detailed refactor plan with tiny
-          commits via user interview, then file it as a GitHub issue. Use when user wants to plan a
-          refactor, create a refactoring RFC, or break a refactor into safe incremental steps. ---
-        </p>
+        <aside class="frontmatter">
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+name: request-refactor-plan
+description: Create a detailed refactor plan with tiny commits via user interview, then file it as a GitHub issue. Use when user wants to plan a refactor, create a refactoring RFC, or break a refactor into safe incremental steps.
+---</code></pre>
+          </details>
+        </aside>
         <p>
           This skill will be invoked when the user wants to create a refactor request. You should go
           through the steps below. You may skip steps if you don't consider them necessary.
         </p>
-        <p>
-          1. Ask the user for a long, detailed description of the problem they want to solve and any
-          potential ideas for solutions.
-        </p>
-        <p>
-          2. Explore the repo to verify their assertions and understand the current state of the
-          codebase.
-        </p>
-        <p>3. Ask whether they have considered other options, and present other options to them.</p>
-        <p>4. Interview the user about the implementation. Be extremely detailed and thorough.</p>
-        <p>
-          5. Hammer out the exact scope of the implementation. Work out what you plan to change and
-          what you plan not to change.
-        </p>
-        <p>
-          6. Look in the codebase to check for test coverage of this area of the codebase. If there
-          is insufficient test coverage, ask the user what their plans for testing are.
-        </p>
-        <p>
-          7. Break the implementation into a plan of tiny commits. Remember Martin Fowler's advice
-          to &quot;make each refactoring step as small as possible, so that you can always see the
-          program working.&quot;
-        </p>
-        <p>
-          8. Create a GitHub issue with the refactor plan. Use the following template for the issue
-          description:
-        </p>
-        <p>&lt;refactor-plan-template&gt;</p>
+        <ol>
+          <li>
+            <p>
+              Ask the user for a long, detailed description of the problem they want to solve and
+              any potential ideas for solutions.
+            </p>
+          </li>
+          <li>
+            <p>
+              Explore the repo to verify their assertions and understand the current state of the
+              codebase.
+            </p>
+          </li>
+          <li>
+            <p>
+              Ask whether they have considered other options, and present other options to them.
+            </p>
+          </li>
+          <li>
+            <p>Interview the user about the implementation. Be extremely detailed and thorough.</p>
+          </li>
+          <li>
+            <p>
+              Hammer out the exact scope of the implementation. Work out what you plan to change and
+              what you plan not to change.
+            </p>
+          </li>
+          <li>
+            <p>
+              Look in the codebase to check for test coverage of this area of the codebase. If there
+              is insufficient test coverage, ask the user what their plans for testing are.
+            </p>
+          </li>
+          <li>
+            <p>
+              Break the implementation into a plan of tiny commits. Remember Martin Fowler's advice
+              to &quot;make each refactoring step as small as possible, so that you can always see
+              the program working.&quot;
+            </p>
+          </li>
+          <li>
+            <p>
+              Create a GitHub issue with the refactor plan. Use the following template for the issue
+              description:
+            </p>
+          </li>
+        </ol>
+        &lt;refactor-plan-template&gt;
         <h2 id="problem-statement">Problem Statement</h2>
         <p>The problem that the developer is facing, from the developer's perspective.</p>
         <h2 id="solution">Solution</h2>
@@ -59,27 +83,34 @@
         </p>
         <h2 id="decision-document">Decision Document</h2>
         <p>A list of implementation decisions that were made. This can include:</p>
-        <p>
-          - The modules that will be built/modified - The interfaces of those modules that will be
-          modified - Technical clarifications from the developer - Architectural decisions - Schema
-          changes - API contracts - Specific interactions
-        </p>
+        <ul>
+          <li>The modules that will be built/modified</li>
+          <li>The interfaces of those modules that will be modified</li>
+          <li>Technical clarifications from the developer</li>
+          <li>Architectural decisions</li>
+          <li>Schema changes</li>
+          <li>API contracts</li>
+          <li>Specific interactions</li>
+        </ul>
         <p>
           Do NOT include specific file paths or code snippets. They may end up being outdated very
           quickly.
         </p>
         <h2 id="testing-decisions">Testing Decisions</h2>
         <p>A list of testing decisions that were made. Include:</p>
-        <p>
-          - A description of what makes a good test (only test external behavior, not implementation
-          details) - Which modules will be tested - Prior art for the tests (i.e. similar types of
-          tests in the codebase)
-        </p>
+        <ul>
+          <li>
+            A description of what makes a good test (only test external behavior, not implementation
+            details)
+          </li>
+          <li>Which modules will be tested</li>
+          <li>Prior art for the tests (i.e. similar types of tests in the codebase)</li>
+        </ul>
         <h2 id="out-of-scope">Out of Scope</h2>
         <p>A description of the things that are out of scope for this refactor.</p>
         <h2 id="further-notes-optional">Further Notes (optional)</h2>
         <p>Any further notes about the refactor.</p>
-        <p>&lt;/refactor-plan-template&gt;</p>
+        &lt;/refactor-plan-template&gt;
       </article>
     </main>
   </body>

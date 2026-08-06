@@ -12,9 +12,9 @@
       <article>
         <h1 id="renderer-context">Renderer context</h1>
         <p>
-          The renderer consumes an immutable `CreateRenderJobResult`; it never evaluates TSX or
-          replans musical time. It renders `PolySynth` plans through a stateful Float32 DSP loop and
-          emits an in-memory 48 kHz, stereo, IEEE-float32 WAV.
+          The renderer consumes an immutable <code>CreateRenderJobResult</code>; it never evaluates
+          TSX or replans musical time. It renders <code>PolySynth</code> plans through a stateful
+          Float32 DSP loop and emits an in-memory 48 kHz, stereo, IEEE-float32 WAV.
         </p>
         <p>
           The DSP loop is intentionally block-size independent. Parameters, accumulated samples and
@@ -33,10 +33,11 @@
           PolyBLEP correction around their discontinuities.
         </p>
         <p>
-          `renderAudioToFile()` is the filesystem adapter over the same renderer. It writes a
-          validated float32 WAV to a same-directory temporary, publishes it atomically, refuses
-          existing outputs unless `overwrite: true`, and removes temporary state on cancellation or
-          failure. It never introduces a second interpretation of the execution plan.
+          <code>renderAudioToFile()</code> is the filesystem adapter over the same renderer. It
+          writes a validated float32 WAV to a same-directory temporary, publishes it atomically,
+          refuses existing outputs unless <code>overwrite: true</code>, and removes temporary state
+          on cancellation or failure. It never introduces a second interpretation of the execution
+          plan.
         </p>
       </article>
     </main>

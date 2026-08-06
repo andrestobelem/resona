@@ -10,22 +10,28 @@
     <main>
       <p class="source-path">.agents/skills/git-guardrails-claude-code/SKILL.md</p>
       <article>
-        <p>
-          --- name: git-guardrails-claude-code description: Set up Claude Code hooks to block
-          dangerous git commands (push, reset --hard, clean, branch -D, etc.) before they execute.
-          Use when user wants to prevent destructive git operations, add git safety hooks, or block
-          git push/reset in Claude Code. ---
-        </p>
+        <aside class="frontmatter">
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+name: git-guardrails-claude-code
+description: Set up Claude Code hooks to block dangerous git commands (push, reset --hard, clean, branch -D, etc.) before they execute. Use when user wants to prevent destructive git operations, add git safety hooks, or block git push/reset in Claude Code.
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="setup-git-guardrails">Setup Git Guardrails</h1>
         <p>
           Sets up a PreToolUse hook that intercepts and blocks dangerous git commands before Claude
           executes them.
         </p>
         <h2 id="what-gets-blocked">What Gets Blocked</h2>
-        <p>
-          - `git push` (all variants including `--force`) - `git reset --hard` - `git clean -f` /
-          `git clean -fd` - `git branch -D` - `git checkout .` / `git restore .`
-        </p>
+        <ul>
+          <li><code>git push</code> (all variants including <code>--force</code>)</li>
+          <li><code>git reset --hard</code></li>
+          <li><code>git clean -f</code> / <code>git clean -fd</code></li>
+          <li><code>git branch -D</code></li>
+          <li><code>git checkout .</code> / <code>git restore .</code></li>
+        </ul>
         <p>
           When blocked, Claude sees a message telling it that it does not have authority to access
           these commands.
@@ -33,60 +39,60 @@
         <h2 id="steps">Steps</h2>
         <h3 id="1-ask-scope">1. Ask scope</h3>
         <p>
-          Ask the user: install for **this project only** (`.claude/settings.json`) or **all
-          projects** (`~/.claude/settings.json`)?
+          Ask the user: install for
+          <strong>this project only</strong> (<code>.claude/settings.json</code>) or
+          <strong>all projects</strong> (<code>~/.claude/settings.json</code>)?
         </p>
         <h3 id="2-copy-the-hook-script">2. Copy the hook script</h3>
         <p>
-          The bundled script is at: [scripts/block-dangerous-git.sh](scripts/block-dangerous-git.sh)
+          The bundled script is at:
+          <a href="scripts/block-dangerous-git.sh">scripts/block-dangerous-git.sh</a>
         </p>
         <p>Copy it to the target location based on scope:</p>
-        <p>
-          - **Project**: `.claude/hooks/block-dangerous-git.sh` - **Global**:
-          `~/.claude/hooks/block-dangerous-git.sh`
-        </p>
-        <p>Make it executable with `chmod +x`.</p>
+        <ul>
+          <li><strong>Project</strong>: <code>.claude/hooks/block-dangerous-git.sh</code></li>
+          <li><strong>Global</strong>: <code>~/.claude/hooks/block-dangerous-git.sh</code></li>
+        </ul>
+        <p>Make it executable with <code>chmod +x</code>.</p>
         <h3 id="3-add-hook-to-settings">3. Add hook to settings</h3>
         <p>Add to the appropriate settings file:</p>
-        <p>**Project** (`.claude/settings.json`):</p>
-        <pre><code class="language-json">
-{
-  &quot;hooks&quot;: {
-    &quot;PreToolUse&quot;: [
+        <p><strong>Project</strong> (<code>.claude/settings.json</code>):</p>
+        <pre><code class="language-json">{
+  <span class="token string">&quot;hooks&quot;</span>: {
+    <span class="token string">&quot;PreToolUse&quot;</span>: [
       {
-        &quot;matcher&quot;: &quot;Bash&quot;,
-        &quot;hooks&quot;: [
+        <span class="token string">&quot;matcher&quot;</span>: <span class="token string">&quot;Bash&quot;</span>,
+        <span class="token string">&quot;hooks&quot;</span>: [
           {
-            &quot;type&quot;: &quot;command&quot;,
-            &quot;command&quot;: &quot;\&quot;$CLAUDE_PROJECT_DIR\&quot;/.claude/hooks/block-dangerous-git.sh&quot;
+            <span class="token string">&quot;type&quot;</span>: <span class="token string">&quot;command&quot;</span>,
+            <span class="token string">&quot;command&quot;</span>: <span class="token string">&quot;\&quot;$CLAUDE_PROJECT_DIR\&quot;/.claude/hooks/block-dangerous-git.sh&quot;</span>
           }
         ]
       }
     ]
   }
 }
-        </code></pre>
-        <p>**Global** (`~/.claude/settings.json`):</p>
-        <pre><code class="language-json">
-{
-  &quot;hooks&quot;: {
-    &quot;PreToolUse&quot;: [
+</code></pre>
+        <p><strong>Global</strong> (<code>~/.claude/settings.json</code>):</p>
+        <pre><code class="language-json">{
+  <span class="token string">&quot;hooks&quot;</span>: {
+    <span class="token string">&quot;PreToolUse&quot;</span>: [
       {
-        &quot;matcher&quot;: &quot;Bash&quot;,
-        &quot;hooks&quot;: [
+        <span class="token string">&quot;matcher&quot;</span>: <span class="token string">&quot;Bash&quot;</span>,
+        <span class="token string">&quot;hooks&quot;</span>: [
           {
-            &quot;type&quot;: &quot;command&quot;,
-            &quot;command&quot;: &quot;~/.claude/hooks/block-dangerous-git.sh&quot;
+            <span class="token string">&quot;type&quot;</span>: <span class="token string">&quot;command&quot;</span>,
+            <span class="token string">&quot;command&quot;</span>: <span class="token string">&quot;~/.claude/hooks/block-dangerous-git.sh&quot;</span>
           }
         ]
       }
     ]
   }
 }
-        </code></pre>
+</code></pre>
         <p>
-          If the settings file already exists, merge the hook into existing `hooks.PreToolUse` array
-          — don't overwrite other settings.
+          If the settings file already exists, merge the hook into existing
+          <code>hooks.PreToolUse</code> array — don't overwrite other settings.
         </p>
         <h3 id="4-ask-about-customization">4. Ask about customization</h3>
         <p>
@@ -95,9 +101,8 @@
         </p>
         <h3 id="5-verify">5. Verify</h3>
         <p>Run a quick test:</p>
-        <pre><code class="language-bash">
-echo '{&quot;tool_input&quot;:{&quot;command&quot;:&quot;git push origin main&quot;}}' | &lt;path-to-script&gt;
-        </code></pre>
+        <pre><code class="language-bash">echo <span class="token string">'{&quot;tool_input&quot;:{&quot;command&quot;:&quot;git push origin main&quot;}}'</span> | &lt;path-to-script&gt;
+</code></pre>
         <p>Should exit with code 2 and print a BLOCKED message to stderr.</p>
       </article>
     </main>

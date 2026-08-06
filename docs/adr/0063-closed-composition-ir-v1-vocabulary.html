@@ -10,54 +10,95 @@
     <main>
       <p class="source-path">docs/adr/0063-closed-composition-ir-v1-vocabulary.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="compositionir-v1-usa-un-vocabulario-cerrado">
           CompositionIR v1 usa un vocabulario cerrado
         </h1>
         <p>
-          La cabecera de `CompositionIR` v1 contiene `format`, `schemaVersion`, `compositionId`,
-          `duration`, `tempo`, `metadata` y una raíz `SequenceIR`. Todo nodo público implementa
-          `IRNodeBase` con ID, ruta canónica y ubicación fuente opcional.
+          La cabecera de <code>CompositionIR</code> v1 contiene <code>format</code>,
+          <code>schemaVersion</code>, <code>compositionId</code>, <code>duration</code>,
+          <code>tempo</code>, <code>metadata</code> y una raíz <code>SequenceIR</code>. Todo nodo
+          público implementa <code>IRNodeBase</code> con ID, ruta canónica y ubicación fuente
+          opcional.
         </p>
-        <pre><code class="language-ts">
-type IRNodeBase = Readonly&lt;{
+        <pre><code class="language-ts"><span class="token keyword">type</span> IRNodeBase = Readonly&lt;{
   id: string;
   path: NodePath;
   source?: SourceLocation;
 }&gt;;
 
-type SequenceChildIR = SequenceIR | TrackIR;
-type TrackIR = AudioTrackIR | InstrumentTrackIR;
-type InstrumentIR = PolySynthIR;
-type EffectIR = GainIR | DelayIR;
-        </code></pre>
+<span class="token keyword">type</span> SequenceChildIR = SequenceIR | TrackIR;
+<span class="token keyword">type</span> TrackIR = AudioTrackIR | InstrumentTrackIR;
+<span class="token keyword">type</span> InstrumentIR = PolySynthIR;
+<span class="token keyword">type</span> EffectIR = GainIR | DelayIR;
+</code></pre>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Representar toda entidad, incluida cada nota, como un nodo público extensible. - Admitir
-          nodos genéricos con payloads arbitrarios desde v1. - Cerrar el vocabulario inicial y
-          mantener los eventos densos como datos tipados dentro de clips estructurales.
-        </p>
+        <ul>
+          <li>Representar toda entidad, incluida cada nota, como un nodo público extensible.</li>
+          <li>Admitir nodos genéricos con payloads arbitrarios desde v1.</li>
+          <li>
+            Cerrar el vocabulario inicial y mantener los eventos densos como datos tipados dentro de
+            clips estructurales.
+          </li>
+        </ul>
         <p>
           Se eligió la tercera opción porque mantiene inspeccionable la estructura sin inflar el
           árbol con una entidad por evento ni permitir payloads que Studio y el planificador no
           puedan validar exhaustivamente.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - `SequenceIR` contiene otras secuencias o pistas. - `AudioTrackIR` contiene `AudioClipIR`
-          y no admite instrumento. - `InstrumentTrackIR` contiene `EventClipIR` y exactamente un
-          `PolySynthIR`. - Ambas pistas pueden contener una cadena ordenada de `GainIR | DelayIR` y
-          lanes de automatización. - Una lane apunta a un parámetro mediante `{nodePath,
-          parameterId}`. - Las notas viven como datos dentro de `EventClipIR` y no tienen ID ni
-          ubicación fuente pública individual. - `AudioClipIR` conserva una `StaticAudioReference`;
-          el hash pertenece al plan resuelto. - No existe un discriminante genérico de extensión.
-          Agregar nodos exige otra versión del schema y una migración explícita. - La representación
-          temporal se fija en el [ADR 0064](0064-canonical-rational-time-in-composition-ir.md); los
-          demás payloads se fijarán por separado. - Los payloads de secuencias, pistas, clips y
-          notas se fijan en el [ADR 0065](0065-composition-ir-v1-structural-payloads.md). -
-          `NodePath` y `SourceLocation` se fijan en el [ADR
-          0077](0077-canonical-node-paths-and-source-locations.md).
-        </p>
+        <ul>
+          <li><code>SequenceIR</code> contiene otras secuencias o pistas.</li>
+          <li>
+            <code>AudioTrackIR</code> contiene <code>AudioClipIR</code> y no admite instrumento.
+          </li>
+          <li>
+            <code>InstrumentTrackIR</code> contiene <code>EventClipIR</code> y exactamente un
+            <code>PolySynthIR</code>.
+          </li>
+          <li>
+            Ambas pistas pueden contener una cadena ordenada de <code>GainIR | DelayIR</code> y
+            lanes de automatización.
+          </li>
+          <li>Una lane apunta a un parámetro mediante <code>{nodePath, parameterId}</code>.</li>
+          <li>
+            Las notas viven como datos dentro de <code>EventClipIR</code> y no tienen ID ni
+            ubicación fuente pública individual.
+          </li>
+          <li>
+            <code>AudioClipIR</code> conserva una <code>StaticAudioReference</code>; el hash
+            pertenece al plan resuelto.
+          </li>
+          <li>
+            No existe un discriminante genérico de extensión. Agregar nodos exige otra versión del
+            schema y una migración explícita.
+          </li>
+          <li>
+            La representación temporal se fija en el
+            <a href="0064-canonical-rational-time-in-composition-ir.html">ADR 0064</a>; los demás
+            payloads se fijarán por separado.
+          </li>
+          <li>
+            Los payloads de secuencias, pistas, clips y notas se fijan en el
+            <a href="0065-composition-ir-v1-structural-payloads.html">ADR 0065</a>.
+          </li>
+          <li>
+            <code>NodePath</code> y <code>SourceLocation</code> se fijan en el
+            <a href="0077-canonical-node-paths-and-source-locations.html">ADR 0077</a>.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

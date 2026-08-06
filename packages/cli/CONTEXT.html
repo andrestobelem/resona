@@ -12,52 +12,63 @@
       <article>
         <h1 id="cli-context">CLI context</h1>
         <p>
-          `@resona/cli` is a thin Node adapter over the engine and renderer. It discovers a project
-          root, translates flags and JSON inputs, and delegates composition enumeration, variant
-          validation, and audio publication to the same registry, `createRenderJob()`, and
-          `renderAudioToFile()` used by the programmatic API. It never evaluates TSX in the terminal
-          process and never implements DSP itself.
+          <code>@resona/cli</code> is a thin Node adapter over the engine and renderer. It discovers
+          a project root, translates flags and JSON inputs, and delegates composition enumeration,
+          variant validation, and audio publication to the same registry,
+          <code>createRenderJob()</code>, and <code>renderAudioToFile()</code> used by the
+          programmatic API. It never evaluates TSX in the terminal process and never implements DSP
+          itself.
         </p>
         <p>
-          `studio`, `compositions`, and `validate` emit human-readable text by default. With
-          `--json`, `studio`, `compositions`, and `validate` emit a versioned startup/result
-          document; `render --json` emits versioned JSON Lines envelopes for progress, diagnostics,
-          errors, and the final result. Incidental diagnostics stay in stderr. Exit codes are
-          stable: `0` success, `1` domain failure, `2` usage or configuration failure, and `130`
-          cancellation.
+          <code>studio</code>, <code>compositions</code>, and <code>validate</code> emit
+          human-readable text by default. With <code>--json</code>, <code>studio</code>,
+          <code>compositions</code>, and <code>validate</code> emit a versioned startup/result
+          document; <code>render --json</code> emits versioned JSON Lines envelopes for progress,
+          diagnostics, errors, and the final result. Incidental diagnostics stay in stderr. Exit
+          codes are stable: <code>0</code> success, <code>1</code> domain failure,
+          <code>2</code> usage or configuration failure, and <code>130</code> cancellation.
         </p>
         <p>
-          The CLI resolves a project root from an explicit `--config`, the nearest
-          `resona.config.ts`, or the initial working directory. The engine API continues to require
-          an absolute root.
+          The CLI resolves a project root from an explicit <code>--config</code>, the nearest
+          <code>resona.config.ts</code>, or the initial working directory. The engine API continues
+          to require an absolute root.
         </p>
         <p>
-          `render` accepts either `[entry] &lt;composition-id&gt; &lt;output.wav&gt;` (with the
-          entry optional when the project can be discovered) or `--composition`/`--output`. Inputs
-          and render options can be provided with `--input`, `--input-file`, and `--options` (or
-          `--render-options`); explicit flags override values from the JSON object, which overrides
-          project defaults. Range and execution flags are `--start-frame`, `--end-frame`,
-          `--tail-frames`, `--block-frames`, and `--overwrite`. A render JSONL stream uses `format:
-          &quot;resona/render-event&quot;`, `schemaVersion: 1`, and `type: &quot;progress&quot; |
-          &quot;diagnostic&quot; | &quot;error&quot; | &quot;result&quot;`.
+          <code>render</code> accepts either
+          <code>[entry] &lt;composition-id&gt; &lt;output.wav&gt;</code> (with the entry optional
+          when the project can be discovered) or <code>--composition</code>/<code>--output</code>.
+          Inputs and render options can be provided with <code>--input</code>,
+          <code>--input-file</code>, and <code>--options</code> (or <code>--render-options</code>);
+          explicit flags override values from the JSON object, which overrides project defaults.
+          Range and execution flags are <code>--start-frame</code>, <code>--end-frame</code>,
+          <code>--tail-frames</code>, <code>--block-frames</code>, and <code>--overwrite</code>. A
+          render JSONL stream uses <code>format: &quot;resona/render-event&quot;</code>,
+          <code>schemaVersion: 1</code>, and
+          <code
+            >type: &quot;progress&quot; | &quot;diagnostic&quot; | &quot;error&quot; |
+            &quot;result&quot;</code
+          >.
         </p>
         <p>
-          `studio` starts a loopback-only HTTP service on a dynamic port and keeps it alive until
-          SIGINT. The static shell is served at `/`; authenticated API requests use a bearer session
-          token and the versioned `/api/v1/session`, `/api/v1/compositions`, `/api/v1/variants`,
-          `/api/v1/variants/:variantId/plan`, and
-          `/api/v1/variants/:variantId/resources/:sha256-hash` routes. Host and Origin are checked
-          against the exact loopback URL, and resource requests are authorized against hashes
-          already resolved by that variant. The browser receives serializable IR, plans, metadata,
-          diagnostics, and resource samples; it never receives or evaluates the authoring bundle.
+          <code>studio</code> starts a loopback-only HTTP service on a dynamic port and keeps it
+          alive until SIGINT. The static shell is served at <code>/</code>; authenticated API
+          requests use a bearer session token and the versioned <code>/api/v1/session</code>,
+          <code>/api/v1/compositions</code>, <code>/api/v1/variants</code>,
+          <code>/api/v1/variants/:variantId/plan</code>, and
+          <code>/api/v1/variants/:variantId/resources/:sha256-hash</code> routes. Host and Origin
+          are checked against the exact loopback URL, and resource requests are authorized against
+          hashes already resolved by that variant. The browser receives serializable IR, plans,
+          metadata, diagnostics, and resource samples; it never receives or evaluates the authoring
+          bundle.
         </p>
         <p>
-          The first Studio shell also loads the private same-origin `/studio/audio-worklet.js` and
-          `/studio/audio-engine.js` modules. It converts authorized JSON resource samples into
-          `Float32Array` buffers, transfers them with the plan through the `load` command, and
-          enables play/pause only after a 48 kHz stereo `AudioContext` and the worklet report
-          `ready`. The worklet owns the sample cursor and reports snapshots; the shell only presents
-          them.
+          The first Studio shell also loads the private same-origin
+          <code>/studio/audio-worklet.js</code> and <code>/studio/audio-engine.js</code> modules. It
+          converts authorized JSON resource samples into <code>Float32Array</code> buffers,
+          transfers them with the plan through the <code>load</code> command, and enables play/pause
+          only after a 48 kHz stereo <code>AudioContext</code> and the worklet report
+          <code>ready</code>. The worklet owns the sample cursor and reports snapshots; the shell
+          only presents them.
         </p>
       </article>
     </main>

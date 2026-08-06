@@ -13,7 +13,8 @@
         <h1 id="deepening">Deepening</h1>
         <p>
           How to deepen a cluster of shallow modules safely, given its dependencies. Assumes the
-          vocabulary in [SKILL.md](SKILL.md) — **module**, **interface**, **seam**, **adapter**.
+          vocabulary in <a href="SKILL.html">SKILL.md</a> — <strong>module</strong>,
+          <strong>interface</strong>, <strong>seam</strong>, <strong>adapter</strong>.
         </p>
         <h2 id="dependency-categories">Dependency categories</h2>
         <p>
@@ -34,14 +35,17 @@
         <h3 id="3-remote-but-owned-ports-adapters">3. Remote but owned (Ports &amp; Adapters)</h3>
         <p>
           Your own services across a network boundary (microservices, internal APIs). Define a
-          **port** (interface) at the seam. The deep module owns the logic; the transport is
-          injected as an **adapter**. Tests use an in-memory adapter. Production uses an
-          HTTP/gRPC/queue adapter.
+          <strong>port</strong> (interface) at the seam. The deep module owns the logic; the
+          transport is injected as an <strong>adapter</strong>. Tests use an in-memory adapter.
+          Production uses an HTTP/gRPC/queue adapter.
         </p>
         <p>
-          Recommendation shape: *&quot;Define a port at the seam, implement an HTTP adapter for
-          production and an in-memory adapter for testing, so the logic sits in one deep module even
-          though it's deployed across a network.&quot;*
+          Recommendation shape:
+          <em
+            >&quot;Define a port at the seam, implement an HTTP adapter for production and an
+            in-memory adapter for testing, so the logic sits in one deep module even though it's
+            deployed across a network.&quot;</em
+          >
         </p>
         <h3 id="4-true-external-mock">4. True external (Mock)</h3>
         <p>
@@ -49,23 +53,36 @@
           the external dependency as an injected port; tests provide a mock adapter.
         </p>
         <h2 id="seam-discipline">Seam discipline</h2>
-        <p>
-          - **One adapter means a hypothetical seam. Two adapters means a real one.** Don't
-          introduce a port unless at least two adapters are justified (typically production + test).
-          A single-adapter seam is just indirection. - **Internal seams vs external seams.** A deep
-          module can have internal seams (private to its implementation, used by its own tests) as
-          well as the external seam at its interface. Don't expose internal seams through the
-          interface just because tests use them.
-        </p>
-        <h2 id="testing-strategy-replace-don-t-layer">Testing strategy: replace, don't layer</h2>
-        <p>
-          - Old unit tests on shallow modules become waste once tests at the deepened module's
-          interface exist — delete them. - Write new tests at the deepened module's interface. The
-          **interface is the test surface**. - Tests assert on observable outcomes through the
-          interface, not internal state. - Tests should survive internal refactors — they describe
-          behaviour, not implementation. If a test has to change when the implementation changes,
-          it's testing past the interface.
-        </p>
+        <ul>
+          <li>
+            <strong>One adapter means a hypothetical seam. Two adapters means a real one.</strong>
+            Don't introduce a port unless at least two adapters are justified (typically production
+            + test). A single-adapter seam is just indirection.
+          </li>
+          <li>
+            <strong>Internal seams vs external seams.</strong> A deep module can have internal seams
+            (private to its implementation, used by its own tests) as well as the external seam at
+            its interface. Don't expose internal seams through the interface just because tests use
+            them.
+          </li>
+        </ul>
+        <h2 id="testing-strategy-replace-dont-layer">Testing strategy: replace, don't layer</h2>
+        <ul>
+          <li>
+            Old unit tests on shallow modules become waste once tests at the deepened module's
+            interface exist — delete them.
+          </li>
+          <li>
+            Write new tests at the deepened module's interface. The
+            <strong>interface is the test surface</strong>.
+          </li>
+          <li>Tests assert on observable outcomes through the interface, not internal state.</li>
+          <li>
+            Tests should survive internal refactors — they describe behaviour, not implementation.
+            If a test has to change when the implementation changes, it's testing past the
+            interface.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

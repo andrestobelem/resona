@@ -10,42 +10,73 @@
     <main>
       <p class="source-path">docs/adr/0058-studio-render-numeric-parity-budget.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="studio-y-render-comparten-un-presupuesto-numerico-explicito">
           Studio y render comparten un presupuesto numérico explícito
         </h1>
         <p>
-          La paridad entre Studio y render offline se mide sobre muestras `Float32` alineadas antes
-          de codificar un archivo. Ambos resultados deben tener la misma cantidad de canales y
-          frames, ubicar eventos y transiciones en el mismo frame, y no contener `NaN` ni infinitos.
+          La paridad entre Studio y render offline se mide sobre muestras
+          <code>Float32</code> alineadas antes de codificar un archivo. Ambos resultados deben tener
+          la misma cantidad de canales y frames, ubicar eventos y transiciones en el mismo frame, y
+          no contener <code>NaN</code> ni infinitos.
         </p>
-        <p>Para las muestras de Studio `s[i]` y las offline `r[i]`, el contrato inicial exige:</p>
-        <pre><code class="language-text">
-max(abs(s[i] - r[i])) &lt;= 1e-5
-rms(s - r)             &lt;= 1e-6
-        </code></pre>
-        <h2 id="opciones-consideradas">Opciones consideradas</h2>
         <p>
-          - Exigir igualdad bit a bit entre navegador y Node. - Validar solamente equivalencia
-          perceptual. - Exigir igualdad estructural y temporal exacta con un presupuesto numérico
-          pequeño y medible para las muestras.
+          Para las muestras de Studio <code>s[i]</code> y las offline <code>r[i]</code>, el contrato
+          inicial exige:
         </p>
+        <pre><code class="language-text">max(abs(s[i] - r[i])) &lt;= 1e-5
+rms(s - r)             &lt;= 1e-6
+</code></pre>
+        <h2 id="opciones-consideradas">Opciones consideradas</h2>
+        <ul>
+          <li>Exigir igualdad bit a bit entre navegador y Node.</li>
+          <li>Validar solamente equivalencia perceptual.</li>
+          <li>
+            Exigir igualdad estructural y temporal exacta con un presupuesto numérico pequeño y
+            medible para las muestras.
+          </li>
+        </ul>
         <p>
           Se eligió la tercera opción porque detecta drift, errores de planificación y divergencias
           audibles sin convertir diferencias mínimas entre runtimes en fallas falsas.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - La suite de paridad compara buffers anteriores al encoder para no mezclar diferencias de
-          contenedor o cuantización. - Una diferencia en canales, longitud, frame de un evento o
-          frame de una transición falla aunque los valores de las muestras respeten el presupuesto.
-          - Cualquier `NaN` o infinito falla inmediatamente. - Las fixtures con instrumentos,
-          efectos con estado, automatización, seek y loop deben cumplir ambos límites numéricos. -
-          Los límites pueden endurecerse con evidencia del prototipo; relajarlos requiere una nueva
-          decisión explícita y documentada. - Las fronteras numéricas canónicas compartidas por
-          ambos motores se fijan en el [ADR 0078](0078-explicit-float32-audio-boundaries.md); la
-          igualdad bit a bit solo se exige entre particiones en bloques dentro de un mismo runtime.
-        </p>
+        <ul>
+          <li>
+            La suite de paridad compara buffers anteriores al encoder para no mezclar diferencias de
+            contenedor o cuantización.
+          </li>
+          <li>
+            Una diferencia en canales, longitud, frame de un evento o frame de una transición falla
+            aunque los valores de las muestras respeten el presupuesto.
+          </li>
+          <li>Cualquier <code>NaN</code> o infinito falla inmediatamente.</li>
+          <li>
+            Las fixtures con instrumentos, efectos con estado, automatización, seek y loop deben
+            cumplir ambos límites numéricos.
+          </li>
+          <li>
+            Los límites pueden endurecerse con evidencia del prototipo; relajarlos requiere una
+            nueva decisión explícita y documentada.
+          </li>
+          <li>
+            Las fronteras numéricas canónicas compartidas por ambos motores se fijan en el
+            <a href="0078-explicit-float32-audio-boundaries.html">ADR 0078</a>; la igualdad bit a
+            bit solo se exige entre particiones en bloques dentro de un mismo runtime.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

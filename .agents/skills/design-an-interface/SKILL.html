@@ -10,12 +10,15 @@
     <main>
       <p class="source-path">.agents/skills/design-an-interface/SKILL.md</p>
       <article>
-        <p>
-          --- name: design-an-interface description: Generate multiple radically different interface
-          designs for a module using parallel sub-agents. Use when user wants to design an API,
-          explore interface options, compare module shapes, or mentions &quot;design it twice&quot;.
-          ---
-        </p>
+        <aside class="frontmatter">
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+name: design-an-interface
+description: Generate multiple radically different interface designs for a module using parallel sub-agents. Use when user wants to design an API, explore interface options, compare module shapes, or mentions &quot;design it twice&quot;.
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="design-an-interface">Design an Interface</h1>
         <p>
           Based on &quot;Design It Twice&quot; from &quot;A Philosophy of Software Design&quot;:
@@ -25,22 +28,22 @@
         <h2 id="workflow">Workflow</h2>
         <h3 id="1-gather-requirements">1. Gather Requirements</h3>
         <p>Before designing, understand:</p>
-        <p>
-          - [ ] What problem does this module solve? - [ ] Who are the callers? (other modules,
-          external users, tests) - [ ] What are the key operations? - [ ] Any constraints?
-          (performance, compatibility, existing patterns) - [ ] What should be hidden inside vs
-          exposed?
-        </p>
+        <ul>
+          <li>[ ] What problem does this module solve?</li>
+          <li>[ ] Who are the callers? (other modules, external users, tests)</li>
+          <li>[ ] What are the key operations?</li>
+          <li>[ ] Any constraints? (performance, compatibility, existing patterns)</li>
+          <li>[ ] What should be hidden inside vs exposed?</li>
+        </ul>
         <p>Ask: &quot;What does this module need to do? Who will use it?&quot;</p>
         <h3 id="2-generate-designs-parallel-sub-agents">
           2. Generate Designs (Parallel Sub-Agents)
         </h3>
         <p>
-          Spawn 3+ sub-agents simultaneously using Task tool. Each must produce a **radically
-          different** approach.
+          Spawn 3+ sub-agents simultaneously using Task tool. Each must produce a
+          <strong>radically different</strong> approach.
         </p>
-        <pre><code>
-Prompt template for each sub-agent:
+        <pre><code>Prompt template for each sub-agent:
 
 Design an interface for: [module description]
 
@@ -57,54 +60,59 @@ Output format:
 2. Usage example (how caller uses it)
 3. What this design hides internally
 4. Trade-offs of this approach
-        </code></pre>
+</code></pre>
         <h3 id="3-present-designs">3. Present Designs</h3>
         <p>Show each design with:</p>
-        <p>
-          1. **Interface signature** - types, methods, params 2. **Usage examples** - how callers
-          actually use it in practice 3. **What it hides** - complexity kept internal
-        </p>
+        <ol>
+          <li><strong>Interface signature</strong> - types, methods, params</li>
+          <li><strong>Usage examples</strong> - how callers actually use it in practice</li>
+          <li><strong>What it hides</strong> - complexity kept internal</li>
+        </ol>
         <p>Present designs sequentially so user can absorb each approach before comparison.</p>
         <h3 id="4-compare-designs">4. Compare Designs</h3>
         <p>After showing all designs, compare them on:</p>
-        <p>
-          - **Interface simplicity**: fewer methods, simpler params - **General-purpose vs
-          specialized**: flexibility vs focus - **Implementation efficiency**: does shape allow
-          efficient internals? - **Depth**: small interface hiding significant complexity (good) vs
-          large interface with thin implementation (bad) - **Ease of correct use** vs **ease of
-          misuse**
-        </p>
+        <ul>
+          <li><strong>Interface simplicity</strong>: fewer methods, simpler params</li>
+          <li><strong>General-purpose vs specialized</strong>: flexibility vs focus</li>
+          <li><strong>Implementation efficiency</strong>: does shape allow efficient internals?</li>
+          <li>
+            <strong>Depth</strong>: small interface hiding significant complexity (good) vs large
+            interface with thin implementation (bad)
+          </li>
+          <li><strong>Ease of correct use</strong> vs <strong>ease of misuse</strong></li>
+        </ul>
         <p>Discuss trade-offs in prose, not tables. Highlight where designs diverge most.</p>
         <h3 id="5-synthesize">5. Synthesize</h3>
         <p>Often the best design combines insights from multiple options. Ask:</p>
-        <p>
-          - &quot;Which design best fits your primary use case?&quot; - &quot;Any elements from
-          other designs worth incorporating?&quot;
-        </p>
+        <ul>
+          <li>&quot;Which design best fits your primary use case?&quot;</li>
+          <li>&quot;Any elements from other designs worth incorporating?&quot;</li>
+        </ul>
         <h2 id="evaluation-criteria">Evaluation Criteria</h2>
         <p>From &quot;A Philosophy of Software Design&quot;:</p>
         <p>
-          **Interface simplicity**: Fewer methods, simpler params = easier to learn and use
-          correctly.
+          <strong>Interface simplicity</strong>: Fewer methods, simpler params = easier to learn and
+          use correctly.
         </p>
         <p>
-          **General-purpose**: Can handle future use cases without changes. But beware
+          <strong>General-purpose</strong>: Can handle future use cases without changes. But beware
           over-generalization.
         </p>
         <p>
-          **Implementation efficiency**: Does interface shape allow efficient implementation? Or
-          force awkward internals?
+          <strong>Implementation efficiency</strong>: Does interface shape allow efficient
+          implementation? Or force awkward internals?
         </p>
         <p>
-          **Depth**: Small interface hiding significant complexity = deep module (good). Large
-          interface with thin implementation = shallow module (avoid).
+          <strong>Depth</strong>: Small interface hiding significant complexity = deep module
+          (good). Large interface with thin implementation = shallow module (avoid).
         </p>
         <h2 id="anti-patterns">Anti-Patterns</h2>
-        <p>
-          - Don't let sub-agents produce similar designs - enforce radical difference - Don't skip
-          comparison - the value is in contrast - Don't implement - this is purely about interface
-          shape - Don't evaluate based on implementation effort
-        </p>
+        <ul>
+          <li>Don't let sub-agents produce similar designs - enforce radical difference</li>
+          <li>Don't skip comparison - the value is in contrast</li>
+          <li>Don't implement - this is purely about interface shape</li>
+          <li>Don't evaluate based on implementation effort</li>
+        </ul>
       </article>
     </main>
   </body>

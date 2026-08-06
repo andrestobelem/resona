@@ -10,52 +10,85 @@
     <main>
       <p class="source-path">docs/adr/0064-canonical-rational-time-in-composition-ir.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="compositionir-usa-tiempo-racional-canonico">
           CompositionIR usa tiempo racional canónico
         </h1>
         <p>
-          `CompositionIR` distingue posiciones de duraciones y tiempo musical de tiempo absoluto. El
-          tiempo musical se expresa como una fracción exacta de notas negras y el absoluto como una
-          fracción exacta de segundos.
+          <code>CompositionIR</code> distingue posiciones de duraciones y tiempo musical de tiempo
+          absoluto. El tiempo musical se expresa como una fracción exacta de notas negras y el
+          absoluto como una fracción exacta de segundos.
         </p>
-        <pre><code class="language-ts">
-type RationalIR = Readonly&lt;{
+        <pre><code class="language-ts"><span class="token keyword">type</span> RationalIR = Readonly&lt;{
   numerator: string;
   denominator: string;
 }&gt;;
 
-type PositionIR =
-  | Readonly&lt;{type: &quot;musical-position&quot;; quarterNotes: RationalIR}&gt;
-  | Readonly&lt;{type: &quot;absolute-position&quot;; seconds: RationalIR}&gt;;
+<span class="token keyword">type</span> PositionIR =
+  | Readonly&lt;{<span class="token keyword">type</span>: <span class="token string">&quot;musical-position&quot;</span>; quarterNotes: RationalIR}&gt;
+  | Readonly&lt;{<span class="token keyword">type</span>: <span class="token string">&quot;absolute-position&quot;</span>; seconds: RationalIR}&gt;;
 
-type DurationIR =
-  | Readonly&lt;{type: &quot;musical-duration&quot;; quarterNotes: RationalIR}&gt;
-  | Readonly&lt;{type: &quot;absolute-duration&quot;; seconds: RationalIR}&gt;;
-        </code></pre>
+<span class="token keyword">type</span> DurationIR =
+  | Readonly&lt;{<span class="token keyword">type</span>: <span class="token string">&quot;musical-duration&quot;</span>; quarterNotes: RationalIR}&gt;
+  | Readonly&lt;{<span class="token keyword">type</span>: <span class="token string">&quot;absolute-duration&quot;</span>; seconds: RationalIR}&gt;;
+</code></pre>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Conservar todas las formas públicas, incluida una variante de frames, dentro de la IR. -
-          Convertir todo temprano a segundos de punto flotante. - Normalizar a dos dominios
-          racionales exactos y convertir a frames únicamente al compilar el plan.
-        </p>
+        <ul>
+          <li>
+            Conservar todas las formas públicas, incluida una variante de frames, dentro de la IR.
+          </li>
+          <li>Convertir todo temprano a segundos de punto flotante.</li>
+          <li>
+            Normalizar a dos dominios racionales exactos y convertir a frames únicamente al compilar
+            el plan.
+          </li>
+        </ul>
         <p>
           Se eligió la tercera opción porque evita múltiples representaciones del mismo instante,
           conserva la diferencia semántica entre tiempo musical y absoluto y elimina redondeos
           intermedios al anidar secuencias.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - Barras, pulsos y subdivisiones se resuelven a fracciones de notas negras antes de emitir
-          la IR. - Segundos y frames acompañados por sample rate se resuelven a segundos racionales
-          exactos. - Numerador y denominador son strings decimales canónicos para no depender del
-          límite de enteros seguros de JSON. - Ambos son no negativos, el denominador es positivo y
-          la fracción está reducida. - Cero se escribe como `&quot;0&quot;`; no se permiten signos
-          redundantes ni ceros a la izquierda. - Posiciones y duraciones conservan tipos distintos y
-          no son intercambiables. - El planificador combina offsets racionales, aplica el tempo
-          resuelto y redondea una sola vez a frames con nearest-even. - `ExecutionPlan` no contiene
-          estas uniones: todo su tiempo ya son frames enteros.
-        </p>
+        <ul>
+          <li>
+            Barras, pulsos y subdivisiones se resuelven a fracciones de notas negras antes de emitir
+            la IR.
+          </li>
+          <li>
+            Segundos y frames acompañados por sample rate se resuelven a segundos racionales
+            exactos.
+          </li>
+          <li>
+            Numerador y denominador son strings decimales canónicos para no depender del límite de
+            enteros seguros de JSON.
+          </li>
+          <li>Ambos son no negativos, el denominador es positivo y la fracción está reducida.</li>
+          <li>
+            Cero se escribe como <code>&quot;0&quot;</code>; no se permiten signos redundantes ni
+            ceros a la izquierda.
+          </li>
+          <li>Posiciones y duraciones conservan tipos distintos y no son intercambiables.</li>
+          <li>
+            El planificador combina offsets racionales, aplica el tempo resuelto y redondea una sola
+            vez a frames con nearest-even.
+          </li>
+          <li>
+            <code>ExecutionPlan</code> no contiene estas uniones: todo su tiempo ya son frames
+            enteros.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

@@ -10,7 +10,19 @@
     <main>
       <p class="source-path">docs/adr/0002-tsx-as-primary-authoring-interface.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="tsx-y-react-son-la-interfaz-principal-de-autoria">
           TSX y React son la interfaz principal de autoría
         </h1>
@@ -21,25 +33,35 @@
           en el motor de audio.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Componentes TSX y React como interfaz pública de autoría. - Una DSL de builders o datos
-          en TypeScript como única interfaz pública. - Una API imperativa acoplada directamente al
-          motor de audio.
-        </p>
+        <ul>
+          <li>Componentes TSX y React como interfaz pública de autoría.</li>
+          <li>Una DSL de builders o datos en TypeScript como única interfaz pública.</li>
+          <li>Una API imperativa acoplada directamente al motor de audio.</li>
+        </ul>
         <p>
           Se eligió la primera opción por su capacidad de encapsular y combinar estructura musical,
           manteniendo una experiencia familiar para el usuario inicial. Las otras alternativas
           siguen siendo posibles como frontends adicionales si producen el mismo modelo musical.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - La evaluación de componentes debe producir una representación normalizada independiente
-          de React. - El subconjunto React admitido está definido en el [ADR
-          0019](0019-pure-declarative-react-authoring.md). - React no participa del callback de
-          audio ni del procesamiento DSP. - El código TSX puede importar datos declarativos; cada
-          nota o evento no tiene que vivir directamente en componentes. - Los nombres y contratos
-          concretos de los componentes públicos todavía deben diseñarse.
-        </p>
+        <ul>
+          <li>
+            La evaluación de componentes debe producir una representación normalizada independiente
+            de React.
+          </li>
+          <li>
+            El subconjunto React admitido está definido en el
+            <a href="0019-pure-declarative-react-authoring.html">ADR 0019</a>.
+          </li>
+          <li>React no participa del callback de audio ni del procesamiento DSP.</li>
+          <li>
+            El código TSX puede importar datos declarativos; cada nota o evento no tiene que vivir
+            directamente en componentes.
+          </li>
+          <li>
+            Los nombres y contratos concretos de los componentes públicos todavía deben diseñarse.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

@@ -10,36 +10,59 @@
     <main>
       <p class="source-path">docs/adr/0049-author-code-evaluates-only-in-node.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="el-codigo-del-autor-se-evalua-unicamente-en-node">
           El código del autor se evalúa únicamente en Node
         </h1>
         <p>
           El servicio local de Node es la única autoridad que carga el bundle del proyecto, registra
-          composiciones, valida inputs, prepara variantes, evalúa TSX y compila `ExecutionPlan`.
-          Studio recibe artefactos serializables y no importa el bundle del autor en el navegador.
+          composiciones, valida inputs, prepara variantes, evalúa TSX y compila
+          <code>ExecutionPlan</code>. Studio recibe artefactos serializables y no importa el bundle
+          del autor en el navegador.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Evaluar el proyecto en el navegador para Studio y volver a evaluarlo en Node al
-          renderizar. - Ejecutar autoría solamente en Node y transferir IR y planes al navegador. -
-          Diseñar un runtime aislado distinto para cada superficie.
-        </p>
+        <ul>
+          <li>
+            Evaluar el proyecto en el navegador para Studio y volver a evaluarlo en Node al
+            renderizar.
+          </li>
+          <li>Ejecutar autoría solamente en Node y transferir IR y planes al navegador.</li>
+          <li>Diseñar un runtime aislado distinto para cada superficie.</li>
+        </ul>
         <p>
           Se eligió la segunda opción porque elimina dos evaluaciones en runtimes diferentes,
           mantiene schema y filesystem del lado servidor y aprovecha las seams serializables ya
           definidas.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - `ExecutionPlan` debe ser serializable además de inmutable. - El bundle web de Studio no
-          contiene código ni dependencias del proyecto del autor. - Cambios de código o inputs
-          solicitan una nueva variante al servicio local. - `AudioWorklet` recibe el plan y ejecuta
-          el mismo núcleo DSP que Node. - Render offline usa la misma ruta de registro, preparación,
-          evaluación y planificación. - APIs exclusivas del navegador no están disponibles para la
-          autoría. - El protocolo y la entrega de recursos se definen en el [ADR
-          0050](0050-versioned-local-studio-protocol.md).
-        </p>
+        <ul>
+          <li><code>ExecutionPlan</code> debe ser serializable además de inmutable.</li>
+          <li>
+            El bundle web de Studio no contiene código ni dependencias del proyecto del autor.
+          </li>
+          <li>Cambios de código o inputs solicitan una nueva variante al servicio local.</li>
+          <li><code>AudioWorklet</code> recibe el plan y ejecuta el mismo núcleo DSP que Node.</li>
+          <li>
+            Render offline usa la misma ruta de registro, preparación, evaluación y planificación.
+          </li>
+          <li>APIs exclusivas del navegador no están disponibles para la autoría.</li>
+          <li>
+            El protocolo y la entrega de recursos se definen en el
+            <a href="0050-versioned-local-studio-protocol.html">ADR 0050</a>.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

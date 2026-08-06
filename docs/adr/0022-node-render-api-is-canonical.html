@@ -10,36 +10,61 @@
     <main>
       <p class="source-path">docs/adr/0022-node-render-api-is-canonical.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="la-api-de-render-de-node-es-la-capacidad-canonica">
           La API de render de Node es la capacidad canónica
         </h1>
         <p>
-          El render offline tiene una sola implementación pública canónica: `renderAudio(job)` en
-          Node. La CLI y el botón de render de Studio son adaptadores finos que construyen o reciben
-          el mismo trabajo y delegan su ejecución a esa capacidad.
+          El render offline tiene una sola implementación pública canónica:
+          <code>renderAudio(job)</code> en Node. La CLI y el botón de render de Studio son
+          adaptadores finos que construyen o reciben el mismo trabajo y delegan su ejecución a esa
+          capacidad.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Implementar caminos de render propios para API, CLI y Studio. - Hacer de la CLI el
-          renderer canónico y que las demás superficies lancen un proceso. - Hacer canónica una API
-          programática de Node y adaptar CLI y Studio sobre ella.
-        </p>
+        <ul>
+          <li>Implementar caminos de render propios para API, CLI y Studio.</li>
+          <li>
+            Hacer de la CLI el renderer canónico y que las demás superficies lancen un proceso.
+          </li>
+          <li>Hacer canónica una API programática de Node y adaptar CLI y Studio sobre ella.</li>
+        </ul>
         <p>
           Se eligió la tercera opción porque permite automatización directa sin subprocesos y evita
           que las superficies acumulen diferencias de resolución, ejecución o reporte.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - `renderAudio()` recibe un `RenderJob` inmutable ya resuelto y compilado. - El renderer
-          no vuelve a interpretar defaults, inputs, preparación ni TSX. - La CLI se limita a adaptar
-          argumentos, salida textual, progreso y cancelación. - Studio delega mediante su servicio
-          local de Node y no mantiene otro motor offline. - Las tres superficies comparten
-          diagnósticos y semántica de render. - La precedencia y procedencia de opciones se definen
-          en el [ADR 0023](0023-render-option-precedence-and-provenance.md). - La identidad de
-          contenido de `RenderJob` se define en el [ADR
-          0024](0024-render-spec-defines-content-identity.md).
-        </p>
+        <ul>
+          <li>
+            <code>renderAudio()</code> recibe un <code>RenderJob</code> inmutable ya resuelto y
+            compilado.
+          </li>
+          <li>El renderer no vuelve a interpretar defaults, inputs, preparación ni TSX.</li>
+          <li>La CLI se limita a adaptar argumentos, salida textual, progreso y cancelación.</li>
+          <li>
+            Studio delega mediante su servicio local de Node y no mantiene otro motor offline.
+          </li>
+          <li>Las tres superficies comparten diagnósticos y semántica de render.</li>
+          <li>
+            La precedencia y procedencia de opciones se definen en el
+            <a href="0023-render-option-precedence-and-provenance.html">ADR 0023</a>.
+          </li>
+          <li>
+            La identidad de contenido de <code>RenderJob</code> se define en el
+            <a href="0024-render-spec-defines-content-identity.html">ADR 0024</a>.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

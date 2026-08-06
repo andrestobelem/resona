@@ -10,7 +10,19 @@
     <main>
       <p class="source-path">docs/adr/0012-prepare-an-immutable-resolved-variant.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="la-preparacion-produce-una-variante-resuelta-inmutable">
           La preparación produce una variante resuelta inmutable
         </h1>
@@ -20,27 +32,43 @@
           variante resuelta inmutable consumida por Studio, API, CLI y renderer.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Evaluar el TSX directamente con defaults e inputs provistos. - Recalcular metadata de
-          forma independiente en cada superficie y etapa. - Preparar una vez una variante resuelta y
-          conservarla durante la ejecución.
-        </p>
+        <ul>
+          <li>Evaluar el TSX directamente con defaults e inputs provistos.</li>
+          <li>Recalcular metadata de forma independiente en cada superficie y etapa.</li>
+          <li>Preparar una vez una variante resuelta y conservarla durante la ejecución.</li>
+        </ul>
         <p>
           Se eligió la tercera opción para admitir composiciones parametrizadas y metadata derivada
           sin que selección, preview y render puedan observar configuraciones distintas.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - La preparación recibe inputs validados, ID de composición, `AbortSignal` y un resolver
-          restringido de recursos. - Solo puede consultar recursos explícitos mediante el resolver
-          de Resona; red, reloj, estado global y aleatoriedad sin seed no alteran la variante. - El
-          modo de ejecución no forma parte del contrato público, como precisa el [ADR
-          0059](0059-mode-agnostic-public-preparation.md). - La preparación no procesa audio ni
-          participa del callback de tiempo real. - La variante resuelta contiene los inputs
-          concretos y la metadata, recursos y configuración finales. - Una superficie no vuelve a
-          preparar silenciosamente la variante entre selección y ejecución. - El nombre y la firma
-          pública se definen en el [ADR 0060](0060-prepare-composition-public-contract.md).
-        </p>
+        <ul>
+          <li>
+            La preparación recibe inputs validados, ID de composición, <code>AbortSignal</code> y un
+            resolver restringido de recursos.
+          </li>
+          <li>
+            Solo puede consultar recursos explícitos mediante el resolver de Resona; red, reloj,
+            estado global y aleatoriedad sin seed no alteran la variante.
+          </li>
+          <li>
+            El modo de ejecución no forma parte del contrato público, como precisa el
+            <a href="0059-mode-agnostic-public-preparation.html">ADR 0059</a>.
+          </li>
+          <li>La preparación no procesa audio ni participa del callback de tiempo real.</li>
+          <li>
+            La variante resuelta contiene los inputs concretos y la metadata, recursos y
+            configuración finales.
+          </li>
+          <li>
+            Una superficie no vuelve a preparar silenciosamente la variante entre selección y
+            ejecución.
+          </li>
+          <li>
+            El nombre y la firma pública se definen en el
+            <a href="0060-prepare-composition-public-contract.html">ADR 0060</a>.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

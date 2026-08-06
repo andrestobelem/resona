@@ -10,41 +10,72 @@
     <main>
       <p class="source-path">docs/adr/0074-pitch-frequency-must-be-below-nyquist.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="la-frecuencia-de-un-pitch-debe-ser-menor-que-nyquist">
           La frecuencia de un pitch debe ser menor que Nyquist
         </h1>
         <p>
-          `PitchIR` conserva cualquier entero seguro de semitonos respecto de A4 y no adopta el
-          rango MIDI. Al planificar, Resona exige que ese valor produzca una frecuencia
+          <code>PitchIR</code> conserva cualquier entero seguro de semitonos respecto de A4 y no
+          adopta el rango MIDI. Al planificar, Resona exige que ese valor produzca una frecuencia
           representable por el perfil de ejecución.
         </p>
         <p>La conversión canónica es:</p>
-        <pre><code class="language-ts">
-const frequencyHz = 440 * 2 ** (semitonesFromA4 / 12);
-        </code></pre>
+        <pre><code class="language-ts"><span class="token keyword">const</span> frequencyHz = <span class="token number">440</span> * <span class="token number">2</span> ** (semitonesFromA4 / <span class="token number">12</span>);
+</code></pre>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Permitir cualquier resultado finito y aceptar aliasing por encima de Nyquist. - Limitar,
-          plegar o transponer automáticamente frecuencias fuera del rango ejecutable. - Rechazar
-          resultados no positivos, no finitos o iguales o superiores a Nyquist.
-        </p>
+        <ul>
+          <li>Permitir cualquier resultado finito y aceptar aliasing por encima de Nyquist.</li>
+          <li>
+            Limitar, plegar o transponer automáticamente frecuencias fuera del rango ejecutable.
+          </li>
+          <li>Rechazar resultados no positivos, no finitos o iguales o superiores a Nyquist.</li>
+        </ul>
         <p>
           Se eligió la tercera opción. Evita reinterpretaciones silenciosas y mantiene al oscilador
           y su corrección PolyBLEP dentro del dominio representable por el sample rate elegido.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - La frecuencia debe ser finita, estrictamente positiva y menor que `sampleRate / 2`. -
-          Con `sampleRate: 48_000`, debe ser menor que `24_000 Hz`. - El mayor `semitonesFromA4`
-          entero aceptado es `+69`; `+70` ya supera Nyquist. - No existe un límite musical inferior
-          arbitrario. Las frecuencias subaudibles son válidas mientras el cálculo siga produciendo
-          un número finito y positivo. - Un resultado inválido produce un diagnóstico; no se aplica
-          clamp, folding, wrapping ni transposición. - La validación ocurre antes de podar notas,
-          incluso si una nota no sobrevivirá al plan. - Una única función compartida implementa la
-          fórmula para el planificador y el núcleo DSP. - Esta restricción depende del perfil de
-          ejecución, no cambia la representación de `PitchIR` ni introduce identidad MIDI.
-        </p>
+        <ul>
+          <li>
+            La frecuencia debe ser finita, estrictamente positiva y menor que
+            <code>sampleRate / 2</code>.
+          </li>
+          <li>Con <code>sampleRate: 48_000</code>, debe ser menor que <code>24_000 Hz</code>.</li>
+          <li>
+            El mayor <code>semitonesFromA4</code> entero aceptado es <code>+69</code>;
+            <code>+70</code> ya supera Nyquist.
+          </li>
+          <li>
+            No existe un límite musical inferior arbitrario. Las frecuencias subaudibles son válidas
+            mientras el cálculo siga produciendo un número finito y positivo.
+          </li>
+          <li>
+            Un resultado inválido produce un diagnóstico; no se aplica clamp, folding, wrapping ni
+            transposición.
+          </li>
+          <li>
+            La validación ocurre antes de podar notas, incluso si una nota no sobrevivirá al plan.
+          </li>
+          <li>
+            Una única función compartida implementa la fórmula para el planificador y el núcleo DSP.
+          </li>
+          <li>
+            Esta restricción depende del perfil de ejecución, no cambia la representación de
+            <code>PitchIR</code> ni introduce identidad MIDI.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

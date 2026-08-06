@@ -10,33 +10,50 @@
     <main>
       <p class="source-path">docs/adr/0053-explicit-atomic-output-publication.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="publicar-un-render-es-atomico-y-sobrescribir-es-explicito">
           Publicar un render es atómico y sobrescribir es explícito
         </h1>
         <p>
-          El renderer falla si el destino existe salvo `overwrite` explícito. Escribe un temporal en
-          el mismo directorio y solo lo renombra después de cerrar y validar el WAV; recién entonces
-          informa éxito.
+          El renderer falla si el destino existe salvo <code>overwrite</code> explícito. Escribe un
+          temporal en el mismo directorio y solo lo renombra después de cerrar y validar el WAV;
+          recién entonces informa éxito.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Sobrescribir siempre el destino a medida que se renderiza. - Elegir automáticamente otro
-          nombre cuando el destino existe. - Exigir autorización de overwrite y publicar desde un
-          temporal validado.
-        </p>
+        <ul>
+          <li>Sobrescribir siempre el destino a medida que se renderiza.</li>
+          <li>Elegir automáticamente otro nombre cuando el destino existe.</li>
+          <li>Exigir autorización de overwrite y publicar desde un temporal validado.</li>
+        </ul>
         <p>
           Se eligió la tercera opción para proteger artefactos existentes y asegurar que un path
           final nunca represente por accidente un render parcial.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - API usa `overwrite: true` y CLI usa `--overwrite`. - El temporal vive en el directorio
-          del destino para permitir rename local. - Header, longitud y tamaño se validan antes de
-          publicar. - Cancelación y falla eliminan el temporal después de cerrarlo. - El resultado
-          exitoso se emite después del rename, no al terminar el último bloque DSP. - La
-          implementación debe documentar límites de atomicidad del filesystem y plataforma.
-        </p>
+        <ul>
+          <li>API usa <code>overwrite: true</code> y CLI usa <code>--overwrite</code>.</li>
+          <li>El temporal vive en el directorio del destino para permitir rename local.</li>
+          <li>Header, longitud y tamaño se validan antes de publicar.</li>
+          <li>Cancelación y falla eliminan el temporal después de cerrarlo.</li>
+          <li>
+            El resultado exitoso se emite después del rename, no al terminar el último bloque DSP.
+          </li>
+          <li>
+            La implementación debe documentar límites de atomicidad del filesystem y plataforma.
+          </li>
+        </ul>
       </article>
     </main>
   </body>
