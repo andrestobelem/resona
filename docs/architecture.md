@@ -1007,11 +1007,21 @@ cancela la solicitud anterior y el cliente ignora toda respuesta que ya no corre
 variante vigente.
 
 El primer servicio HTTP expone `/api/v1/session`, `/api/v1/compositions`,
-`/api/v1/static-resources`, `/api/v1/variants`, `/api/v1/variants/:variantId/plan` y
+`/api/v1/static-resources`, `/api/v1/variants`, `/api/v1/variants/:variantId/plan`,
+`/api/v1/variants/:variantId/render` y
 `/api/v1/variants/:variantId/resources/:sha256-hash`. Las respuestas usan
 `resona/studio-envelope` v1; los planes, IR y recursos viajan como payload serializable, y los
 paths físicos y `sourcePaths` permanecen en Node. El cliente solo puede pedir hashes que la
 variante ya autorizó.
+
+El endpoint `POST /api/v1/variants/:variantId/render` recibe una variante existente y exige un
+`outputPath` explícito. Una ruta relativa se resuelve desde la raíz del proyecto y una absoluta
+se conserva; `overwrite` es `false` por defecto. También acepta `startFrame`, `endFrame`,
+`tailFrames` y `blockFrames`, con los defaults del renderer (`0`, duración nominal, `0` y `128`).
+El servicio no recompila ni crea otro trabajo: delega el mismo `RenderJob` a
+`renderAudioToFile()`, devuelve `type: "render"` con el fingerprint/spec de la variante y
+`effectiveOptions`, y deja la publicación atómica y el rechazo de destinos existentes al
+renderer. Las rutas dentro del proyecto se redaccionan como `<project>` en el envelope.
 
 `/api/v1/static-resources` devuelve únicamente rutas lógicas de archivos WAV bajo el
 `staticDir` configurado, ordenadas y sin seguir symlinks. Studio usa esa lista para poblar el
@@ -1053,6 +1063,7 @@ la misma confianza que ejecutar sus scripts. La decisión está registrada en el
 - Muestra la cadena de instrumento y efectos de cada pista.
 - Mide niveles por pista y master.
 - Inspecciona la `CompositionIR` y sus diagnósticos.
+- Publica una variante preparada con un output path explícito mediante el renderer canónico.
 - Enlaza diagnósticos a la identidad del nodo y a su ubicación fuente.
 - Recarga cambios con un ciclo de feedback corto.
 
@@ -1109,7 +1120,8 @@ La API `renderAudioToFile(job, { outputPath, overwrite, signal, onProgress })` a
 render en memoria a publicación de filesystem. Relee y valida el WAV temporal antes de
 publicarlo; el resultado exitoso solo se resuelve después de la publicación. La operación
 conserva el destino existente sin `overwrite: true` y elimina el temporal ante cualquier
-falla.
+falla. El endpoint de render de Studio es un adaptador HTTP de esta misma operación: no
+mantiene un renderer ni una variante paralelos.
 
 La atomicidad depende de que el temporal y el destino estén en el mismo filesystem y de las
 garantías de `link`/`rename` de la plataforma; no se promete publicación atómica entre
@@ -1616,6 +1628,12 @@ explícitamente el contrato. El principio está registrado en el
 el [ADR 0058](adr/0058-studio-render-numeric-parity-budget.md). Las fronteras que sí deben
 ser reproducibles dentro de un mismo runtime se fijan en el
 [ADR 0078](adr/0078-explicit-float32-audio-boundaries.md).
+
+La prueba de integración `packages/renderer/src/studio-render-parity.integration.test.ts`
+compara el `AudioWorklet` y `renderAudio()` sobre el fixture de referencia, que combina input
+alternativo, MIDI normalizado, clip WAV, PolySynth, Gain, Delay y automatización. Verifica el
+render completo, el seek con preroll y dos ciclos de loop sin definir una segunda expectativa
+musical independiente.
 
 ## Recursos de audio
 

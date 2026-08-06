@@ -27,11 +27,20 @@ flags are `--start-frame`, `--end-frame`, `--tail-frames`, `--block-frames`, and
 `studio` starts a loopback-only HTTP service on a dynamic port and keeps it alive until SIGINT.
 The static shell is served at `/`; authenticated API requests use a bearer session token and
 the versioned `/api/v1/session`, `/api/v1/compositions`, `/api/v1/variants`,
-`/api/v1/variants/:variantId/plan`, and
+`/api/v1/variants/:variantId/plan`, `/api/v1/variants/:variantId/render`, and
 `/api/v1/variants/:variantId/resources/:sha256-hash` routes. Host and Origin are checked
 against the exact loopback URL, and resource requests are authorized against hashes already
 resolved by that variant. The browser receives serializable IR, plans, metadata, diagnostics,
 and resource samples; it never receives or evaluates the authoring bundle.
+
+`POST /api/v1/variants/:variantId/render` renders the already prepared variant through
+`renderAudioToFile()`. It requires an explicit `outputPath` (relative paths resolve from the
+project root; absolute paths are accepted), defaults `overwrite` to `false`, and accepts the
+same operational range fields as the CLI: `startFrame`, `endFrame`, `tailFrames`, and
+`blockFrames`. The `render` envelope reports the variant's unchanged fingerprint and spec,
+the resolved `effectiveOptions`, output dimensions, diagnostics, and an output path redacted
+to `<project>` when it is inside the project. Studio does not create a second render job or
+renderer; atomic publication and collision handling remain in the renderer package.
 
 The first Studio shell also loads the private same-origin `/studio/audio-worklet.js` and
 `/studio/audio-engine.js` modules. It converts authorized JSON resource samples into
