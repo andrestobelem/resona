@@ -1,9 +1,28 @@
-import { mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
+import { lstat, mkdir, mkdtemp, readdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { basename, dirname, extname, join, relative, resolve } from "node:path";
 
-import { load as parseYaml } from "js-yaml";
-import MarkdownIt, { type MarkdownItAttribute, type MarkdownItToken } from "markdown-it";
 import { format as formatWithPrettier, resolveConfig } from "prettier";
+import {
+  MarkdownBuildError,
+  loadReferenceAllowlist,
+  parseMarkdownDocument,
+  referenceAllowlistRelativePath,
+  renderFrontmatter,
+  renderMarkdownDocument,
+  unusedReferenceAllowlistEntries,
+  type MarkdownBuildIssue,
+  type MarkdownDocument,
+} from "./markdown.js";
+import {
+  documentationManifestRelativePath,
+  documentationManifestVersion,
+  hashContent,
+  hashFile,
+  readDocumentationManifest,
+  serializeDocumentationManifest,
+  type DocumentationManifest,
+  type DocumentationManifestEntry,
+} from "./manifest.js";
 
 const excludedDirectories = new Set([
   ".git",
@@ -16,56 +35,45 @@ const excludedDirectories = new Set([
 
 const styles = `:root {
   color-scheme: light;
-  --bg: #f6f7fb;
+  --accent: #5b3cc4;
+  --accent-strong: #432b9a;
+  --background: #f7f8fa;
+  --border: #d7dce2;
+  --code-background: #edf0f3;
+  --muted: #56616d;
   --surface: #ffffff;
-  --surface-muted: #eef0f6;
-  --text: #202332;
-  --muted: #536078;
-  --border: #d7dce8;
-  --link: #5535a8;
-  --accent: #7357c7;
-  --accent-soft: #e9e3ff;
-  --code-bg: #eef0f6;
-  --token-string: #176b4a;
-  --token-number: #8a4b00;
+  --surface-muted: #f0f2f5;
+  --text: #1d252c;
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
   line-height: 1.6;
-  background: var(--bg);
-  color: var(--text);
-}
-
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --bg: #11141c;
-  --surface: #1b202b;
-  --surface-muted: #252c3a;
-  --text: #f1f3f7;
-  --muted: #b8c1d2;
-  --border: #3a4354;
-  --link: #c7b9ff;
-  --accent: #b5a1ff;
-  --accent-soft: #342a5b;
-  --code-bg: #252c3a;
-  --token-string: #8be9b0;
-  --token-number: #ffd27a;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --bg: #11141c;
-    --surface: #1b202b;
-    --surface-muted: #252c3a;
-    --text: #f1f3f7;
-    --muted: #b8c1d2;
-    --border: #3a4354;
-    --link: #c7b9ff;
-    --accent: #b5a1ff;
-    --accent-soft: #342a5b;
-    --code-bg: #252c3a;
-    --token-string: #8be9b0;
-    --token-number: #ffd27a;
+    --accent: #b9a6ff;
+    --accent-strong: #d0c4ff;
+    --background: #11161c;
+    --border: #37414d;
+    --code-background: #1e2730;
+    --muted: #aeb8c2;
+    --surface: #171e26;
+    --surface-muted: #202933;
+    --text: #edf2f7;
   }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --accent: #b9a6ff;
+  --accent-strong: #d0c4ff;
+  --background: #11161c;
+  --border: #37414d;
+  --code-background: #1e2730;
+  --muted: #aeb8c2;
+  --surface: #171e26;
+  --surface-muted: #202933;
+  --text: #edf2f7;
 }
 
 * {
@@ -77,61 +85,64 @@ html {
 }
 
 body {
-  min-width: 18rem;
   margin: 0;
-  background: var(--bg);
+  background: var(--background);
   color: var(--text);
 }
 
 a {
-  color: var(--link);
+  color: var(--accent-strong);
 }
 
-a:focus-visible,
-button:focus-visible,
-select:focus-visible,
-summary:focus-visible {
+a:hover {
+  text-decoration-thickness: 0.14em;
+}
+
+:focus-visible {
   outline: 0.2rem solid var(--accent);
-  outline-offset: 0.2rem;
+  outline-offset: 0.18rem;
 }
 
 .skip-link {
-  position: absolute;
+  position: fixed;
   z-index: 10;
   top: 0.75rem;
   left: 0.75rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.5rem;
-  background: var(--accent);
-  color: #fff;
-  transform: translateY(-150%);
+  padding: 0.55rem 0.8rem;
+  border-radius: 0.4rem;
+  background: var(--surface);
+  color: var(--text);
+  transform: translateY(-180%);
 }
 
 .skip-link:focus {
   transform: translateY(0);
 }
 
-.docs-header {
+.site-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  max-width: 92rem;
-  margin: 0 auto;
-  padding: 1.25rem 1.5rem;
+  min-height: 4.25rem;
+  padding: 0.8rem clamp(1rem, 3vw, 2.5rem);
   border-bottom: 1px solid var(--border);
+  background: var(--surface);
 }
 
-.brand {
-  font-size: 1.25rem;
+.site-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.site-brand {
+  color: var(--text);
+  font-size: 1.05rem;
   font-weight: 800;
-  letter-spacing: -0.02em;
   text-decoration: none;
-}
-
-.brand span {
-  color: var(--muted);
-  font-weight: 500;
 }
 
 .theme-control {
@@ -139,520 +150,835 @@ summary:focus-visible {
   align-items: center;
   gap: 0.5rem;
   color: var(--muted);
-  font-size: 0.875rem;
+  font-size: 0.85rem;
 }
 
 .theme-control select {
-  min-height: 2rem;
-  padding: 0.25rem 0.5rem;
   border: 1px solid var(--border);
-  border-radius: 0.4rem;
+  border-radius: 0.35rem;
+  padding: 0.35rem 0.5rem;
   background: var(--surface);
   color: var(--text);
+  font: inherit;
 }
 
-.docs-layout {
-  display: grid;
-  grid-template-columns: minmax(15rem, 20rem) minmax(0, 1fr);
-  gap: 2rem;
-  max-width: 92rem;
-  margin: 0 auto;
-  padding: 1.5rem;
+.search-panel {
+  position: relative;
+  min-width: min(28rem, 42vw);
 }
 
-.docs-sidebar {
-  position: sticky;
-  top: 1rem;
-  align-self: start;
-  max-height: calc(100vh - 2rem);
-  overflow: auto;
-  padding: 1rem;
+.search-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.search-controls input,
+.search-controls select {
+  min-width: 0;
   border: 1px solid var(--border);
-  border-radius: 0.75rem;
+  border-radius: 0.35rem;
+  padding: 0.35rem 0.5rem;
   background: var(--surface);
+  color: var(--text);
+  font: 0.8rem Inter, ui-sans-serif, system-ui, sans-serif;
 }
 
-.sidebar-title,
-.eyebrow {
-  margin: 0 0 0.75rem;
+.search-controls input {
+  flex: 1;
+  min-width: 8rem;
+}
+
+.search-results {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  left: 0;
+  max-height: min(28rem, 70vh);
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.65rem;
+  background: var(--surface);
+  box-shadow: 0 0.75rem 2rem rgb(0 0 0 / 18%);
+}
+
+.search-results[hidden] {
+  display: none;
+}
+
+.search-summary {
+  margin: 0 0 0.45rem;
   color: var(--muted);
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 0.76rem;
 }
 
-.navigation-tree ul,
-.document-index ul,
-.table-of-contents ol,
-.breadcrumbs ol {
+.search-results ol {
+  display: grid;
+  gap: 0.35rem;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.navigation-tree li + li {
-  margin-top: 0.25rem;
-}
-
-.nav-directory details {
-  border-radius: 0.4rem;
-}
-
-.nav-directory summary {
-  padding: 0.35rem 0.5rem;
-  color: var(--muted);
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 700;
-}
-
-.nav-directory > details > ul {
-  padding-left: 0.85rem;
-}
-
-.nav-document a {
+.search-result {
   display: block;
-  padding: 0.35rem 0.5rem;
-  border-radius: 0.4rem;
+  border-radius: 0.35rem;
+  padding: 0.45rem;
+  color: var(--text);
   text-decoration: none;
 }
 
-.nav-document a:hover,
-.nav-current a {
-  background: var(--accent-soft);
+.search-result:hover {
+  background: var(--surface-muted);
 }
 
-.nav-document-title,
-.nav-document-path {
+.search-result-title {
   display: block;
+  color: var(--accent-strong);
+  font-weight: 750;
 }
 
-.nav-document-title {
-  font-size: 0.875rem;
+.search-result-meta,
+.search-result-snippet {
+  display: block;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.search-result-snippet {
+  margin-top: 0.15rem;
+  line-height: 1.4;
+}
+
+.site-layout {
+  display: grid;
+  grid-template-columns: minmax(14rem, 19rem) minmax(0, 1fr);
+  max-width: 96rem;
+  margin: 0 auto;
+}
+
+.sidebar {
+  min-width: 0;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.sidebar-panel {
+  position: sticky;
+  top: 0;
+  max-height: calc(100vh - 1rem);
+  overflow: auto;
+  border: 0;
+  border-radius: 0;
+  padding: 1rem;
+}
+
+.sidebar-panel > summary {
+  margin: -0.3rem -0.3rem 0.75rem;
+  padding: 0.3rem;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.nav-tree,
+.nav-tree ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nav-tree ul {
+  margin-left: 0.7rem;
+  border-left: 1px solid var(--border);
+  padding-left: 0.65rem;
+}
+
+.nav-tree details {
+  border: 0;
+  padding: 0;
+}
+
+.nav-tree details > summary {
+  padding: 0.25rem 0;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.84rem;
   font-weight: 700;
 }
 
-.nav-document-path {
+.nav-document {
+  display: block;
+  margin: 0.15rem 0;
+  border-radius: 0.35rem;
+  padding: 0.35rem 0.45rem;
+  color: var(--text);
+  font-size: 0.82rem;
+  text-decoration: none;
+}
+
+.nav-document:hover,
+.nav-document[aria-current="page"] {
+  background: var(--surface-muted);
+  color: var(--accent-strong);
+}
+
+.nav-document[aria-current="page"] {
+  box-shadow: inset 0.2rem 0 0 var(--accent);
+  font-weight: 700;
+}
+
+.nav-title,
+.nav-path {
+  display: block;
   overflow: hidden;
-  color: var(--muted);
-  font: 0.7rem ui-monospace, SFMono-Regular, Menlo, monospace;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.docs-main {
+.nav-path {
+  margin-top: 0.08rem;
+  color: var(--muted);
+  font: 0.7rem ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.content-column {
   min-width: 0;
-  padding: 1rem 0 4rem;
+}
+
+.document-layout,
+.index-main {
+  box-sizing: border-box;
+  max-width: 88rem;
+  margin: 0 auto;
+  padding: 2rem clamp(1rem, 4vw, 4rem) 4rem;
+}
+
+.document-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 52rem) minmax(11rem, 15rem);
+  gap: clamp(1.5rem, 4vw, 4rem);
+  align-items: start;
+}
+
+.document-content {
+  min-width: 0;
+}
+
+.document-header {
+  margin-bottom: 1.5rem;
+}
+
+.source-path {
+  margin: 0 0 0.4rem;
+  color: var(--muted);
+  font: 0.82rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  overflow-wrap: anywhere;
+}
+
+.source-link {
+  margin-left: 0.65rem;
+  font: 0.82rem Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.badge,
+.category-badge {
+  display: inline-block;
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.76rem;
+  font-weight: 750;
+}
+
+.badge-status {
+  background: #d8f3dc;
+  color: #1b4332;
+}
+
+.badge-date {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.category-badge {
+  background: var(--surface-muted);
+  color: var(--muted);
 }
 
 .breadcrumbs {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
   color: var(--muted);
-  font-size: 0.875rem;
+  font-size: 0.84rem;
 }
 
 .breadcrumbs ol {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.breadcrumbs li + li::before {
-  margin-right: 0.35rem;
+.breadcrumbs li:not(:last-child)::after {
+  margin-left: 0.35rem;
   content: "/";
   color: var(--border);
 }
 
-.page-heading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-}
-
-.source-path {
-  flex-basis: 100%;
-  margin: 0;
-  color: var(--muted);
-  font: 0.8rem ui-monospace, SFMono-Regular, Menlo, monospace;
-}
-
-.source-link {
-  font-size: 0.875rem;
-}
-
-.category-badge {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.5rem;
-  padding: 0.1rem 0.5rem;
-  border-radius: 999px;
-  background: var(--accent-soft);
+.breadcrumbs [aria-current="page"] {
   color: var(--text);
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 650;
 }
 
-.document-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(12rem, 15rem);
-  gap: 2rem;
-  align-items: start;
-}
-
-.doc-content {
-  min-width: 0;
-  max-width: 55rem;
-}
-
-.doc-content h1,
-.doc-content h2,
-.doc-content h3,
-.doc-content h4,
-.doc-content h5,
-.doc-content h6 {
-  scroll-margin-top: 1rem;
-  line-height: 1.2;
-}
-
-.doc-content h1 {
-  margin-top: 0;
-  font-size: clamp(1.8rem, 4vw, 2.6rem);
-}
-
-.doc-content h2 {
-  margin-top: 2.5rem;
-}
-
-.doc-content h3 {
-  margin-top: 2rem;
-}
-
-.doc-content img {
-  max-width: 100%;
-  height: auto;
-}
-
-.doc-content table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.doc-content th,
-.doc-content td {
-  padding: 0.5rem;
-  border: 1px solid var(--border);
-  text-align: left;
-}
-
-.doc-content blockquote {
-  margin: 1rem 0;
-  padding: 0.25rem 1rem;
-  border-left: 0.25rem solid var(--accent);
-  color: var(--muted);
-}
-
-.doc-content pre {
-  overflow: auto;
-  padding: 1rem;
-  border-radius: 0.75rem;
-  background: var(--code-bg);
-}
-
-.doc-content code,
-.nav-document-path {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-}
-
-.frontmatter {
-  margin: 0 0 2rem;
-  padding: 1rem;
-  border: 1px solid var(--border);
-  border-radius: 0.75rem;
-  background: var(--surface);
-}
-
-.frontmatter-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin: 0 0 0.75rem;
-}
-
-.frontmatter-badge {
-  padding: 0.125rem 0.5rem;
-  border-radius: 999px;
-  background: var(--surface-muted);
-  font-size: 0.875rem;
-}
-
-.table-of-contents {
+.toc {
   position: sticky;
   top: 1rem;
   max-height: calc(100vh - 2rem);
   overflow: auto;
-  padding: 1rem;
   border-left: 1px solid var(--border);
+  padding-left: 1rem;
+  font-size: 0.82rem;
+}
+
+.toc-title {
+  margin: 0 0 0.55rem;
   color: var(--muted);
-  font-size: 0.875rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
-.table-of-contents h2 {
-  margin: 0 0 0.5rem;
-  color: var(--text);
-  font-size: 0.875rem;
+.toc ol {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.table-of-contents li + li {
-  margin-top: 0.35rem;
+.toc .toc-depth-3 {
+  padding-left: 0.8rem;
 }
 
-.table-of-contents .toc-level-3 {
-  padding-left: 0.75rem;
-}
-
-.table-of-contents a {
+.toc a {
+  color: var(--muted);
   text-decoration: none;
 }
 
-.table-of-contents a.toc-current {
+.toc a:hover,
+.toc a[aria-current="location"] {
+  color: var(--accent-strong);
+  font-weight: 700;
+}
+
+.document-meta {
+  margin: 0 0 1.5rem;
+}
+
+details {
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.65rem 0.8rem;
+}
+
+details summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  line-height: 1.2;
+  scroll-margin-top: 1rem;
+}
+
+blockquote {
+  margin: 1rem 0;
+  border-left: 0.25rem solid var(--accent);
+  padding: 0.25rem 1rem;
+  color: var(--muted);
+}
+
+table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  border: 1px solid var(--border);
+  padding: 0.45rem 0.65rem;
+  text-align: left;
+}
+
+pre {
+  overflow: auto;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  background: var(--code-background);
+}
+
+.code-block {
+  position: relative;
+  margin: 1rem 0;
+}
+
+.code-block pre {
+  margin: 0;
+  padding-top: 2.75rem;
+}
+
+.copy-code-button {
+  position: absolute;
+  z-index: 1;
+  top: 0.5rem;
+  right: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+  padding: 0.3rem 0.55rem;
+  background: var(--surface);
   color: var(--text);
-  font-weight: 800;
+  cursor: pointer;
+  font: 0.75rem Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.copy-code-button:hover {
+  background: var(--surface-muted);
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.hljs-comment,
+.hljs-quote {
+  color: #6a737d;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-name {
+  color: #7c3aed;
+}
+
+.hljs-string,
+.hljs-title,
+.hljs-section,
+.hljs-attribute {
+  color: #087f5b;
+}
+
+.hljs-number,
+.hljs-symbol,
+.hljs-bullet {
+  color: #b45309;
 }
 
 .page-navigation {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
   margin-top: 3rem;
-  padding-top: 1rem;
   border-top: 1px solid var(--border);
+  padding-top: 1rem;
 }
 
-.page-nav-link {
+.page-navigation a,
+.page-navigation span {
   display: block;
-  padding: 0.75rem;
+  min-height: 3.4rem;
   border: 1px solid var(--border);
   border-radius: 0.5rem;
+  padding: 0.55rem 0.7rem;
   text-decoration: none;
 }
 
-.page-nav-link span,
-.page-nav-link strong {
-  display: block;
-}
-
-.page-nav-link span {
-  color: var(--muted);
-  font-size: 0.75rem;
-  text-transform: uppercase;
-}
-
-.page-nav-next {
+.page-navigation .next {
   text-align: right;
+}
+
+.page-navigation span {
+  color: var(--muted);
+  opacity: 0.65;
+}
+
+.page-navigation small {
+  display: block;
+  margin-bottom: 0.2rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
 }
 
 .back-to-top {
   display: inline-block;
-  margin-top: 1.5rem;
-  font-size: 0.875rem;
+  margin-top: 1.25rem;
+  font-size: 0.86rem;
 }
 
-.index-intro {
-  max-width: 48rem;
-  padding: 2rem 0;
+.index-main {
+  max-width: 68rem;
 }
 
-.index-intro h1 {
-  margin: 0;
-  font-size: clamp(2rem, 5vw, 3.5rem);
-  line-height: 1.1;
-}
-
-.document-index {
-  max-width: 64rem;
-}
-
-.document-index li {
+.document-list {
   display: grid;
-  grid-template-columns: max-content minmax(10rem, 1fr) minmax(12rem, 0.8fr);
-  gap: 0.75rem;
-  align-items: center;
-  padding: 0.75rem 0;
-  border-top: 1px solid var(--border);
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.document-index li a {
-  font-weight: 700;
+.document-list a {
+  display: block;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.7rem 0.85rem;
+  text-decoration: none;
 }
 
-.document-index code {
-  overflow: hidden;
+.document-list code {
+  display: block;
+  margin-top: 0.15rem;
   color: var(--muted);
-  font: 0.75rem ui-monospace, SFMono-Regular, Menlo, monospace;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 0.75rem;
 }
 
-.token.comment {
-  color: var(--muted);
+li + li {
+  margin-top: 0.25rem;
 }
 
-.token.keyword {
-  color: var(--accent);
-  font-weight: 700;
-}
-
-.token.string {
-  color: var(--token-string);
-}
-
-.token.number {
-  color: var(--token-number);
-}
-
-@media (max-width: 64rem) {
+@media (max-width: 70rem) {
   .document-layout {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .table-of-contents {
+  .toc {
     position: static;
     max-height: none;
-    border-top: 1px solid var(--border);
-    border-left: 0;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 0.8rem 1rem;
   }
 }
 
-@media (max-width: 48rem) {
-  .docs-header {
+@media (max-width: 52rem) {
+  .site-layout {
+    display: block;
+  }
+
+  .sidebar {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-panel {
+    position: static;
+    max-height: none;
+  }
+}
+
+@media (max-width: 34rem) {
+  .site-header {
     align-items: flex-start;
     flex-direction: column;
   }
 
-  .docs-layout {
-    display: block;
-    padding: 1rem;
+  .site-header-actions,
+  .search-panel,
+  .search-controls {
+    width: 100%;
   }
 
-  .docs-sidebar {
-    position: static;
-    max-height: none;
-    margin-bottom: 1.5rem;
-  }
-
-  .document-index li {
-    grid-template-columns: 1fr;
-    gap: 0.35rem;
+  .site-header-actions {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .page-navigation {
     grid-template-columns: 1fr;
   }
 
-  .page-nav-next {
+  .page-navigation .next {
     text-align: left;
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
+@media print {
+  .site-header,
+  .sidebar,
+  .toc,
+  .breadcrumbs,
+  .page-navigation,
+  .back-to-top,
+  .source-link {
+    display: none;
+  }
+
+  .site-layout,
+  .document-layout,
+  .index-main {
+    display: block;
+    max-width: none;
+    padding: 0;
   }
 }
 `;
 
-const knownCodeLanguages = new Set([
-  "bash",
-  "css",
-  "html",
-  "javascript",
-  "js",
-  "json",
-  "jsx",
-  "md",
-  "shell",
-  "text",
-  "ts",
-  "tsx",
-  "typescript",
-  "xml",
-  "yaml",
-  "yml",
-]);
+const script = `/* global URL, document, IntersectionObserver, window */
+(() => {
+  const root = document.documentElement;
+  const select = document.querySelector("#theme-select");
+  const storageKey = "resona-docs-theme";
+  const themes = new Set(["system", "light", "dark"]);
 
-const codeKeywords = new Set([
-  "async",
-  "await",
-  "class",
-  "const",
-  "else",
-  "export",
-  "extends",
-  "from",
-  "function",
-  "if",
-  "implements",
-  "import",
-  "interface",
-  "let",
-  "new",
-  "return",
-  "throw",
-  "type",
-  "var",
-]);
+  const readStoredTheme = () => {
+    try {
+      const value = window.localStorage.getItem(storageKey);
+      if (value && themes.has(value)) return value;
+    } catch {
+      // file:// storage can be unavailable.
+    }
+    try {
+      const value = window.sessionStorage.getItem(storageKey);
+      if (value && themes.has(value)) return value;
+    } catch {
+      // Session storage can be unavailable too.
+    }
+    const prefix = storageKey + ":";
+    if (window.name.startsWith(prefix)) {
+      const value = window.name.slice(prefix.length);
+      if (themes.has(value)) return value;
+    }
+    return "system";
+  };
 
-const safeHtmlTags = new Set([
-  "abbr",
-  "b",
-  "br",
-  "code",
-  "del",
-  "details",
-  "div",
-  "em",
-  "i",
-  "ins",
-  "kbd",
-  "mark",
-  "p",
-  "pre",
-  "q",
-  "s",
-  "samp",
-  "small",
-  "span",
-  "strong",
-  "sub",
-  "summary",
-  "sup",
-  "u",
-]);
+  const storeTheme = (theme) => {
+    try {
+      window.localStorage.setItem(storageKey, theme);
+      return;
+    } catch {
+      // Continue with the file:// fallbacks.
+    }
+    try {
+      window.sessionStorage.setItem(storageKey, theme);
+      return;
+    } catch {
+      // Continue with the same-tab fallback.
+    }
+    try {
+      window.name = storageKey + ":" + theme;
+    } catch {
+      // Theme switching still works for the current page.
+    }
+  };
 
-const safeHtmlAttributes = new Set(["class", "id", "open", "role", "title"]);
+  const applyTheme = (theme) => {
+    if (theme === "system") {
+      delete root.dataset.theme;
+    } else {
+      root.dataset.theme = theme;
+    }
+    if (select) select.value = theme;
+  };
 
-const htmlVoidTags = new Set([
-  "area",
-  "base",
-  "br",
-  "col",
-  "embed",
-  "hr",
-  "img",
-  "input",
-  "link",
-  "meta",
-  "param",
-  "source",
-  "track",
-  "wbr",
-]);
+  applyTheme(readStoredTheme());
 
-const escapedLeftBracket = "\uE000";
-const escapedRightBracket = "\uE001";
+  select?.addEventListener("change", () => {
+    const theme = themes.has(select.value) ? select.value : "system";
+    applyTheme(theme);
+    storeTheme(theme);
+  });
+
+  const copyText = async (text) => {
+    if (window.navigator.clipboard?.writeText) {
+      await window.navigator.clipboard.writeText(text);
+      return;
+    }
+    if (typeof document.execCommand !== "function") {
+      throw new Error("Clipboard access is unavailable");
+    }
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.append(textarea);
+    textarea.select();
+    try {
+      if (!document.execCommand("copy")) throw new Error("Copy command failed");
+    } finally {
+      textarea.remove();
+    }
+  };
+
+  const copyCode = async (button) => {
+    const code = button.closest(".code-block")?.querySelector("code");
+    if (!code) return;
+    try {
+      await copyText(code.textContent ?? "");
+      button.textContent = "Copied";
+      button.dataset.copyState = "copied";
+    } catch {
+      button.textContent = "Copy unavailable";
+      button.dataset.copyState = "failed";
+    }
+    window.setTimeout(() => {
+      button.textContent = "Copy code";
+      delete button.dataset.copyState;
+    }, 1600);
+  };
+
+  document.querySelectorAll('[data-copy-code="true"]').forEach((button) => {
+    button.addEventListener("click", () => void copyCode(button));
+  });
+
+  const searchInput = document.querySelector("#docs-search");
+  const categoryFilter = document.querySelector("#search-category");
+  const directoryFilter = document.querySelector("#search-directory");
+  const searchResults = document.querySelector("#search-results");
+  const searchEntries = Array.isArray(window.__RESONA_DOCS_SEARCH__)
+    ? window.__RESONA_DOCS_SEARCH__
+    : [];
+  const searchApi = window.__RESONA_DOCS_SEARCH_API__;
+
+  const searchHref = (href) => {
+    const rootLink = document.querySelector(".site-brand");
+    if (!rootLink) return href;
+    try {
+      return new URL(href, rootLink.href).href;
+    } catch {
+      return href;
+    }
+  };
+
+  const renderSearchResults = () => {
+    if (!searchResults) return;
+    const query = searchInput?.value ?? "";
+    searchResults.replaceChildren();
+    if (query.trim() === "") {
+      searchResults.hidden = true;
+      return;
+    }
+    const results = searchApi?.search(
+      searchEntries,
+      query,
+      categoryFilter?.value ?? "",
+      directoryFilter?.value ?? "",
+    ) ?? [];
+    const summary = document.createElement("p");
+    summary.className = "search-summary";
+    summary.textContent = results.length + " result" + (results.length === 1 ? "" : "s");
+    searchResults.append(summary);
+    if (results.length > 0) {
+      const list = document.createElement("ol");
+      for (const { entry, snippet: resultSnippet } of results) {
+        const item = document.createElement("li");
+        const link = document.createElement("a");
+        link.className = "search-result";
+        link.href = searchHref(entry.href);
+        const title = document.createElement("span");
+        title.className = "search-result-title";
+        title.textContent = entry.title;
+        const meta = document.createElement("span");
+        meta.className = "search-result-meta";
+        meta.textContent = entry.category + " · " + entry.path;
+        const snippet = document.createElement("span");
+        snippet.className = "search-result-snippet";
+        snippet.textContent = resultSnippet;
+        link.append(title, meta, snippet);
+        item.append(link);
+        list.append(item);
+      }
+      searchResults.append(list);
+    }
+    searchResults.hidden = false;
+  };
+
+  document.querySelector(".search-controls")?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    renderSearchResults();
+  });
+  searchInput?.addEventListener("input", renderSearchResults);
+  categoryFilter?.addEventListener("change", renderSearchResults);
+  directoryFilter?.addEventListener("change", renderSearchResults);
+
+  const tocLinks = new Map(
+    [...document.querySelectorAll(".toc a[href^=\\"#\\"]")].map((link) => [
+      link.getAttribute("href").slice(1),
+      link,
+    ]),
+  );
+  const headings = [...document.querySelectorAll("article h2[id], article h3[id]")];
+  const setCurrentHeading = (id) => {
+    for (const link of tocLinks.values()) {
+      if (link.getAttribute("href") === "#" + id) {
+        link.setAttribute("aria-current", "location");
+      } else {
+        link.removeAttribute("aria-current");
+      }
+    }
+  };
+
+  const setCurrentFromScroll = () => {
+    const current = headings
+      .filter((heading) => heading.getBoundingClientRect().top <= 180)
+      .at(-1);
+    if (current) setCurrentHeading(current.id);
+  };
+
+  if (headings.length) {
+    const initialId = window.location.hash.slice(1);
+    setCurrentHeading(tocLinks.has(initialId) ? initialId : headings[0].id);
+  }
+
+  if (headings.length && "IntersectionObserver" in window) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((left, right) => left.boundingClientRect.top - right.boundingClientRect.top)[0];
+        if (visible) setCurrentHeading(visible.target.id);
+      },
+      { rootMargin: "-10% 0px -70% 0px", threshold: 0 },
+    );
+    headings.forEach((heading) => observer.observe(heading));
+  } else if (headings.length) {
+    setCurrentFromScroll();
+    window.addEventListener("scroll", setCurrentFromScroll, { passive: true });
+  }
+})();
+`;
 
 export type BuildDocumentationSiteOptions = Readonly<{
   projectRoot: string;
@@ -660,238 +986,618 @@ export type BuildDocumentationSiteOptions = Readonly<{
 
 export type BuildDocumentationSiteResult = Readonly<{
   generatedFiles: readonly string[];
+  orphanedFiles: readonly string[];
   sourceCount: number;
 }>;
 
-type Frontmatter = Readonly<{
-  raw: string;
-  values: Readonly<Record<string, unknown>>;
-}>;
-
-type DocumentationCategory =
-  "adr" | "research" | "agent-skill" | "package-context" | "root" | "other";
-
-type Heading = Readonly<{
-  level: 2 | 3;
-  slug: string;
-  title: string;
-}>;
-
-type MarkdownDocument = Readonly<{
-  body: string;
-  category: DocumentationCategory;
-  frontmatter: Frontmatter | null;
-  headings: readonly Heading[];
-  markdown: string;
-  relativePath: string;
-  sourcePath: string;
-  title: string;
-}>;
-
-type DocumentationDocument = Omit<MarkdownDocument, "body">;
-
-type NavigationNode =
-  | Readonly<{
-      children: readonly NavigationNode[];
-      kind: "directory";
-      name: string;
-      relativePath: string;
-    }>
-  | Readonly<{
-      document: DocumentationDocument;
-      kind: "document";
-    }>;
-
-type MutableNavigationNode =
-  | {
-      children: MutableNavigationNode[];
-      kind: "directory";
-      name: string;
-      relativePath: string;
-    }
-  | {
-      document: DocumentationDocument;
-      kind: "document";
-    };
-
-type DocumentationContext = Readonly<{
-  headingsByRelativePath: ReadonlyMap<string, ReadonlySet<string>>;
-  navigation: NavigationNode;
-  documents: readonly DocumentationDocument[];
-  projectRoot: string;
-  sourceByRelativePath: ReadonlyMap<string, string>;
+type DiscoveredProject = Readonly<{
+  allPaths: ReadonlySet<string>;
+  files: ReadonlySet<string>;
+  markdown: readonly string[];
 }>;
 
 export const buildDocumentationSite = async (
   options: BuildDocumentationSiteOptions,
 ): Promise<BuildDocumentationSiteResult> => {
   const projectRoot = resolve(options.projectRoot);
-  const sourcePaths = await discoverMarkdown(projectRoot);
-  if (sourcePaths.some((sourcePath) => relative(projectRoot, sourcePath) === "index.md")) {
+  const discovered = await discoverProject(projectRoot);
+  if (discovered.markdown.some((sourcePath) => relative(projectRoot, sourcePath) === "index.md")) {
     throw new Error("The root index.md is reserved for the generated documentation index.");
   }
 
-  const sourceByRelativePath = new Map(
-    sourcePaths.map((sourcePath) => [toPosix(relative(projectRoot, sourcePath)), sourcePath]),
-  );
-  const documents = await Promise.all(
-    sourcePaths.map(async (sourcePath) => {
+  const parsedDocuments = await Promise.all(
+    discovered.markdown.map(async (sourcePath) => {
       const source = await readFile(sourcePath, "utf8");
       const relativePath = toPosix(relative(projectRoot, sourcePath));
-      const parsed = parseFrontmatter(source, relativePath);
       return {
-        category: categoryForPath(relativePath),
-        frontmatter: parsed.frontmatter,
-        headings: collectHeadings(parsed.markdown),
-        markdown: parsed.markdown,
-        relativePath,
-        sourcePath,
-        title: titleFrom(parsed.markdown, sourcePath, parsed.frontmatter),
-      } satisfies Omit<MarkdownDocument, "body">;
+        document: parseMarkdownDocument({
+          outputPath: join(projectRoot, relativePath.replace(/\.md$/u, ".html")),
+          relativePath,
+          source,
+          sourcePath,
+        }),
+        sourceHash: hashContent(source),
+      };
     }),
   );
-  const headingsByRelativePath = new Map(
-    documents.map((document) => [
-      document.relativePath,
-      new Set(document.headings.map(({ slug }) => slug)),
-    ]),
+  const documents = parsedDocuments.map(({ document }) => document);
+  const documentsBySourcePath = new Map(
+    documents.map((document) => [document.sourcePath, document]),
   );
-  const navigation = buildNavigationTree(documents);
-  const context: DocumentationContext = {
-    headingsByRelativePath,
-    navigation,
-    documents,
-    projectRoot,
-    sourceByRelativePath,
-  };
-  const renderedDocuments: MarkdownDocument[] = [];
-  for (const document of documents) {
-    renderedDocuments.push({
-      ...document,
-      body: await renderMarkdown(document.markdown, document, context),
+  const documentsByOutputPath = new Map(
+    documents.map((document) => [document.outputPath, document]),
+  );
+  const fragmentIdsByPath = await discoverFragmentIds(discovered.files, documentsBySourcePath);
+  const referenceAllowlist = await loadReferenceAllowlist(projectRoot);
+  const issues: MarkdownBuildIssue[] = [];
+  const renderedDocuments = documents.map((document) => ({
+    ...document,
+    body: renderMarkdownDocument(document, {
+      availableFiles: discovered.files,
+      availablePaths: discovered.allPaths,
+      documentsBySourcePath,
+      documentsByOutputPath,
+      fragmentIdsByPath,
+      issues,
+      projectRoot,
+      referenceAllowlist,
+    }),
+  }));
+  for (const entry of unusedReferenceAllowlistEntries(referenceAllowlist)) {
+    issues.push({
+      message: `unused reference allowlist entry (${entry.kind}: ${entry.target})`,
+      relativePath: referenceAllowlistRelativePath,
     });
   }
-  const generatedFiles: string[] = [];
+  if (issues.length > 0) throw new MarkdownBuildError(issues);
 
-  await mkdir(join(projectRoot, ".resona-docs"), { recursive: true });
-  await writeFormattedFile(join(projectRoot, ".resona-docs", "styles.css"), styles);
-  generatedFiles.push(".resona-docs/styles.css");
+  const navigation = buildNavigationTree(renderedDocuments);
+  const searchIndex = buildSearchIndex(projectRoot, renderedDocuments);
+  const searchFilters = buildSearchFilters(searchIndex);
+  const backlinks = buildBacklinks(renderedDocuments, documentsByOutputPath);
+  const generatedContents = new Map<string, string>();
+  const addGeneratedFile = async (path: string, source: string): Promise<void> => {
+    generatedContents.set(path, await formatFile(join(projectRoot, path), source));
+  };
+  await addGeneratedFile(".resona-docs/styles.css", styles);
+  await addGeneratedFile(".resona-docs/search-index.js", renderSearchIndexScript(searchIndex));
+  await addGeneratedFile(".resona-docs/docs.js", script);
 
   for (const document of renderedDocuments) {
-    const outputPath = join(projectRoot, document.relativePath.replace(/\.md$/u, ".html"));
-    await writeFormattedFile(outputPath, renderPage(projectRoot, document, context));
-    generatedFiles.push(toPosix(relative(projectRoot, outputPath)));
+    await addGeneratedFile(
+      toPosix(relative(projectRoot, document.outputPath)),
+      renderPage(projectRoot, document, renderedDocuments, navigation, searchFilters, backlinks),
+    );
   }
 
-  await writeFormattedFile(
-    join(projectRoot, "index.html"),
-    renderIndex(projectRoot, renderedDocuments, context),
+  await addGeneratedFile(
+    "index.html",
+    renderIndex(projectRoot, renderedDocuments, navigation, searchFilters),
   );
-  generatedFiles.push("index.html");
+
+  const previousManifest = await readDocumentationManifest(projectRoot);
+  await validateOutputConflicts(projectRoot, generatedContents, previousManifest);
+  const orphanedOutputs = await findOrphanedOutputs(
+    projectRoot,
+    generatedContents,
+    previousManifest,
+  );
+  const manifest: DocumentationManifest = {
+    orphanedOutputs,
+    outputs: [...generatedContents.entries()].map(([path, content]) => ({
+      path,
+      sha256: hashContent(content),
+    })),
+    sources: parsedDocuments.map(({ document, sourceHash }) => ({
+      path: document.relativePath,
+      sha256: sourceHash,
+    })),
+    version: documentationManifestVersion,
+  };
+  const manifestContent = await formatFile(
+    join(projectRoot, documentationManifestRelativePath),
+    serializeDocumentationManifest(manifest),
+  );
+  const filesToPublish = new Map(generatedContents);
+  filesToPublish.set(documentationManifestRelativePath, manifestContent);
+  await publishGeneratedFiles(projectRoot, filesToPublish);
 
   return {
-    generatedFiles: generatedFiles.sort(compareDeterministically),
-    sourceCount: renderedDocuments.length,
+    generatedFiles: [...filesToPublish.keys()].sort(compareDeterministically),
+    orphanedFiles: orphanedOutputs.map((entry) => entry.path),
+    sourceCount: documents.length,
   };
 };
 
-const writeFormattedFile = async (path: string, source: string): Promise<void> => {
+const formatFile = async (path: string, source: string): Promise<string> => {
   const config = (await resolveConfig(path)) ?? {};
-  const formatted = await formatWithPrettier(source, { ...config, filepath: path });
-  await writeFile(path, formatted);
+  return formatWithPrettier(source, { ...config, filepath: path });
 };
 
-const discoverMarkdown = async (projectRoot: string): Promise<string[]> => {
-  const paths: string[] = [];
+const validateOutputConflicts = async (
+  projectRoot: string,
+  generatedContents: ReadonlyMap<string, string>,
+  previousManifest: DocumentationManifest | undefined,
+): Promise<void> => {
+  const registered = new Map<string, DocumentationManifestEntry>();
+  for (const entry of previousManifest?.outputs ?? []) registered.set(entry.path, entry);
+  for (const entry of previousManifest?.orphanedOutputs ?? []) registered.set(entry.path, entry);
+
+  for (const [path, content] of generatedContents) {
+    const currentHash = await existingFileHash(projectRoot, path);
+    if (currentHash === undefined) continue;
+    const previousEntry = registered.get(path);
+    if (previousEntry !== undefined) {
+      if (currentHash !== previousEntry.sha256) {
+        throw new Error(`generated output conflict: ${path} was modified outside the build`);
+      }
+      continue;
+    }
+    if (previousManifest === undefined && currentHash === hashContent(content)) continue;
+    throw new Error(`manual output conflict: ${path} already exists`);
+  }
+};
+
+const findOrphanedOutputs = async (
+  projectRoot: string,
+  generatedContents: ReadonlyMap<string, string>,
+  previousManifest: DocumentationManifest | undefined,
+): Promise<DocumentationManifestEntry[]> => {
+  if (previousManifest === undefined) return [];
+  const expectedPaths = new Set(generatedContents.keys());
+  const orphaned: DocumentationManifestEntry[] = [];
+  for (const entry of [...previousManifest.outputs, ...previousManifest.orphanedOutputs]) {
+    if (expectedPaths.has(entry.path)) continue;
+    const currentHash = await existingFileHash(projectRoot, entry.path);
+    if (currentHash === undefined) continue;
+    if (currentHash !== entry.sha256) {
+      throw new Error(
+        `orphaned generated output conflict: ${entry.path} was modified outside the build`,
+      );
+    }
+    orphaned.push(entry);
+  }
+  return orphaned.sort((left, right) => compareDeterministically(left.path, right.path));
+};
+
+const publishGeneratedFiles = async (
+  projectRoot: string,
+  files: ReadonlyMap<string, string>,
+): Promise<void> => {
+  const stageRoot = await mkdtemp(join(projectRoot, ".resona-docs-stage-"));
+  const backupRoot = await mkdtemp(join(projectRoot, ".resona-docs-backup-"));
+  const paths = [...files.keys()].sort((left, right) => {
+    if (left === documentationManifestRelativePath) return 1;
+    if (right === documentationManifestRelativePath) return -1;
+    return compareDeterministically(left, right);
+  });
+  const backedUp: string[] = [];
+  const published: string[] = [];
+
+  try {
+    for (const path of paths) {
+      const stagedPath = join(stageRoot, path);
+      await mkdir(dirname(stagedPath), { recursive: true });
+      await writeFile(stagedPath, files.get(path) ?? "", "utf8");
+      if ((await hashFile(stagedPath)) !== hashContent(files.get(path) ?? "")) {
+        throw new Error(`staged output changed before publication: ${path}`);
+      }
+    }
+
+    for (const path of paths) {
+      const targetPath = join(projectRoot, path);
+      if (await pathExists(targetPath)) {
+        const backupPath = join(backupRoot, path);
+        await mkdir(dirname(backupPath), { recursive: true });
+        await rename(targetPath, backupPath);
+        backedUp.push(path);
+      }
+      await mkdir(dirname(targetPath), { recursive: true });
+      await rename(join(stageRoot, path), targetPath);
+      published.push(path);
+    }
+  } catch (error) {
+    await rollbackPublication(projectRoot, backupRoot, published, backedUp);
+    throw error;
+  } finally {
+    await Promise.allSettled([
+      rm(stageRoot, { force: true, recursive: true }),
+      rm(backupRoot, { force: true, recursive: true }),
+    ]);
+  }
+};
+
+const rollbackPublication = async (
+  projectRoot: string,
+  backupRoot: string,
+  published: readonly string[],
+  backedUp: readonly string[],
+): Promise<void> => {
+  for (const path of [...published].reverse()) {
+    await rm(join(projectRoot, path), { force: true });
+  }
+  for (const path of [...backedUp].reverse()) {
+    const backupPath = join(backupRoot, path);
+    if (!(await pathExists(backupPath))) continue;
+    const targetPath = join(projectRoot, path);
+    await mkdir(dirname(targetPath), { recursive: true });
+    await rename(backupPath, targetPath);
+  }
+};
+
+const existingFileHash = async (projectRoot: string, path: string): Promise<string | undefined> => {
+  const targetPath = join(projectRoot, path);
+  let metadata;
+  try {
+    metadata = await lstat(targetPath);
+  } catch (error) {
+    if (isNodeError(error) && error.code === "ENOENT") return undefined;
+    throw error;
+  }
+  if (!metadata.isFile()) throw new Error(`generated output conflict: ${path} is not a file`);
+  return hashFile(targetPath);
+};
+
+const pathExists = async (path: string): Promise<boolean> => {
+  try {
+    await lstat(path);
+    return true;
+  } catch (error) {
+    if (isNodeError(error) && error.code === "ENOENT") return false;
+    throw error;
+  }
+};
+
+const isNodeError = (error: unknown): error is NodeJS.ErrnoException =>
+  error instanceof Error && "code" in error;
+
+const discoverProject = async (projectRoot: string): Promise<DiscoveredProject> => {
+  const markdown: string[] = [];
+  const allPaths = new Set<string>([projectRoot]);
+  const files = new Set<string>();
 
   const visit = async (directory: string): Promise<void> => {
     const entries = (await readdir(directory, { withFileTypes: true })).sort((left, right) =>
       compareDeterministically(left.name, right.name),
     );
-
     for (const entry of entries) {
-      if (entry.isDirectory() && excludedDirectories.has(entry.name)) continue;
+      if (
+        entry.isDirectory() &&
+        (excludedDirectories.has(entry.name) ||
+          entry.name.startsWith(".resona-docs-stage-") ||
+          entry.name.startsWith(".resona-docs-backup-"))
+      ) {
+        continue;
+      }
       const entryPath = join(directory, entry.name);
+      allPaths.add(entryPath);
       if (entry.isDirectory()) {
         await visit(entryPath);
-      } else if (entry.isFile() && extname(entry.name) === ".md") {
-        paths.push(entryPath);
+      } else if (entry.isFile()) {
+        files.add(entryPath);
+        if (extname(entry.name) === ".md") markdown.push(entryPath);
       }
     }
   };
 
   await visit(projectRoot);
-  return paths.sort(compareDeterministically);
-};
-
-const parseFrontmatter = (
-  source: string,
-  relativePath: string,
-): Readonly<{ frontmatter: Frontmatter | null; markdown: string }> => {
-  if (!source.startsWith("---\n") && !source.startsWith("---\r\n")) {
-    return { frontmatter: null, markdown: source };
-  }
-  const match = /^---\r?\n([\s\S]*?)\r?\n(?:---|\.\.\.)\r?(?:\n|$)/u.exec(source);
-  if (match === null) {
-    throw new Error(`Invalid frontmatter in ${relativePath}: closing delimiter not found.`);
-  }
-  const raw = match[0].replace(/\r?\n$/u, "");
-  let parsed: unknown;
-  try {
-    parsed = parseYaml(match[1] ?? "");
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    throw new Error(`Invalid frontmatter in ${relativePath}: ${detail}`, { cause: error });
-  }
-  if (parsed === null || typeof parsed !== "object" || Array.isArray(parsed)) {
-    throw new Error(`Invalid frontmatter in ${relativePath}: expected a YAML object.`);
-  }
   return {
-    frontmatter: { raw, values: parsed as Readonly<Record<string, unknown>> },
-    markdown: source.slice(match[0].length),
+    allPaths,
+    files,
+    markdown: markdown.sort(compareDeterministically),
   };
 };
+
+const discoverFragmentIds = async (
+  files: ReadonlySet<string>,
+  documentsBySourcePath: ReadonlyMap<string, MarkdownDocument>,
+): Promise<ReadonlyMap<string, ReadonlySet<string>>> => {
+  const fragments = new Map<string, ReadonlySet<string>>(
+    [...documentsBySourcePath.values()].map((document) => [
+      document.sourcePath,
+      document.headingIds,
+    ]),
+  );
+  const htmlFiles = [...files].filter((path) => /\.(?:html?|svg)$/iu.test(extname(path)));
+  await Promise.all(
+    htmlFiles.map(async (path) => {
+      fragments.set(path, extractHtmlFragmentIds(await readFile(path, "utf8")));
+    }),
+  );
+  return fragments;
+};
+
+const extractHtmlFragmentIds = (source: string): ReadonlySet<string> => {
+  const ids = new Set<string>();
+  const attribute = /\b(?:id|name)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/giu;
+  for (const match of source.matchAll(attribute)) {
+    const value = match[1] ?? match[2] ?? match[3];
+    if (value !== undefined) ids.add(value);
+  }
+  return ids;
+};
+
+type NavigationDirectory = {
+  directories: NavigationDirectory[];
+  documents: MarkdownDocument[];
+  name: string;
+  path: string;
+};
+
+type DocumentCategory = "ADR" | "Agent skill" | "Other" | "Package context" | "Research" | "Root";
+
+type SearchIndexEntry = Readonly<{
+  body: string;
+  category: DocumentCategory;
+  code: string;
+  directory: string;
+  headings: readonly string[];
+  href: string;
+  path: string;
+  snippet: string;
+  title: string;
+}>;
+
+type SearchFilters = Readonly<{
+  categories: readonly DocumentCategory[];
+  directories: readonly string[];
+}>;
+
+const buildNavigationTree = (documents: readonly MarkdownDocument[]): NavigationDirectory => {
+  const root: NavigationDirectory = { directories: [], documents: [], name: "", path: "" };
+  for (const document of documents) {
+    const segments = document.relativePath.split("/");
+    let directory = root;
+    const directorySegments = segments.slice(0, -1);
+    for (const [index, name] of directorySegments.entries()) {
+      const path = directorySegments.slice(0, index + 1).join("/");
+      let child = directory.directories.find((candidate) => candidate.path === path);
+      if (child === undefined) {
+        child = { directories: [], documents: [], name, path };
+        directory.directories.push(child);
+      }
+      directory = child;
+    }
+    directory.documents.push(document);
+  }
+  sortNavigationTree(root);
+  return root;
+};
+
+const sortNavigationTree = (directory: NavigationDirectory): void => {
+  directory.directories.sort((left, right) => compareDeterministically(left.name, right.name));
+  directory.documents.sort((left, right) =>
+    compareDeterministically(left.relativePath, right.relativePath),
+  );
+  directory.directories.forEach(sortNavigationTree);
+};
+
+const buildSearchIndex = (
+  projectRoot: string,
+  documents: readonly MarkdownDocument[],
+): readonly SearchIndexEntry[] =>
+  documents.map((document) => ({
+    body: document.searchText,
+    category: documentCategory(document.relativePath),
+    code: document.searchCode,
+    directory: directoryForSearch(document.relativePath),
+    headings: document.headings.map((heading) => heading.text),
+    href: toPosix(relative(projectRoot, document.outputPath)),
+    path: document.relativePath,
+    snippet: snippetForSearch(document.searchText),
+    title: document.title,
+  }));
+
+const buildSearchFilters = (entries: readonly SearchIndexEntry[]): SearchFilters => ({
+  categories: [...new Set(entries.map((entry) => entry.category))].sort(compareDeterministically),
+  directories: [...new Set(entries.map((entry) => entry.directory))].sort(compareDeterministically),
+});
+
+const renderSearchIndexScript = (entries: readonly SearchIndexEntry[]): string =>
+  `/* global window */
+window.__RESONA_DOCS_SEARCH__ = ${JSON.stringify(entries)};
+window.__RESONA_DOCS_SEARCH_API__ = (() => {
+  const normalizeText = (value) => value.normalize("NFD").replace(/\\p{Mark}/gu, "").toLowerCase();
+
+  const scoreEntry = (entry, terms, category, directory) => {
+    if (category && entry.category !== category) return null;
+    if (directory && entry.directory !== directory) return null;
+    const fields = [
+      [normalizeText(entry.title), 100],
+      [normalizeText(entry.path), 80],
+      [normalizeText(entry.headings.join(" ")), 60],
+      [normalizeText(entry.body), 20],
+      [normalizeText(entry.code), 10],
+    ];
+    let score = 0;
+    for (const term of terms) {
+      let matched = false;
+      for (const [field, weight] of fields) {
+        if (field.includes(term)) {
+          score += weight;
+          matched = true;
+        }
+      }
+      if (!matched) return null;
+    }
+    return score;
+  };
+
+  const searchSnippet = (entry, terms) => {
+    const candidates = [entry.body, entry.code, entry.headings.join(" "), entry.path, entry.title];
+    for (const candidate of candidates) {
+      const normalized = normalizeText(candidate);
+      const position = terms.map((term) => normalized.indexOf(term)).find((index) => index >= 0);
+      if (position === undefined || position < 0) continue;
+      const start = Math.max(0, position - 75);
+      const end = Math.min(candidate.length, position + 145);
+      return (start > 0 ? "..." : "") + candidate.slice(start, end) + (end < candidate.length ? "..." : "");
+    }
+    return entry.snippet;
+  };
+
+  const search = (entries, query, category, directory) => {
+    const normalizedQuery = normalizeText(query).trim();
+    if (normalizedQuery === "") return [];
+    const terms = normalizedQuery.split(/\\s+/u).filter(Boolean);
+    return entries
+      .map((entry) => ({ entry, score: scoreEntry(entry, terms, category, directory) }))
+      .filter((result) => result.score !== null)
+      .sort(
+        (left, right) =>
+          right.score - left.score ||
+          left.entry.title.localeCompare(right.entry.title) ||
+          left.entry.path.localeCompare(right.entry.path),
+      )
+      .slice(0, 30)
+      .map(({ entry, score }) => ({ entry, score, snippet: searchSnippet(entry, terms) }));
+  };
+
+  return { normalizeText, search };
+})();
+`;
+
+const renderSearchControls = (filters: SearchFilters): string => {
+  const categories = filters.categories
+    .map((category) => `<option value="${escapeHtml(category)}">${escapeHtml(category)}</option>`)
+    .join("\n");
+  const directories = filters.directories
+    .map(
+      (directory) => `<option value="${escapeHtml(directory)}">${escapeHtml(directory)}</option>`,
+    )
+    .join("\n");
+  return `<div class="search-panel">
+  <form class="search-controls" role="search">
+    <label class="visually-hidden" for="docs-search">Search documentation</label>
+    <input id="docs-search" type="search" autocomplete="off" placeholder="Search docs" />
+    <label class="visually-hidden" for="search-category">Filter by category</label>
+    <select id="search-category" name="category">
+      <option value="">All categories</option>
+${indentBlock(categories, 6)}
+    </select>
+    <label class="visually-hidden" for="search-directory">Filter by directory</label>
+    <select id="search-directory" name="directory">
+      <option value="">All directories</option>
+${indentBlock(directories, 6)}
+    </select>
+  </form>
+  <div id="search-results" class="search-results" role="status" aria-live="polite" hidden></div>
+</div>`;
+};
+
+const buildBacklinks = (
+  documents: readonly MarkdownDocument[],
+  documentsByOutputPath: ReadonlyMap<string, MarkdownDocument>,
+): ReadonlyMap<string, readonly MarkdownDocument[]> => {
+  const backlinks = new Map<string, MarkdownDocument[]>();
+  const linkPattern = /<a\b[^>]*\bhref=(?:"([^"]*)"|'([^']*)')/giu;
+  for (const source of documents) {
+    const linkedTargets = new Set<string>();
+    for (const match of source.body.matchAll(linkPattern)) {
+      const href = decodeHtmlAttribute(match[1] ?? match[2] ?? "");
+      const path = href.split(/[?#]/u)[0] ?? "";
+      if (path === "") continue;
+      const target = documentsByOutputPath.get(resolve(dirname(source.outputPath), path));
+      if (target === undefined || target.sourcePath === source.sourcePath) continue;
+      if (linkedTargets.has(target.sourcePath)) continue;
+      linkedTargets.add(target.sourcePath);
+      const sources = backlinks.get(target.sourcePath) ?? [];
+      sources.push(source);
+      backlinks.set(target.sourcePath, sources);
+    }
+  }
+  for (const sources of backlinks.values()) {
+    sources.sort((left, right) => compareDeterministically(left.relativePath, right.relativePath));
+  }
+  return backlinks;
+};
+
+const renderBacklinks = (
+  document: MarkdownDocument,
+  backlinks: ReadonlyMap<string, readonly MarkdownDocument[]>,
+): string => {
+  const sources = backlinks.get(document.sourcePath) ?? [];
+  if (sources.length === 0) return "";
+  const links = sources
+    .map(
+      (source) =>
+        `    <li><a href="${escapeHtml(hrefFromOutput(document.outputPath, source.outputPath))}">${escapeHtml(source.title)}</a> <code>${escapeHtml(source.relativePath)}</code></li>`,
+    )
+    .join("\n");
+  return `<section class="backlinks" aria-labelledby="backlinks">
+  <h2 id="backlinks">Referenced by</h2>
+  <ul>
+${links}
+  </ul>
+</section>`;
+};
+
+const directoryForSearch = (relativePath: string): string => {
+  const separator = relativePath.lastIndexOf("/");
+  return separator === -1 ? "(root)" : relativePath.slice(0, separator);
+};
+
+const snippetForSearch = (value: string): string => {
+  const compact = value.replace(/\s+/gu, " ").trim();
+  return compact.length > 220 ? `${compact.slice(0, 217)}...` : compact;
+};
+
+const decodeHtmlAttribute = (value: string): string =>
+  value.replaceAll("&amp;", "&").replaceAll("&quot;", '"').replaceAll("&#39;", "'");
 
 const renderPage = (
   projectRoot: string,
   document: MarkdownDocument,
-  context: DocumentationContext,
+  documents: readonly MarkdownDocument[],
+  navigation: NavigationDirectory,
+  searchFilters: SearchFilters,
+  backlinks: ReadonlyMap<string, readonly MarkdownDocument[]>,
 ): string => {
-  const outputPath = join(projectRoot, document.relativePath.replace(/\.md$/u, ".html"));
-  const previous = adjacentDocument(document, context.documents, -1);
-  const next = adjacentDocument(document, context.documents, 1);
-  const sourceHref = relativeHref(outputPath, document.sourcePath);
-  const previousHref =
-    previous === null ? null : relativeHref(outputPath, outputPathFor(projectRoot, previous));
-  const nextHref =
-    next === null ? null : relativeHref(outputPath, outputPathFor(projectRoot, next));
-  const toc = renderTableOfContents(document.headings);
-  return renderShell({
-    content: `      <nav class="breadcrumbs" aria-label="Breadcrumb">
-        <ol>
-          <li><a href="${escapeHtml(relativeHref(outputPath, join(projectRoot, "index.html")))}">Documentación</a></li>
-${renderBreadcrumbs(document)}
-        </ol>
-      </nav>
-      <div class="page-heading">
-        <p class="source-path">${escapeHtml(document.relativePath)}</p>
-        <span class="category-badge" data-category="${document.category}">${escapeHtml(categoryLabel(document.category))}</span>
-        <a class="source-link" href="${escapeHtml(sourceHref)}">Ver Markdown fuente</a>
-      </div>
-      <div class="document-layout">
-        <article class="doc-content">
-${renderFrontmatter(document.frontmatter)}${document.body}
-        </article>
-        ${toc}
-      </div>
-      <nav class="page-navigation" aria-label="Paginación de documentación">
-${renderAdjacentLink("Anterior", previous, previousHref)}${renderAdjacentLink("Siguiente", next, nextHref)}
-      </nav>
-      <a class="back-to-top" href="#top">Volver arriba</a>`,
-    currentRelativePath: document.relativePath,
-    navigation: context.navigation,
-    outputPath,
-    projectRoot,
+  const stylesheet = toPosix(
+    relative(dirname(document.outputPath), join(projectRoot, ".resona-docs", "styles.css")),
+  );
+  const rootHref = hrefFromOutput(document.outputPath, join(projectRoot, "index.html"));
+  const metadata = renderFrontmatter(document.frontmatter);
+  const category = documentCategory(document.relativePath);
+  const toc = renderTableOfContents(document);
+  const index = documents.findIndex(
+    (candidate) => candidate.relativePath === document.relativePath,
+  );
+  const previous = index > 0 ? documents[index - 1] : undefined;
+  const next = index >= 0 ? documents[index + 1] : undefined;
+  const main = `    <main id="content" class="document-layout">
+      <article class="document-content">
+        ${renderBreadcrumbs(projectRoot, document)}
+        <header class="document-header">
+          <p class="source-path">${escapeHtml(document.relativePath)} <a class="source-link" href="${escapeHtml(hrefFromOutput(document.outputPath, document.sourcePath))}">View Markdown source</a></p>
+          <div class="badges"><span class="category-badge">${escapeHtml(category)}</span></div>
+        </header>
+${metadata}
+        <div class="markdown-body">
+${indentBlock(document.body, 10)}
+        </div>
+${indentBlock(renderBacklinks(document, backlinks), 8)}
+${indentBlock(renderPageNavigation(document.outputPath, previous, next), 8)}
+        <a class="back-to-top" href="#top">Back to top</a>
+      </article>
+${indentBlock(toc, 6)}
+    </main>`;
+  return renderHtmlDocument({
+    body: renderSiteBody(
+      rootHref,
+      document.outputPath,
+      join(projectRoot, "index.html"),
+      navigation,
+      searchFilters,
+      main,
+      document,
+    ),
+    searchScript: hrefFromOutput(
+      document.outputPath,
+      join(projectRoot, ".resona-docs", "search-index.js"),
+    ),
+    script: hrefFromOutput(document.outputPath, join(projectRoot, ".resona-docs", "docs.js")),
+    stylesheet,
     title: `${document.title} · Resona`,
   });
 };
@@ -899,209 +1605,93 @@ ${renderAdjacentLink("Anterior", previous, previousHref)}${renderAdjacentLink("S
 const renderIndex = (
   projectRoot: string,
   documents: readonly MarkdownDocument[],
-  context: DocumentationContext,
+  navigation: NavigationDirectory,
+  searchFilters: SearchFilters,
 ): string => {
   const links = documents
     .map((document) => {
-      const href = relativeHref(
-        join(projectRoot, "index.html"),
-        outputPathFor(projectRoot, document),
-      );
-      return `          <li data-category="${document.category}">
-            <span class="category-badge">${escapeHtml(categoryLabel(document.category))}</span>
-            <a href="${escapeHtml(href)}">${escapeHtml(document.title)}</a>
-            <code>${escapeHtml(document.relativePath)}</code>
-          </li>`;
+      const href = hrefFromOutput(join(projectRoot, "index.html"), document.outputPath);
+      return `          <li><a href="${escapeHtml(href)}">${escapeHtml(document.title)}</a><code>${escapeHtml(document.relativePath)}</code></li>`;
     })
     .join("\n");
-  return renderShell({
-    content: `      <div class="index-intro">
-        <p class="eyebrow">Resona · documentación</p>
-        <h1>Resona documentation</h1>
-        <p>Un recorrido navegable por ${documents.length} documentos Markdown.</p>
-      </div>
-      <section aria-labelledby="documents-title" class="document-index">
-        <h2 id="documents-title">Documentos</h2>
-        <ul>
+  const stylesheet = toPosix(
+    relative(projectRoot, join(projectRoot, ".resona-docs", "styles.css")),
+  );
+  const main = `    <main id="content" class="index-main">
+      <article>
+        <header class="document-header">
+          <div class="badges"><span class="category-badge">Root</span></div>
+          <h1>Resona documentation</h1>
+        </header>
+        <p>Generated from ${documents.length} Markdown files. Use the navigation tree or search the list below.</p>
+        <section aria-labelledby="all-documents">
+          <h2 id="all-documents">All documents</h2>
+          <ul class="document-list">
 ${links}
-        </ul>
-      </section>
-      <a class="back-to-top" href="#top">Volver arriba</a>`,
-    currentRelativePath: null,
-    navigation: context.navigation,
-    outputPath: join(projectRoot, "index.html"),
-    projectRoot,
+          </ul>
+        </section>
+      </article>
+    </main>`;
+  return renderHtmlDocument({
+    body: renderSiteBody(
+      "index.html",
+      join(projectRoot, "index.html"),
+      join(projectRoot, "index.html"),
+      navigation,
+      searchFilters,
+      main,
+    ),
+    searchScript: ".resona-docs/search-index.js",
+    script: ".resona-docs/docs.js",
+    stylesheet,
     title: "Resona documentation",
   });
 };
 
-type ShellOptions = Readonly<{
-  content: string;
-  currentRelativePath: string | null;
-  navigation: NavigationNode;
-  outputPath: string;
-  projectRoot: string;
-  title: string;
-}>;
-
-const renderShell = ({
-  content,
-  currentRelativePath,
-  navigation,
-  outputPath,
-  projectRoot,
-  title,
-}: ShellOptions): string => {
-  const homeHref = relativeHref(outputPath, join(projectRoot, "index.html"));
-  return renderHtmlDocument({
-    body: `    <a class="skip-link" href="#content">Saltar al contenido</a>
-    <header class="docs-header">
-      <a class="brand" href="${escapeHtml(homeHref)}">Resona <span>docs</span></a>
-      <label class="theme-control" for="theme-select">
-        <span>Tema</span>
-        <select id="theme-select" name="theme">
-          <option value="system">Sistema</option>
-          <option value="light">Claro</option>
-          <option value="dark">Oscuro</option>
-        </select>
-      </label>
+const renderSiteBody = (
+  rootHref: string,
+  currentOutputPath: string,
+  rootOutputPath: string,
+  navigation: NavigationDirectory,
+  searchFilters: SearchFilters,
+  main: string,
+  currentDocument?: MarkdownDocument,
+): string => `    <a class="skip-link" href="#content">Skip to content</a>
+    <header class="site-header">
+      <a class="site-brand" href="${escapeHtml(rootHref)}">Resona documentation</a>
+      <div class="site-header-actions">
+${indentBlock(renderSearchControls(searchFilters), 8)}
+        <label class="theme-control" for="theme-select">
+          <span>Theme</span>
+          <select id="theme-select" name="theme">
+            <option value="system">System</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </label>
+      </div>
     </header>
-    <div class="docs-layout">
-      <aside class="docs-sidebar">
-        <nav aria-label="Documentación">
-          <p class="sidebar-title">Explorar</p>
-${renderNavigation(projectRoot, outputPath, currentRelativePath, navigation)}
-        </nav>
+    <div class="site-layout">
+      <aside class="sidebar" aria-label="Documentation navigation">
+${indentBlock(renderSidebar(currentOutputPath, rootOutputPath, navigation, currentDocument), 8)}
       </aside>
-      <main id="content" class="docs-main" tabindex="-1">
-${content}
-      </main>
-    </div>`,
-    stylesheet: toPosix(
-      relative(dirname(outputPath), join(projectRoot, ".resona-docs", "styles.css")),
-    ),
-    title,
-  });
-};
-
-const outputPathFor = (projectRoot: string, document: DocumentationDocument): string =>
-  join(projectRoot, document.relativePath.replace(/\.md$/u, ".html"));
-
-const relativeHref = (fromOutputPath: string, targetPath: string): string =>
-  toPosix(relative(dirname(fromOutputPath), targetPath)) || basename(targetPath);
-
-const adjacentDocument = (
-  document: DocumentationDocument,
-  documents: readonly DocumentationDocument[],
-  offset: -1 | 1,
-): DocumentationDocument | null => {
-  const index = documents.findIndex(({ relativePath }) => relativePath === document.relativePath);
-  return index === -1 ? null : (documents[index + offset] ?? null);
-};
-
-const categoryLabel = (category: DocumentationCategory): string => {
-  const labels: Record<DocumentationCategory, string> = {
-    adr: "ADR",
-    "agent-skill": "Agent skill",
-    other: "Other",
-    "package-context": "Package context",
-    research: "Research",
-    root: "Root",
-  };
-  return labels[category];
-};
-
-const renderBreadcrumbs = (document: MarkdownDocument): string => {
-  const segments = document.relativePath.split("/");
-  const crumbs: string[] = [];
-  for (const [index, segment] of segments.entries()) {
-    const isDocument = index === segments.length - 1;
-    if (isDocument) {
-      crumbs.push(`          <li aria-current="page">${escapeHtml(document.title)}</li>`);
-      continue;
-    }
-    crumbs.push(`          <li><span>${escapeHtml(segment)}</span></li>`);
-  }
-  return crumbs.join("\n");
-};
-
-const renderTableOfContents = (headings: readonly Heading[]): string => {
-  const items = headings
-    .map(
-      ({ level, slug, title }, index) =>
-        `          <li class="toc-level-${level}"><a href="#${escapeHtml(slug)}"${index === 0 ? ' class="toc-current" aria-current="location"' : ""}>${escapeHtml(title)}</a></li>`,
-    )
-    .join("\n");
-  return `        <nav class="table-of-contents" aria-label="En esta página">
-          <h2>En esta página</h2>
-          <ol>
-${items}
-          </ol>
-        </nav>`;
-};
-
-const renderAdjacentLink = (
-  label: string,
-  document: DocumentationDocument | null,
-  href: string | null,
-): string => {
-  if (document === null || href === null) {
-    return `        <span class="page-nav-placeholder" aria-hidden="true"></span>`;
-  }
-  const direction = label === "Anterior" ? "previous" : "next";
-  return `        <a class="page-nav-link page-nav-${direction}" href="${escapeHtml(href)}">
-          <span>${label}</span>
-          <strong>${escapeHtml(document.title)}</strong>
-        </a>`;
-};
-
-const renderNavigation = (
-  projectRoot: string,
-  outputPath: string,
-  currentRelativePath: string | null,
-  root: NavigationNode,
-): string => {
-  const renderNodes = (nodes: readonly NavigationNode[]): string =>
-    nodes.map(renderNode).join("\n");
-  const renderNode = (node: NavigationNode): string => {
-    if (node.kind === "document") {
-      const current = node.document.relativePath === currentRelativePath;
-      return `            <li class="nav-document${current ? " nav-current" : ""}" data-category="${node.document.category}">
-              <a href="${escapeHtml(relativeHref(outputPath, outputPathFor(projectRoot, node.document)))}"${current ? ' aria-current="page"' : ""}>
-                <span class="nav-document-title">${escapeHtml(node.document.title)}</span>
-                <span class="nav-document-path">${escapeHtml(node.document.relativePath)}</span>
-              </a>
-            </li>`;
-    }
-    const open =
-      node.relativePath === "" ||
-      (currentRelativePath !== null &&
-        (currentRelativePath === node.relativePath ||
-          currentRelativePath.startsWith(`${node.relativePath}/`)));
-    return `            <li class="nav-directory">
-              <details${open ? " open" : ""}>
-                <summary>${escapeHtml(node.name || "Todos los documentos")}</summary>
-                <ul>
-${renderNodes(node.children)}
-                </ul>
-              </details>
-            </li>`;
-  };
-  return `<div class="navigation-tree">
-    <ul>
-${renderNode(root)}
-    </ul>
-  </div>`;
-};
+      <div class="content-column">
+${main}
+      </div>
+    </div>`;
 
 type HtmlDocumentOptions = Readonly<{
   body: string;
+  searchScript: string;
+  script: string;
   stylesheet: string;
   title: string;
 }>;
 
 const renderHtmlDocument = ({
   body,
+  searchScript,
+  script,
   stylesheet,
   title,
 }: HtmlDocumentOptions): string => `<!doctype html>
@@ -1114,542 +1704,142 @@ const renderHtmlDocument = ({
   </head>
   <body id="top">
 ${body}
-${themeScript}
+    <script src="${escapeHtml(searchScript)}" defer></script>
+    <script src="${escapeHtml(script)}" defer></script>
   </body>
 </html>
 `;
 
-const themeScript = `<script>
-(() => {
-  const key = "resona-docs-theme";
-  const root = document.documentElement;
-  const select = document.getElementById("theme-select");
-  const apply = (theme) => {
-    root.dataset.theme = theme;
-    if (select) select.value = theme;
-  };
-  let stored = "system";
-  try {
-    stored = window.localStorage.getItem(key) || "system";
-  } catch {}
-  apply(["system", "light", "dark"].includes(stored) ? stored : "system");
-  select?.addEventListener("change", () => {
-    const theme = select.value;
-    apply(theme);
-    try {
-      window.localStorage.setItem(key, theme);
-    } catch {}
-  });
-  const tocLinks = [...document.querySelectorAll(".table-of-contents a")];
-  const setCurrentHeading = (id) => {
-    for (const link of tocLinks) {
-      const current = link.getAttribute("href") === "#" + id;
-      link.classList.toggle("toc-current", current);
-      if (current) link.setAttribute("aria-current", "location");
-      else link.removeAttribute("aria-current");
-    }
-  };
-  if (tocLinks.length > 0 && "IntersectionObserver" in window) {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((entry) => entry.isIntersecting)
-          .sort((left, right) => left.boundingClientRect.top - right.boundingClientRect.top);
-        const id = visible[0]?.target.id;
-        if (id) setCurrentHeading(id);
-      },
-      { rootMargin: "-10% 0px -70% 0px", threshold: [0, 1] },
-    );
-    for (const link of tocLinks) {
-      const id = link.getAttribute("href")?.slice(1);
-      const heading = id ? document.getElementById(id) : null;
-      if (heading) observer.observe(heading);
-    }
-  }
-})();
-</script>`;
+const renderSidebar = (
+  currentOutputPath: string,
+  rootOutputPath: string,
+  navigation: NavigationDirectory,
+  currentDocument?: MarkdownDocument,
+): string => `<details class="sidebar-panel" open>
+  <summary>Documentation navigation</summary>
+  <nav aria-label="All documents">
+    <a class="nav-document" href="${escapeHtml(hrefFromOutput(currentOutputPath, rootOutputPath))}">
+      <span class="nav-title">Resona documentation</span>
+      <span class="nav-path">index.html</span>
+    </a>
+${renderNavigationDirectory(navigation, currentOutputPath, currentDocument, true)}
+  </nav>
+</details>`;
 
-const renderFrontmatter = (frontmatter: Frontmatter | null): string => {
-  if (frontmatter === null) return "";
-  const metadata = ["status", "date"]
-    .map((key) => {
-      const value = frontmatter.values[key];
-      if (value === undefined || value === null) return "";
-      return `        <span class="frontmatter-badge">${escapeHtml(key)}: ${escapeHtml(formatMetadataValue(value))}</span>`;
-    })
-    .filter((value) => value !== "")
-    .join("\n");
-  return `        <aside class="frontmatter">
-${metadata === "" ? "" : `          <div class="frontmatter-meta">\n${metadata}\n          </div>`}
-          <details>
-            <summary>Frontmatter</summary>
-            <pre><code>${escapeHtml(frontmatter.raw)}</code></pre>
-          </details>
-        </aside>
-`;
+const renderNavigationDirectory = (
+  directory: NavigationDirectory,
+  currentOutputPath: string,
+  currentDocument: MarkdownDocument | undefined,
+  isRoot = false,
+): string => {
+  const children = [
+    ...directory.directories.map((child) => {
+      const open =
+        currentDocument !== undefined &&
+        (currentDocument.relativePath === child.path ||
+          currentDocument.relativePath.startsWith(`${child.path}/`));
+      return `      <li>
+        <details${open ? " open" : ""}>
+          <summary>${escapeHtml(child.name)}</summary>
+${indentBlock(renderNavigationDirectory(child, currentOutputPath, currentDocument), 10)}
+        </details>
+      </li>`;
+    }),
+    ...directory.documents.map((document) => {
+      const current = currentDocument?.relativePath === document.relativePath;
+      return `      <li><a class="nav-document" href="${escapeHtml(hrefFromOutput(currentOutputPath, document.outputPath))}"${current ? ' aria-current="page"' : ""}>
+        <span class="nav-title">${escapeHtml(document.title)}</span>
+        <span class="nav-path">${escapeHtml(document.relativePath)}</span>
+      </a></li>`;
+    }),
+  ].join("\n");
+  const className = isRoot ? "nav-tree" : "nav-tree nav-tree-nested";
+  return `    <ul class="${className}">
+${children}
+    </ul>`;
 };
 
-const formatMetadataValue = (value: unknown): string => {
-  if (value instanceof Date) return value.toISOString().slice(0, 10);
-  if (typeof value === "string") return value;
-  return JSON.stringify(value) ?? String(value);
+const renderBreadcrumbs = (projectRoot: string, document: MarkdownDocument): string => {
+  const segments = document.relativePath.split("/");
+  const items = [
+    `<li><a href="${escapeHtml(hrefFromOutput(document.outputPath, join(projectRoot, "index.html")))}">Resona docs</a></li>`,
+    ...segments.slice(0, -1).map((segment) => `<li><span>${escapeHtml(segment)}</span></li>`),
+    `<li aria-current="page">${escapeHtml(document.title)}</li>`,
+  ].join("\n");
+  return `<nav class="breadcrumbs" aria-label="Breadcrumb">
+  <ol>
+${indentBlock(items, 4)}
+  </ol>
+</nav>`;
 };
 
-const renderMarkdown = async (
-  source: string,
-  document: Omit<MarkdownDocument, "body">,
-  context: DocumentationContext,
-): Promise<string> => {
-  validateReferenceLabels(source, document.relativePath);
-  const markdown = createMarkdownIt();
-  const tokens = markdown.parse(source, {});
-  await validateAndRewriteReferences(tokens, document, context);
-  return markdown.renderer.render(tokens, markdown.options, {});
-};
-
-const validateReferenceLabels = (source: string, relativePath: string): void => {
-  const markdown = new MarkdownIt({ html: true });
-  const tokens = markdown.parse(maskEscapedBrackets(source), {});
-  const ignoredLines = new Set<number>();
-  const sourceLines = source.split(/\r?\n/u);
-  const textSegments: string[] = [];
-  for (const token of tokens) {
-    if (token.type === "code_block" || token.type === "fence" || token.type === "html_block") {
-      if (token.map !== null) {
-        for (let line = token.map[0]; line < token.map[1]; line += 1) ignoredLines.add(line);
-      }
-      continue;
-    }
-    if (token.type !== "inline" || token.children === null || token.children === undefined) {
-      continue;
-    }
-    let htmlDepth = 0;
-    let autolinkDepth = 0;
-    const firstSourceLine = token.map === null ? "" : (sourceLines[token.map[0]] ?? "");
-    const isTaskListItem = /^\s*(?:>\s*)*(?:[-+*]|\d+[.)])\s+\[[ xX]\](?=\s)/u.test(
-      firstSourceLine,
-    );
-    for (const child of token.children) {
-      if (child.type === "link_open" && child.markup === "autolink") {
-        autolinkDepth += 1;
-        continue;
-      }
-      if (child.type === "link_close" && autolinkDepth > 0) {
-        autolinkDepth -= 1;
-        continue;
-      }
-      if (child.type === "html_inline") {
-        const html = child.content.trim();
-        if (/^<\//u.test(html)) htmlDepth = Math.max(0, htmlDepth - 1);
-        else if (/^<[^!/?][^>]*>$/u.test(html) && !/\/\s*>$/u.test(html)) {
-          const tagName = /^<\s*([a-z][\w-]*)/iu.exec(html)?.[1]?.toLowerCase();
-          if (tagName !== undefined && !htmlVoidTags.has(tagName)) htmlDepth += 1;
-        }
-        continue;
-      }
-      if (child.type === "text" && htmlDepth === 0 && autolinkDepth === 0) {
-        textSegments.push(
-          isTaskListItem ? child.content.replace(/^\[[ xX]\](?=\s)/u, "") : child.content,
-        );
-      }
-    }
-  }
-  const definitionSource = source
-    .split(/\r?\n/u)
-    .filter((_line, index) => !ignoredLines.has(index))
-    .join("\n");
-  const definitions = new Set<string>();
-  const definitionPattern = /^\s{0,3}\[([^\]]+)\]:\s+\S.*$/gmu;
-  for (const match of definitionSource.matchAll(definitionPattern)) {
-    const label = match[1];
-    if (label !== undefined) definitions.add(normalizeReferenceLabel(label));
-  }
-  const referenceSource = textSegments.join("\n");
-  const referencePattern = /(?<!\\)(!?)\[([^\]]+)\]\[([^\]]*)\]/gu;
-  for (const match of referenceSource.matchAll(referencePattern)) {
-    const label = normalizeReferenceLabel(match[3] === "" ? (match[2] ?? "") : (match[3] ?? ""));
-    if (!definitions.has(label)) {
-      throw new Error(`Invalid reference label in ${relativePath}: ${label}`);
-    }
-  }
-  const shortcutPattern = /(?<![!\\[])\[([^\u005B\u005D\n]+)\](?![[(])/gu;
-  for (const match of referenceSource.matchAll(shortcutPattern)) {
-    const label = normalizeReferenceLabel(match[1] ?? "");
-    if (label === "") continue;
-    if (!definitions.has(label)) {
-      throw new Error(`Invalid reference label in ${relativePath}: ${label}`);
-    }
-  }
-};
-
-const maskEscapedBrackets = (source: string): string => {
-  const characters = source.split("");
-  const isEscaped = (index: number): boolean => {
-    let slashCount = 0;
-    for (let cursor = index - 1; cursor >= 0 && source[cursor] === "\\"; cursor -= 1) {
-      slashCount += 1;
-    }
-    return slashCount % 2 === 1;
-  };
-  const mark = (index: number): void => {
-    if (source[index] === "[") characters[index] = escapedLeftBracket;
-    if (source[index] === "]") characters[index] = escapedRightBracket;
-  };
-  const findClosingBracket = (start: number): number => {
-    for (let index = start; index < source.length; index += 1) {
-      if (source[index] === "\n") return -1;
-      if (source[index] === "]" && !isEscaped(index)) return index;
-    }
-    return -1;
-  };
-
-  for (let index = 0; index < source.length; index += 1) {
-    if (source[index] !== "[" && source[index] !== "]") continue;
-    if (!isEscaped(index)) continue;
-    mark(index);
-    if (source[index] !== "[") continue;
-    const closing = findClosingBracket(index + 1);
-    if (closing === -1) continue;
-    mark(closing);
-    const adjacentOpening = closing + 1;
-    if (source[adjacentOpening] !== "[") continue;
-    const adjacentClosing = findClosingBracket(adjacentOpening + 1);
-    if (adjacentClosing !== -1) {
-      mark(adjacentOpening);
-      mark(adjacentClosing);
-    }
-  }
-  return characters.join("");
-};
-
-const normalizeReferenceLabel = (value: string): string =>
-  value.trim().replace(/\s+/gu, " ").toLowerCase();
-
-const createMarkdownIt = (): MarkdownIt => {
-  const markdown = new MarkdownIt({ html: true, highlight: highlightCode });
-  const headingSlugs = new Set<string>();
-  const defaultHeadingOpen = markdown.renderer.rules.heading_open;
-  const defaultHtmlBlock = markdown.renderer.rules.html_block;
-  const defaultHtmlInline = markdown.renderer.rules.html_inline;
-  markdown.renderer.rules.heading_open = (tokens, index, options, environment, self) => {
-    const token = tokens[index];
-    if (token === undefined) return "";
-    const headingText = tokens[index + 1]?.content ?? "";
-    setAttribute(token, "id", uniqueSlug(headingText, headingSlugs));
-    if (defaultHeadingOpen !== undefined) {
-      return defaultHeadingOpen(tokens, index, options, environment, self);
-    }
-    return self.renderToken(tokens, index, options);
-  };
-  markdown.renderer.rules.html_block = (tokens, index) =>
-    sanitizeEmbeddedHtml(tokens[index]?.content ?? "");
-  markdown.renderer.rules.html_inline = (tokens, index) =>
-    sanitizeEmbeddedHtml(tokens[index]?.content ?? "");
-  if (defaultHtmlBlock === undefined || defaultHtmlInline === undefined) {
-    throw new Error("Markdown renderer does not expose HTML rules.");
-  }
-  return markdown;
-};
-
-const collectHeadings = (source: string): readonly Heading[] => {
-  const markdown = new MarkdownIt();
-  const tokens = markdown.parse(source, {});
-  const slugs = new Set<string>();
-  const headings: Heading[] = [];
-  tokens.forEach((token, index) => {
-    if (token.type !== "heading_open") return;
-    const level = Number(token.tag.slice(1));
-    const title = tokens[index + 1]?.content ?? "";
-    const slug = uniqueSlug(title, slugs);
-    if (level === 2 || level === 3) headings.push({ level, slug, title });
-  });
-  return headings;
-};
-
-const categoryForPath = (relativePath: string): DocumentationCategory => {
-  const path = relativePath.toLowerCase();
-  if (path.startsWith("docs/adr/") || path.startsWith("adr/")) return "adr";
-  if (path.startsWith("docs/research/") || path.startsWith("research/")) return "research";
-  if (path.startsWith(".agents/skills/")) return "agent-skill";
-  if (path.startsWith("packages/") && relativePath.toLowerCase().endsWith("/context.md")) {
-    return "package-context";
-  }
-  if (
-    !relativePath.includes("/") &&
-    new Set(["agents.md", "context.md", "readme.md"]).has(basename(path))
-  ) {
-    return "root";
-  }
-  return "other";
-};
-
-const buildNavigationTree = (documents: readonly DocumentationDocument[]): NavigationNode => {
-  const root: Extract<MutableNavigationNode, { kind: "directory" }> = {
-    children: [],
-    kind: "directory",
-    name: "",
-    relativePath: "",
-  };
-  for (const document of documents) {
-    const segments = document.relativePath.split("/");
-    let currentChildren = root.children;
-    let directoryPath = "";
-    for (const segment of segments.slice(0, -1)) {
-      directoryPath = directoryPath === "" ? segment : `${directoryPath}/${segment}`;
-      let directory = currentChildren.find(
-        (node): node is Extract<MutableNavigationNode, { kind: "directory" }> =>
-          node.kind === "directory" && node.relativePath === directoryPath,
-      );
-      if (directory === undefined) {
-        directory = {
-          children: [],
-          kind: "directory",
-          name: segment,
-          relativePath: directoryPath,
-        };
-        currentChildren.push(directory);
-      }
-      currentChildren = directory.children;
-    }
-    currentChildren.push({ document, kind: "document" });
-  }
-
-  const sortNodes = (nodes: readonly MutableNavigationNode[]): NavigationNode[] =>
-    [...nodes]
-      .sort((left, right) => {
-        if (left.kind !== right.kind) return left.kind === "directory" ? -1 : 1;
-        const leftName = left.kind === "directory" ? left.name : left.document.title;
-        const rightName = right.kind === "directory" ? right.name : right.document.title;
-        return compareDeterministically(leftName, rightName);
-      })
-      .map((node) =>
-        node.kind === "directory" ? { ...node, children: sortNodes(node.children) } : node,
-      );
-  return { children: sortNodes(root.children), kind: "directory", name: "", relativePath: "" };
-};
-
-const validateAndRewriteReferences = async (
-  tokens: MarkdownItToken[],
-  document: Omit<MarkdownDocument, "body">,
-  context: DocumentationContext,
-): Promise<void> => {
-  for (const token of tokens) {
-    if (token.type === "inline" && token.children !== null && token.children !== undefined) {
-      await validateAndRewriteReferences(token.children, document, context);
-    }
-    if (token.type === "link_open") {
-      const href = getAttribute(token, "href");
-      if (href !== undefined) {
-        setAttribute(token, "href", await resolveReference(href, "link", document, context));
-      }
-    }
-    if (token.type === "image") {
-      const source = getAttribute(token, "src");
-      if (source !== undefined) {
-        setAttribute(token, "src", await resolveReference(source, "image", document, context));
-      }
-    }
-  }
-};
-
-type ReferenceKind = "image" | "link";
-
-const resolveReference = async (
-  reference: string,
-  kind: ReferenceKind,
-  document: Omit<MarkdownDocument, "body">,
-  context: DocumentationContext,
-): Promise<string> => {
-  if (/^javascript:/iu.test(reference)) {
-    throw new Error(`Invalid ${kind} reference in ${document.relativePath}: ${reference}`);
-  }
-  if (/^(?:[a-z][a-z\d+.-]*:|\/\/)/iu.test(reference)) return reference;
-  const { fragment, path, query } = splitReference(reference);
-  const decodedPath = decodeReferencePath(path, document.relativePath);
-  const sourceDirectory = dirname(document.sourcePath);
-  const targetPath =
-    decodedPath === ""
-      ? document.sourcePath
-      : decodedPath.startsWith("/")
-        ? resolve(context.projectRoot, `.${decodedPath}`)
-        : resolve(sourceDirectory, decodedPath);
-  const targetRelativePath = toPosix(relative(context.projectRoot, targetPath));
-  if (targetRelativePath === ".." || targetRelativePath.startsWith("../")) {
-    throw new Error(`Invalid ${kind} reference in ${document.relativePath}: ${reference}`);
-  }
-  if (kind === "image") {
-    await assertFileExists(targetPath, document.relativePath, reference, kind);
-    return reference;
-  }
-  if (path === "" && fragment === "") return reference;
-  if (targetRelativePath.toLowerCase().endsWith(".md")) {
-    if (!context.sourceByRelativePath.has(targetRelativePath)) {
-      throw new Error(`Invalid link in ${document.relativePath}: ${reference}`);
-    }
-    if (fragment !== "") {
-      const headings = context.headingsByRelativePath.get(targetRelativePath);
-      const normalizedFragment = slugify(decodeReferencePath(fragment, document.relativePath));
-      if (headings === undefined || !headings.has(normalizedFragment)) {
-        throw new Error(`Invalid fragment in ${document.relativePath}: ${reference}`);
-      }
-    }
-    const targetOutput = targetRelativePath.replace(/\.md$/iu, ".html");
-    const currentOutput = document.relativePath.replace(/\.md$/iu, ".html");
-    const outputPath =
-      toPosix(relative(dirname(currentOutput), targetOutput)) || basename(targetOutput);
-    return `${outputPath}${query}${fragment === "" ? "" : `#${fragment}`}`;
-  }
-  await assertFileExists(targetPath, document.relativePath, reference, kind);
-  return reference;
-};
-
-const assertFileExists = async (
-  path: string,
-  source: string,
-  reference: string,
-  kind: ReferenceKind,
-): Promise<void> => {
-  try {
-    const details = await stat(path);
-    if (!details.isFile()) throw new Error("not a file");
-  } catch (error) {
-    throw new Error(`Invalid ${kind} reference in ${source}: ${reference}`, { cause: error });
-  }
-};
-
-const splitReference = (
-  reference: string,
-): Readonly<{ fragment: string; path: string; query: string }> => {
-  const hashIndex = reference.indexOf("#");
-  const withoutFragment = hashIndex === -1 ? reference : reference.slice(0, hashIndex);
-  const fragment = hashIndex === -1 ? "" : reference.slice(hashIndex + 1);
-  const queryIndex = withoutFragment.indexOf("?");
-  return {
-    fragment,
-    path: queryIndex === -1 ? withoutFragment : withoutFragment.slice(0, queryIndex),
-    query: queryIndex === -1 ? "" : withoutFragment.slice(queryIndex),
-  };
-};
-
-const decodeReferencePath = (value: string, source: string): string => {
-  try {
-    return decodeURIComponent(value);
-  } catch (error) {
-    throw new Error(`Invalid reference in ${source}: ${value}`, { cause: error });
-  }
-};
-
-const highlightCode = (source: string, languageInfo: string): string => {
-  const language = languageInfo.trim().split(/\s+/u)[0]?.toLowerCase() ?? "";
-  if (!knownCodeLanguages.has(language)) return escapeHtml(source);
-  if (language === "text" || language === "md") return escapeHtml(source);
-  const tokenPattern =
-    /(\/\/[^\r\n]*|#[^\r\n]*|\/\*[\s\S]*?\*\/|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`|\b\d+(?:\.\d+)?\b|\b[A-Za-z_$][\w$]*\b)/gu;
-  let output = "";
-  let cursor = 0;
-  for (const match of source.matchAll(tokenPattern)) {
-    const value = match[0] ?? "";
-    const start = match.index ?? cursor;
-    output += escapeHtml(source.slice(cursor, start));
-    const className =
-      value.startsWith("//") || value.startsWith("#") || value.startsWith("/*")
-        ? "comment"
-        : value.startsWith('"') || value.startsWith("'") || value.startsWith("`")
-          ? "string"
-          : /^\d/u.test(value)
-            ? "number"
-            : codeKeywords.has(value)
-              ? "keyword"
-              : "";
-    output +=
-      className === ""
-        ? escapeHtml(value)
-        : `<span class="token ${className}">${escapeHtml(value)}</span>`;
-    cursor = start + value.length;
-  }
-  return output + escapeHtml(source.slice(cursor));
-};
-
-const sanitizeEmbeddedHtml = (source: string): string => {
-  if (
-    /<\s*(?:script|iframe|style|object|embed|form|link|meta|base)\b|\son\w+\s*=|\sstyle\s*=/iu.test(
-      source,
-    )
-  ) {
-    return escapeHtml(source);
-  }
-  return source.replace(
-    /<\s*(\/?)\s*([a-z][\w-]*)([^>]*)>/giu,
-    (full, closing: string, rawName: string, rawAttributes: string) => {
-      const name = rawName.toLowerCase();
-      if (!safeHtmlTags.has(name)) return escapeHtml(full);
-      if (closing !== "") return `</${name}>`;
-      return `<${name}${sanitizeAttributes(rawAttributes)}>`;
-    },
+const renderTableOfContents = (document: MarkdownDocument): string => {
+  const headings = document.headings.filter(
+    (heading) => heading.depth === 2 || heading.depth === 3,
   );
+  if (headings.length === 0) return "";
+  const items = headings
+    .map(
+      (heading) =>
+        `      <li class="toc-depth-${heading.depth}"><a href="#${escapeHtml(heading.id)}">${escapeHtml(heading.text)}</a></li>`,
+    )
+    .join("\n");
+  return `<aside class="toc" aria-label="On this page">
+  <p class="toc-title">On this page</p>
+  <nav>
+    <ol>
+${items}
+    </ol>
+  </nav>
+</aside>`;
 };
 
-const sanitizeAttributes = (source: string): string => {
-  const output: string[] = [];
-  const attributePattern =
-    /\s+([A-Za-z_:][\w:.-]*)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/gu;
-  for (const match of source.matchAll(attributePattern)) {
-    const name = match[1] ?? "";
-    if (!safeHtmlAttributes.has(name.toLowerCase()) && !name.toLowerCase().startsWith("aria-")) {
-      continue;
-    }
-    const value = match[2] ?? match[3] ?? match[4];
-    output.push(value === undefined ? ` ${name}` : ` ${name}="${escapeHtml(value)}"`);
+const renderPageNavigation = (
+  currentOutputPath: string,
+  previous: MarkdownDocument | undefined,
+  next: MarkdownDocument | undefined,
+): string => `<nav class="page-navigation" aria-label="Document navigation">
+  ${renderAdjacentDocument("previous", "Previous", currentOutputPath, previous)}
+  ${renderAdjacentDocument("next", "Next", currentOutputPath, next)}
+</nav>`;
+
+const renderAdjacentDocument = (
+  direction: "next" | "previous",
+  label: string,
+  currentOutputPath: string,
+  document: MarkdownDocument | undefined,
+): string => {
+  if (document === undefined) {
+    return `<span class="${direction}" aria-disabled="true"><small>${label}</small>—</span>`;
   }
-  return output.join("");
+  return `<a class="${direction}" href="${escapeHtml(hrefFromOutput(currentOutputPath, document.outputPath))}">
+    <small>${label}</small>${escapeHtml(document.title)}
+  </a>`;
 };
 
-const titleFrom = (source: string, sourcePath: string, frontmatter: Frontmatter | null): string => {
-  const frontmatterTitle = frontmatter?.values.title;
-  if (typeof frontmatterTitle === "string" && frontmatterTitle.trim() !== "") {
-    return frontmatterTitle.trim();
+const documentCategory = (relativePath: string): DocumentCategory => {
+  if (relativePath.includes("/adr/")) return "ADR";
+  if (relativePath.startsWith("docs/research/")) return "Research";
+  if (relativePath.startsWith(".agents/skills/")) return "Agent skill";
+  if (relativePath.startsWith("packages/") && relativePath.endsWith("/CONTEXT.md")) {
+    return "Package context";
   }
-  const heading = /^#\s+(.+)$/mu.exec(source);
-  return heading?.[1]?.trim() ?? basename(sourcePath, extname(sourcePath));
+  if (!relativePath.includes("/")) return "Root";
+  return "Other";
 };
 
-const uniqueSlug = (value: string, used: Set<string>): string => {
-  const base = slugify(value) || "section";
-  let candidate = base;
-  let suffix = 0;
-  while (used.has(candidate)) {
-    suffix += 1;
-    candidate = `${base}-${suffix}`;
-  }
-  used.add(candidate);
-  return candidate;
+const hrefFromOutput = (fromOutputPath: string, targetPath: string): string => {
+  const href = toPosix(relative(dirname(fromOutputPath), targetPath));
+  return href === "" ? basename(targetPath) : href;
 };
 
-const slugify = (value: string): string =>
-  value
-    .replace(/<[^>]*>/gu, "")
-    .replace(/!?\[([^\]]+)\]\([^)]*\)/gu, "$1")
-    .normalize("NFKD")
-    .replace(/\p{Mark}/gu, "")
-    .toLowerCase()
-    .replace(/[^\p{Letter}\p{Number}_\s-]+/gu, "")
-    .trim()
-    .replace(/\s+/gu, "-")
-    .replace(/-+/gu, "-");
-
-const getAttribute = (token: MarkdownItToken, name: string): string | undefined =>
-  token.attrs?.find(([attribute]) => attribute === name)?.[1];
-
-const setAttribute = (token: MarkdownItToken, name: string, value: string): void => {
-  const attrs = token.attrs ?? [];
-  const existing = attrs.findIndex(([attribute]) => attribute === name);
-  const next: MarkdownItAttribute = [name, value];
-  if (existing === -1) {
-    attrs.push(next);
-  } else {
-    attrs[existing] = next;
-  }
-  token.attrs = attrs;
+const indentBlock = (value: string, spaces: number): string => {
+  if (value === "") return "";
+  const prefix = " ".repeat(spaces);
+  return value
+    .split("\n")
+    .map((line) => (line === "" ? line : `${prefix}${line}`))
+    .join("\n");
 };
 
 const compareDeterministically = (left: string, right: string): number =>
