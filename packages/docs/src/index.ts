@@ -15,47 +15,357 @@ const excludedDirectories = new Set([
 ]);
 
 const styles = `:root {
-  color-scheme: light dark;
+  color-scheme: light;
+  --bg: #f6f7fb;
+  --surface: #ffffff;
+  --surface-muted: #eef0f6;
+  --text: #202332;
+  --muted: #536078;
+  --border: #d7dce8;
+  --link: #5535a8;
+  --accent: #7357c7;
+  --accent-soft: #e9e3ff;
+  --code-bg: #eef0f6;
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
   line-height: 1.6;
-  background: #f7f7f5;
-  color: #202124;
+  background: var(--bg);
+  color: var(--text);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #11141c;
+  --surface: #1b202b;
+  --surface-muted: #252c3a;
+  --text: #f1f3f7;
+  --muted: #b8c1d2;
+  --border: #3a4354;
+  --link: #c7b9ff;
+  --accent: #b5a1ff;
+  --accent-soft: #342a5b;
+  --code-bg: #252c3a;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    background: #151515;
-    color: #eeeeec;
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #11141c;
+    --surface: #1b202b;
+    --surface-muted: #252c3a;
+    --text: #f1f3f7;
+    --muted: #b8c1d2;
+    --border: #3a4354;
+    --link: #c7b9ff;
+    --accent: #b5a1ff;
+    --accent-soft: #342a5b;
+    --code-bg: #252c3a;
   }
 }
 
-body {
-  margin: 0;
-}
-
-main {
+* {
   box-sizing: border-box;
-  max-width: 72rem;
-  margin: 0 auto;
-  padding: 3rem 1.5rem 5rem;
 }
 
-article {
-  max-width: 52rem;
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 18rem;
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+a {
+  color: var(--link);
+}
+
+a:focus-visible,
+button:focus-visible,
+select:focus-visible,
+summary:focus-visible {
+  outline: 0.2rem solid var(--accent);
+  outline-offset: 0.2rem;
+}
+
+.skip-link {
+  position: absolute;
+  z-index: 10;
+  top: 0.75rem;
+  left: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  background: var(--accent);
+  color: #fff;
+  transform: translateY(-150%);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.docs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 92rem;
   margin: 0 auto;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.brand {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
+.brand span {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.theme-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.theme-control select {
+  min-height: 2rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.docs-layout {
+  display: grid;
+  grid-template-columns: minmax(15rem, 20rem) minmax(0, 1fr);
+  gap: 2rem;
+  max-width: 92rem;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.docs-sidebar {
+  position: sticky;
+  top: 1rem;
+  align-self: start;
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--surface);
+}
+
+.sidebar-title,
+.eyebrow {
+  margin: 0 0 0.75rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.navigation-tree ul,
+.document-index ul,
+.table-of-contents ol,
+.breadcrumbs ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.navigation-tree li + li {
+  margin-top: 0.25rem;
+}
+
+.nav-directory details {
+  border-radius: 0.4rem;
+}
+
+.nav-directory summary {
+  padding: 0.35rem 0.5rem;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.nav-directory > details > ul {
+  padding-left: 0.85rem;
+}
+
+.nav-document a {
+  display: block;
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.4rem;
+  text-decoration: none;
+}
+
+.nav-document a:hover,
+.nav-current a {
+  background: var(--accent-soft);
+}
+
+.nav-document-title,
+.nav-document-path {
+  display: block;
+}
+
+.nav-document-title {
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.nav-document-path {
+  overflow: hidden;
+  color: var(--muted);
+  font: 0.7rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.docs-main {
+  min-width: 0;
+  padding: 1rem 0 4rem;
+}
+
+.breadcrumbs {
+  margin-bottom: 1.5rem;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.breadcrumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.breadcrumbs li + li::before {
+  margin-right: 0.35rem;
+  content: "/";
+  color: var(--border);
+}
+
+.page-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .source-path {
-  margin: 0 0 2rem;
-  color: #707070;
-  font: 0.875rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--muted);
+  font: 0.8rem ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.source-link {
+  font-size: 0.875rem;
+}
+
+.category-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.5rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--text);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.document-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(12rem, 15rem);
+  gap: 2rem;
+  align-items: start;
+}
+
+.doc-content {
+  min-width: 0;
+  max-width: 55rem;
+}
+
+.doc-content h1,
+.doc-content h2,
+.doc-content h3,
+.doc-content h4,
+.doc-content h5,
+.doc-content h6 {
+  scroll-margin-top: 1rem;
+  line-height: 1.2;
+}
+
+.doc-content h1 {
+  margin-top: 0;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+}
+
+.doc-content h2 {
+  margin-top: 2.5rem;
+}
+
+.doc-content h3 {
+  margin-top: 2rem;
+}
+
+.doc-content img {
+  max-width: 100%;
+  height: auto;
+}
+
+.doc-content table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.doc-content th,
+.doc-content td {
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  text-align: left;
+}
+
+.doc-content blockquote {
+  margin: 1rem 0;
+  padding: 0.25rem 1rem;
+  border-left: 0.25rem solid var(--accent);
+  color: var(--muted);
+}
+
+.doc-content pre {
+  overflow: auto;
+  padding: 1rem;
+  border-radius: 0.75rem;
+  background: var(--code-bg);
+}
+
+.doc-content code,
+.nav-document-path {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 .frontmatter {
   margin: 0 0 2rem;
   padding: 1rem;
-  border: 1px solid #d0d0ca;
+  border: 1px solid var(--border);
   border-radius: 0.75rem;
+  background: var(--surface);
 }
 
 .frontmatter-meta {
@@ -68,70 +378,119 @@ article {
 .frontmatter-badge {
   padding: 0.125rem 0.5rem;
   border-radius: 999px;
-  background: #e8e8e4;
+  background: var(--surface-muted);
   font-size: 0.875rem;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  line-height: 1.2;
-}
-
-a {
-  color: #7357c7;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-th,
-td {
-  padding: 0.5rem;
-  border: 1px solid #d0d0ca;
-  text-align: left;
-}
-
-blockquote {
-  margin: 1rem 0;
-  padding: 0.25rem 1rem;
-  border-left: 0.25rem solid #7357c7;
-  color: #555;
-}
-
-img {
-  max-width: 100%;
-  height: auto;
-}
-
-pre {
+.table-of-contents {
+  position: sticky;
+  top: 1rem;
+  max-height: calc(100vh - 2rem);
   overflow: auto;
   padding: 1rem;
-  border-radius: 0.75rem;
-  background: #e8e8e4;
+  border-left: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 0.875rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  pre {
-    background: #252525;
-  }
+.table-of-contents h2 {
+  margin: 0 0 0.5rem;
+  color: var(--text);
+  font-size: 0.875rem;
 }
 
-code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+.table-of-contents li + li {
+  margin-top: 0.35rem;
+}
+
+.table-of-contents .toc-level-3 {
+  padding-left: 0.75rem;
+}
+
+.table-of-contents a {
+  text-decoration: none;
+}
+
+.page-navigation {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 3rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.page-nav-link {
+  display: block;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  text-decoration: none;
+}
+
+.page-nav-link span,
+.page-nav-link strong {
+  display: block;
+}
+
+.page-nav-link span {
+  color: var(--muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.page-nav-next {
+  text-align: right;
+}
+
+.back-to-top {
+  display: inline-block;
+  margin-top: 1.5rem;
+  font-size: 0.875rem;
+}
+
+.index-intro {
+  max-width: 48rem;
+  padding: 2rem 0;
+}
+
+.index-intro h1 {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  line-height: 1.1;
+}
+
+.document-index {
+  max-width: 64rem;
+}
+
+.document-index li {
+  display: grid;
+  grid-template-columns: max-content minmax(10rem, 1fr) minmax(12rem, 0.8fr);
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--border);
+}
+
+.document-index li a {
+  font-weight: 700;
+}
+
+.document-index code {
+  overflow: hidden;
+  color: var(--muted);
+  font: 0.75rem ui-monospace, SFMono-Regular, Menlo, monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .token.comment {
-  color: #707070;
+  color: var(--muted);
 }
 
 .token.keyword {
-  color: #7357c7;
+  color: var(--accent);
   font-weight: 700;
 }
 
@@ -143,8 +502,54 @@ code {
   color: #a35c00;
 }
 
-li + li {
-  margin-top: 0.25rem;
+@media (max-width: 64rem) {
+  .document-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .table-of-contents {
+    position: static;
+    max-height: none;
+    border-top: 1px solid var(--border);
+    border-left: 0;
+  }
+}
+
+@media (max-width: 48rem) {
+  .docs-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .docs-layout {
+    display: block;
+    padding: 1rem;
+  }
+
+  .docs-sidebar {
+    position: static;
+    max-height: none;
+    margin-bottom: 1.5rem;
+  }
+
+  .document-index li {
+    grid-template-columns: 1fr;
+    gap: 0.35rem;
+  }
+
+  .page-navigation {
+    grid-template-columns: 1fr;
+  }
+
+  .page-nav-next {
+    text-align: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 `;
 
@@ -252,17 +657,56 @@ type Frontmatter = Readonly<{
   values: Readonly<Record<string, unknown>>;
 }>;
 
+type DocumentationCategory =
+  "adr" | "research" | "agent-skill" | "package-context" | "root" | "other";
+
+type Heading = Readonly<{
+  level: 2 | 3;
+  slug: string;
+  title: string;
+}>;
+
 type MarkdownDocument = Readonly<{
   body: string;
+  category: DocumentationCategory;
   frontmatter: Frontmatter | null;
+  headings: readonly Heading[];
   markdown: string;
   relativePath: string;
   sourcePath: string;
   title: string;
 }>;
 
+type DocumentationDocument = Omit<MarkdownDocument, "body">;
+
+type NavigationNode =
+  | Readonly<{
+      children: readonly NavigationNode[];
+      kind: "directory";
+      name: string;
+      relativePath: string;
+    }>
+  | Readonly<{
+      document: DocumentationDocument;
+      kind: "document";
+    }>;
+
+type MutableNavigationNode =
+  | {
+      children: MutableNavigationNode[];
+      kind: "directory";
+      name: string;
+      relativePath: string;
+    }
+  | {
+      document: DocumentationDocument;
+      kind: "document";
+    };
+
 type DocumentationContext = Readonly<{
   headingsByRelativePath: ReadonlyMap<string, ReadonlySet<string>>;
+  navigation: NavigationNode;
+  documents: readonly DocumentationDocument[];
   projectRoot: string;
   sourceByRelativePath: ReadonlyMap<string, string>;
 }>;
@@ -285,7 +729,9 @@ export const buildDocumentationSite = async (
       const relativePath = toPosix(relative(projectRoot, sourcePath));
       const parsed = parseFrontmatter(source, relativePath);
       return {
+        category: categoryForPath(relativePath),
         frontmatter: parsed.frontmatter,
+        headings: collectHeadings(parsed.markdown),
         markdown: parsed.markdown,
         relativePath,
         sourcePath,
@@ -294,10 +740,16 @@ export const buildDocumentationSite = async (
     }),
   );
   const headingsByRelativePath = new Map(
-    documents.map((document) => [document.relativePath, collectHeadingSlugs(document.markdown)]),
+    documents.map((document) => [
+      document.relativePath,
+      new Set(document.headings.map(({ slug }) => slug)),
+    ]),
   );
+  const navigation = buildNavigationTree(documents);
   const context: DocumentationContext = {
     headingsByRelativePath,
+    navigation,
+    documents,
     projectRoot,
     sourceByRelativePath,
   };
@@ -316,13 +768,13 @@ export const buildDocumentationSite = async (
 
   for (const document of renderedDocuments) {
     const outputPath = join(projectRoot, document.relativePath.replace(/\.md$/u, ".html"));
-    await writeFormattedFile(outputPath, renderPage(projectRoot, document));
+    await writeFormattedFile(outputPath, renderPage(projectRoot, document, context));
     generatedFiles.push(toPosix(relative(projectRoot, outputPath)));
   }
 
   await writeFormattedFile(
     join(projectRoot, "index.html"),
-    renderIndex(projectRoot, renderedDocuments),
+    renderIndex(projectRoot, renderedDocuments, context),
   );
   generatedFiles.push("index.html");
 
@@ -389,46 +841,246 @@ const parseFrontmatter = (
   };
 };
 
-const renderPage = (projectRoot: string, document: MarkdownDocument): string => {
+const renderPage = (
+  projectRoot: string,
+  document: MarkdownDocument,
+  context: DocumentationContext,
+): string => {
   const outputPath = join(projectRoot, document.relativePath.replace(/\.md$/u, ".html"));
-  const stylesheet = toPosix(
-    relative(dirname(outputPath), join(projectRoot, ".resona-docs", "styles.css")),
-  );
-  return renderHtmlDocument({
-    body: `    <main>
-      <p class="source-path">${escapeHtml(document.relativePath)}</p>
-      <article>
+  const previous = adjacentDocument(document, context.documents, -1);
+  const next = adjacentDocument(document, context.documents, 1);
+  const sourceHref = relativeHref(outputPath, document.sourcePath);
+  const previousHref =
+    previous === null ? null : relativeHref(outputPath, outputPathFor(projectRoot, previous));
+  const nextHref =
+    next === null ? null : relativeHref(outputPath, outputPathFor(projectRoot, next));
+  const toc = renderTableOfContents(document.headings);
+  return renderShell({
+    content: `      <nav class="breadcrumbs" aria-label="Breadcrumb">
+        <ol>
+          <li><a href="${escapeHtml(relativeHref(outputPath, join(projectRoot, "index.html")))}">Documentación</a></li>
+${renderBreadcrumbs(document)}
+        </ol>
+      </nav>
+      <div class="page-heading">
+        <p class="source-path">${escapeHtml(document.relativePath)}</p>
+        <span class="category-badge" data-category="${document.category}">${escapeHtml(categoryLabel(document.category))}</span>
+        <a class="source-link" href="${escapeHtml(sourceHref)}">Ver Markdown fuente</a>
+      </div>
+      <div class="document-layout">
+        <article class="doc-content">
 ${renderFrontmatter(document.frontmatter)}${document.body}
-      </article>
-    </main>`,
-    stylesheet,
+        </article>
+        ${toc}
+      </div>
+      <nav class="page-navigation" aria-label="Paginación de documentación">
+${renderAdjacentLink("Anterior", previous, previousHref)}${renderAdjacentLink("Siguiente", next, nextHref)}
+      </nav>
+      <a class="back-to-top" href="#top">Volver arriba</a>`,
+    currentRelativePath: document.relativePath,
+    navigation: context.navigation,
+    outputPath,
+    projectRoot,
     title: `${document.title} · Resona`,
   });
 };
 
-const renderIndex = (projectRoot: string, documents: readonly MarkdownDocument[]): string => {
+const renderIndex = (
+  projectRoot: string,
+  documents: readonly MarkdownDocument[],
+  context: DocumentationContext,
+): string => {
   const links = documents
     .map((document) => {
-      const href = toPosix(document.relativePath.replace(/\.md$/u, ".html"));
-      return `        <li><a href="${escapeHtml(href)}">${escapeHtml(document.title)}</a> <code>${escapeHtml(document.relativePath)}</code></li>`;
+      const href = relativeHref(
+        join(projectRoot, "index.html"),
+        outputPathFor(projectRoot, document),
+      );
+      return `          <li data-category="${document.category}">
+            <span class="category-badge">${escapeHtml(categoryLabel(document.category))}</span>
+            <a href="${escapeHtml(href)}">${escapeHtml(document.title)}</a>
+            <code>${escapeHtml(document.relativePath)}</code>
+          </li>`;
     })
     .join("\n");
-  const stylesheet = toPosix(
-    relative(projectRoot, join(projectRoot, ".resona-docs", "styles.css")),
-  );
-  return renderHtmlDocument({
-    body: `    <main>
-      <article>
+  return renderShell({
+    content: `      <div class="index-intro">
+        <p class="eyebrow">Resona · documentación</p>
         <h1>Resona documentation</h1>
-        <p>Generated from ${documents.length} Markdown files.</p>
+        <p>Un recorrido navegable por ${documents.length} documentos Markdown.</p>
+      </div>
+      <section aria-labelledby="documents-title" class="document-index">
+        <h2 id="documents-title">Documentos</h2>
         <ul>
 ${links}
         </ul>
-      </article>
-    </main>`,
-    stylesheet,
+      </section>
+      <a class="back-to-top" href="#top">Volver arriba</a>`,
+    currentRelativePath: null,
+    navigation: context.navigation,
+    outputPath: join(projectRoot, "index.html"),
+    projectRoot,
     title: "Resona documentation",
   });
+};
+
+type ShellOptions = Readonly<{
+  content: string;
+  currentRelativePath: string | null;
+  navigation: NavigationNode;
+  outputPath: string;
+  projectRoot: string;
+  title: string;
+}>;
+
+const renderShell = ({
+  content,
+  currentRelativePath,
+  navigation,
+  outputPath,
+  projectRoot,
+  title,
+}: ShellOptions): string => {
+  const homeHref = relativeHref(outputPath, join(projectRoot, "index.html"));
+  return renderHtmlDocument({
+    body: `    <a class="skip-link" href="#content">Saltar al contenido</a>
+    <header class="docs-header">
+      <a class="brand" href="${escapeHtml(homeHref)}">Resona <span>docs</span></a>
+      <label class="theme-control" for="theme-select">
+        <span>Tema</span>
+        <select id="theme-select" name="theme">
+          <option value="system">Sistema</option>
+          <option value="light">Claro</option>
+          <option value="dark">Oscuro</option>
+        </select>
+      </label>
+    </header>
+    <div class="docs-layout">
+      <aside class="docs-sidebar">
+        <nav aria-label="Documentación">
+          <p class="sidebar-title">Explorar</p>
+${renderNavigation(projectRoot, outputPath, currentRelativePath, navigation)}
+        </nav>
+      </aside>
+      <main id="content" class="docs-main" tabindex="-1">
+${content}
+      </main>
+    </div>`,
+    stylesheet: toPosix(
+      relative(dirname(outputPath), join(projectRoot, ".resona-docs", "styles.css")),
+    ),
+    title,
+  });
+};
+
+const outputPathFor = (projectRoot: string, document: DocumentationDocument): string =>
+  join(projectRoot, document.relativePath.replace(/\.md$/u, ".html"));
+
+const relativeHref = (fromOutputPath: string, targetPath: string): string =>
+  toPosix(relative(dirname(fromOutputPath), targetPath)) || basename(targetPath);
+
+const adjacentDocument = (
+  document: DocumentationDocument,
+  documents: readonly DocumentationDocument[],
+  offset: -1 | 1,
+): DocumentationDocument | null => {
+  const index = documents.indexOf(document);
+  return index === -1 ? null : (documents[index + offset] ?? null);
+};
+
+const categoryLabel = (category: DocumentationCategory): string => {
+  const labels: Record<DocumentationCategory, string> = {
+    adr: "ADR",
+    "agent-skill": "Agent skill",
+    other: "Other",
+    "package-context": "Package context",
+    research: "Research",
+    root: "Root",
+  };
+  return labels[category];
+};
+
+const renderBreadcrumbs = (document: MarkdownDocument): string => {
+  const segments = document.relativePath.split("/");
+  const crumbs: string[] = [];
+  for (const [index, segment] of segments.entries()) {
+    const isDocument = index === segments.length - 1;
+    if (isDocument) {
+      crumbs.push(`          <li aria-current="page">${escapeHtml(document.title)}</li>`);
+      continue;
+    }
+    crumbs.push(`          <li><span>${escapeHtml(segment)}</span></li>`);
+  }
+  return crumbs.join("\n");
+};
+
+const renderTableOfContents = (headings: readonly Heading[]): string => {
+  const items = headings
+    .map(
+      ({ level, slug, title }) =>
+        `          <li class="toc-level-${level}"><a href="#${escapeHtml(slug)}">${escapeHtml(title)}</a></li>`,
+    )
+    .join("\n");
+  return `        <nav class="table-of-contents" aria-label="En esta página">
+          <h2>En esta página</h2>
+          <ol>
+${items}
+          </ol>
+        </nav>`;
+};
+
+const renderAdjacentLink = (
+  label: string,
+  document: DocumentationDocument | null,
+  href: string | null,
+): string => {
+  if (document === null || href === null) {
+    return `        <span class="page-nav-placeholder" aria-hidden="true"></span>`;
+  }
+  const direction = label === "Anterior" ? "previous" : "next";
+  return `        <a class="page-nav-link page-nav-${direction}" href="${escapeHtml(href)}">
+          <span>${label}</span>
+          <strong>${escapeHtml(document.title)}</strong>
+        </a>`;
+};
+
+const renderNavigation = (
+  projectRoot: string,
+  outputPath: string,
+  currentRelativePath: string | null,
+  root: NavigationNode,
+): string => {
+  const renderNodes = (nodes: readonly NavigationNode[]): string =>
+    nodes.map(renderNode).join("\n");
+  const renderNode = (node: NavigationNode): string => {
+    if (node.kind === "document") {
+      const current = node.document.relativePath === currentRelativePath;
+      return `            <li class="nav-document${current ? " nav-current" : ""}" data-category="${node.document.category}">
+              <a href="${escapeHtml(relativeHref(outputPath, outputPathFor(projectRoot, node.document)))}"${current ? ' aria-current="page"' : ""}>
+                <span class="nav-document-title">${escapeHtml(node.document.title)}</span>
+                <span class="nav-document-path">${escapeHtml(node.document.relativePath)}</span>
+              </a>
+            </li>`;
+    }
+    const open =
+      node.relativePath === "" ||
+      (currentRelativePath !== null &&
+        (currentRelativePath === node.relativePath ||
+          currentRelativePath.startsWith(`${node.relativePath}/`)));
+    return `            <li class="nav-directory">
+              <details${open ? " open" : ""}>
+                <summary>${escapeHtml(node.name || "Todos los documentos")}</summary>
+                <ul>
+${renderNodes(node.children)}
+                </ul>
+              </details>
+            </li>`;
+  };
+  return `<div class="navigation-tree">
+    <ul>
+${renderNode(root)}
+    </ul>
+  </div>`;
 };
 
 type HtmlDocumentOptions = Readonly<{
@@ -449,11 +1101,36 @@ const renderHtmlDocument = ({
     <title>${escapeHtml(title)}</title>
     <link rel="stylesheet" href="${escapeHtml(stylesheet)}">
   </head>
-  <body>
+  <body id="top">
 ${body}
+${themeScript}
   </body>
 </html>
 `;
+
+const themeScript = `<script>
+(() => {
+  const key = "resona-docs-theme";
+  const root = document.documentElement;
+  const select = document.getElementById("theme-select");
+  const apply = (theme) => {
+    root.dataset.theme = theme;
+    if (select) select.value = theme;
+  };
+  let stored = "system";
+  try {
+    stored = window.localStorage.getItem(key) || "system";
+  } catch {}
+  apply(["system", "light", "dark"].includes(stored) ? stored : "system");
+  select?.addEventListener("change", () => {
+    const theme = select.value;
+    apply(theme);
+    try {
+      window.localStorage.setItem(key, theme);
+    } catch {}
+  });
+})();
+</script>`;
 
 const renderFrontmatter = (frontmatter: Frontmatter | null): string => {
   if (frontmatter === null) return "";
@@ -637,16 +1314,81 @@ const createMarkdownIt = (): MarkdownIt => {
   return markdown;
 };
 
-const collectHeadingSlugs = (source: string): ReadonlySet<string> => {
+const collectHeadings = (source: string): readonly Heading[] => {
   const markdown = new MarkdownIt();
   const tokens = markdown.parse(source, {});
   const slugs = new Set<string>();
+  const headings: Heading[] = [];
   tokens.forEach((token, index) => {
-    if (token.type === "heading_open") {
-      uniqueSlug(tokens[index + 1]?.content ?? "", slugs);
-    }
+    if (token.type !== "heading_open") return;
+    const level = Number(token.tag.slice(1));
+    const title = tokens[index + 1]?.content ?? "";
+    const slug = uniqueSlug(title, slugs);
+    if (level === 2 || level === 3) headings.push({ level, slug, title });
   });
-  return slugs;
+  return headings;
+};
+
+const categoryForPath = (relativePath: string): DocumentationCategory => {
+  const path = relativePath.toLowerCase();
+  if (path.startsWith("docs/adr/") || path.startsWith("adr/")) return "adr";
+  if (path.startsWith("docs/research/") || path.startsWith("research/")) return "research";
+  if (path.startsWith(".agents/skills/")) return "agent-skill";
+  if (path.startsWith("packages/") && relativePath.toLowerCase().endsWith("/context.md")) {
+    return "package-context";
+  }
+  if (
+    !relativePath.includes("/") &&
+    new Set(["agents.md", "context.md", "readme.md"]).has(basename(path))
+  ) {
+    return "root";
+  }
+  return "other";
+};
+
+const buildNavigationTree = (documents: readonly DocumentationDocument[]): NavigationNode => {
+  const root: Extract<MutableNavigationNode, { kind: "directory" }> = {
+    children: [],
+    kind: "directory",
+    name: "",
+    relativePath: "",
+  };
+  for (const document of documents) {
+    const segments = document.relativePath.split("/");
+    let currentChildren = root.children;
+    let directoryPath = "";
+    for (const segment of segments.slice(0, -1)) {
+      directoryPath = directoryPath === "" ? segment : `${directoryPath}/${segment}`;
+      let directory = currentChildren.find(
+        (node): node is Extract<MutableNavigationNode, { kind: "directory" }> =>
+          node.kind === "directory" && node.relativePath === directoryPath,
+      );
+      if (directory === undefined) {
+        directory = {
+          children: [],
+          kind: "directory",
+          name: segment,
+          relativePath: directoryPath,
+        };
+        currentChildren.push(directory);
+      }
+      currentChildren = directory.children;
+    }
+    currentChildren.push({ document, kind: "document" });
+  }
+
+  const sortNodes = (nodes: readonly MutableNavigationNode[]): NavigationNode[] =>
+    [...nodes]
+      .sort((left, right) => {
+        if (left.kind !== right.kind) return left.kind === "directory" ? -1 : 1;
+        const leftName = left.kind === "directory" ? left.name : left.document.title;
+        const rightName = right.kind === "directory" ? right.name : right.document.title;
+        return compareDeterministically(leftName, rightName);
+      })
+      .map((node) =>
+        node.kind === "directory" ? { ...node, children: sortNodes(node.children) } : node,
+      );
+  return { children: sortNodes(root.children), kind: "directory", name: "", relativePath: "" };
 };
 
 const validateAndRewriteReferences = async (
