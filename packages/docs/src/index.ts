@@ -105,6 +105,9 @@ export const buildDocumentationSite = async (
 ): Promise<BuildDocumentationSiteResult> => {
   const projectRoot = resolve(options.projectRoot);
   const sourcePaths = await discoverMarkdown(projectRoot);
+  if (sourcePaths.some((sourcePath) => relative(projectRoot, sourcePath) === "index.md")) {
+    throw new Error("The root index.md is reserved for the generated documentation index.");
+  }
   const documents = await Promise.all(
     sourcePaths.map(async (sourcePath) => {
       const source = await readFile(sourcePath, "utf8");
@@ -149,7 +152,7 @@ const discoverMarkdown = async (projectRoot: string): Promise<string[]> => {
 
   const visit = async (directory: string): Promise<void> => {
     const entries = (await readdir(directory, { withFileTypes: true })).sort((left, right) =>
-      left.name.localeCompare(right.name),
+      compareDeterministically(left.name, right.name),
     );
 
     for (const entry of entries) {
@@ -164,7 +167,7 @@ const discoverMarkdown = async (projectRoot: string): Promise<string[]> => {
   };
 
   await visit(projectRoot);
-  return paths.sort((left, right) => left.localeCompare(right));
+  return paths.sort(compareDeterministically);
 };
 
 const renderPage = (projectRoot: string, document: MarkdownDocument): string => {
@@ -284,9 +287,12 @@ const slugify = (value: string): string =>
   value
     .normalize("NFKD")
     .replace(/\p{Mark}/gu, "")
-    .toLocaleLowerCase()
+    .toLowerCase()
     .replace(/[^\p{Letter}\p{Number}]+/gu, "-")
     .replace(/^-+|-+$/gu, "");
+
+const compareDeterministically = (left: string, right: string): number =>
+  left < right ? -1 : left > right ? 1 : 0;
 
 const escapeHtml = (value: string): string =>
   value
