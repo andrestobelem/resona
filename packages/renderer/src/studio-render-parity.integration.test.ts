@@ -153,6 +153,14 @@ describe("Studio and Node render parity", () => {
 
     const offline = renderAudio(job);
     const preview = workletSamples(job, { frameCount: offline.frames });
+    expect(job.plan.channels).toBe(2);
+    expect(offline.frames).toBe(job.plan.nominalDurationFrames);
+    expect(preview.messages).toContainEqual({
+      type: "ready",
+      sampleRate: 48_000,
+      channels: 2,
+      nominalDurationFrames: offline.frames,
+    });
     expectParity(offline.samples, preview.samples);
     expect(preview.messages).not.toEqual(
       expect.arrayContaining([expect.objectContaining({ type: "error" })]),
