@@ -6,6 +6,7 @@ import {
   type AudioWorkletEvent,
   type AudioWorkletPortLike,
 } from "./audio-worklet.js";
+import type { AudioEngine } from "./audio-engine.js";
 import { renderAudio } from "./render-audio.js";
 
 const plan = {
@@ -267,6 +268,15 @@ describe("Resona AudioWorklet adapter", () => {
     expect(Array.from(left.slice(0, 4))).toEqual(Array.from(left.slice(4, 8)));
     expect(port.messages).not.toContainEqual({ type: "ended", cursorFrame: 4 });
     expect(port.messages).toContainEqual({ type: "snapshot", cursorFrame: 4 });
+    const meter = port.messages.find(
+      (message): message is { type: "meter"; levels: ArrayLike<number> } =>
+        typeof message === "object" &&
+        message !== null &&
+        "type" in message &&
+        message.type === "meter",
+    );
+    expect(meter).toBeDefined();
+    expect(Array.from(meter?.levels ?? [])).toEqual(expect.arrayContaining([expect.any(Number)]));
   });
 
   it("keeps PolySynth, automation, and Delay state clean across loops", () => {
@@ -289,6 +299,53 @@ describe("Resona AudioWorklet adapter", () => {
     expect(Array.from(left.slice(8, 16))).toEqual(renderedLeft);
     expect(Array.from(right.slice(8, 16))).toEqual(renderedRight);
     expect(port.messages).not.toContainEqual({ type: "ended", cursorFrame: 8 });
+  });
+
+  it("retains the peak meter across a loop boundary in one quantum", () => {
+    let cursorFrame = 0;
+    let processCount = 0;
+    const levels = new Float32Array(1);
+    const fakeEngine: AudioEngine = {
+      get cursorFrame() {
+        return cursorFrame;
+      },
+      process(output, frames = output.length / 2) {
+        levels[0] = processCount === 0 ? 1 : 0;
+        processCount += 1;
+        output.fill(0, 0, frames * 2);
+        cursorFrame += frames;
+        return frames;
+      },
+      reset() {
+        cursorFrame = 0;
+      },
+      seek(frame) {
+        cursorFrame = frame;
+      },
+      meters() {
+        return levels;
+      },
+      diagnostics() {
+        return [];
+      },
+    };
+    const Processor = createResonaAudioWorkletProcessor(FakeBase, () => fakeEngine);
+    const processor = new Processor();
+    const port = processor.port as FakePort;
+    port.send({ type: "load", plan, resources: [] });
+    port.send({ type: "loop", enabled: true });
+    port.send({ type: "play" });
+
+    processor.process([], [[new Float32Array(8), new Float32Array(8)]]);
+
+    const meter = port.messages.find(
+      (message): message is { type: "meter"; levels: ArrayLike<number> } =>
+        typeof message === "object" &&
+        message !== null &&
+        "type" in message &&
+        message.type === "meter",
+    );
+    expect(meter?.levels[0]).toBe(1);
   });
 
   it("reconstructs state from the origin when seeking", () => {
@@ -334,6 +391,7 @@ describe("Resona AudioWorklet adapter", () => {
       seek: (frame: number) => {
         cursorFrame = frame;
       },
+      meters: () => [],
       diagnostics: () => [],
     });
     const Processor = createResonaAudioWorkletProcessor(FakeBase, shortEngine);

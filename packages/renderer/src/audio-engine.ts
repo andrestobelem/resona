@@ -29,6 +29,7 @@ export type AudioEngine = Readonly<{
   process(output: Float32Array, frames?: number): number;
   reset(): void;
   seek(frame: number): void;
+  meters(): ArrayLike<number>;
   diagnostics(): readonly AudioEngineDiagnostic[];
 }>;
 
@@ -339,6 +340,7 @@ export const createAudioEngine = (
     }
   }
   const scratch = new Float32Array(seekBlockFrames * plan.channels);
+  const meterLevels = new Float32Array(plan.processors.length);
   let cursorFrame = 0;
   let eventCursor = 0;
 
@@ -434,7 +436,12 @@ export const createAudioEngine = (
     return previousValue;
   };
 
-  const processFrame = (frame: number, output: Float32Array, outputOffset: number): void => {
+  const processFrame = (
+    frame: number,
+    output: Float32Array,
+    outputOffset: number,
+    peaks: Float32Array,
+  ): void => {
     sourceLeft.fill(0);
     sourceRight.fill(0);
     for (let instrumentIndex = 0; instrumentIndex < instruments.length; instrumentIndex += 1) {
@@ -572,6 +579,13 @@ export const createAudioEngine = (
         state.position = (state.position + 1) % processor.delayFrames;
       }
     }
+    for (let processorIndex = 0; processorIndex < plan.masterProcessor; processorIndex += 1) {
+      const peak = Math.max(
+        Math.abs(sourceLeft[processorIndex] ?? 0),
+        Math.abs(sourceRight[processorIndex] ?? 0),
+      );
+      peaks[processorIndex] = Math.max(peaks[processorIndex] ?? 0, peak);
+    }
     let left = 0;
     let right = 0;
     for (let routeIndex = 0; routeIndex < plan.routes.length; routeIndex += 1) {
@@ -581,6 +595,13 @@ export const createAudioEngine = (
       left = canonicalF32(left + (sourceLeft[route.from] ?? 0));
       right = canonicalF32(right + (sourceRight[route.from] ?? 0));
     }
+    sourceLeft[plan.masterProcessor] = left;
+    sourceRight[plan.masterProcessor] = right;
+    peaks[plan.masterProcessor] = Math.max(
+      peaks[plan.masterProcessor] ?? 0,
+      Math.abs(left),
+      Math.abs(right),
+    );
     output[outputOffset] = left;
     output[outputOffset + 1] = right;
   };
@@ -588,6 +609,7 @@ export const createAudioEngine = (
   const reset = (): void => {
     cursorFrame = 0;
     eventCursor = 0;
+    meterLevels.fill(0);
     for (let instrumentIndex = 0; instrumentIndex < instruments.length; instrumentIndex += 1) {
       const instrument = instruments[instrumentIndex];
       if (instrument === undefined) continue;
@@ -618,8 +640,9 @@ export const createAudioEngine = (
     if (!Number.isSafeInteger(frames) || frames < 0 || output.length < frames * plan.channels) {
       throw new RangeError("Audio output must contain enough interleaved stereo frames.");
     }
+    meterLevels.fill(0);
     for (let index = 0; index < frames; index += 1) {
-      processFrame(cursorFrame, output, index * plan.channels);
+      processFrame(cursorFrame, output, index * plan.channels, meterLevels);
       cursorFrame += 1;
     }
     return frames;
@@ -634,6 +657,8 @@ export const createAudioEngine = (
       process(scratch, Math.min(seekBlockFrames, frame - cursorFrame));
     }
   };
+
+  const meters = (): ArrayLike<number> => meterLevels;
 
   const diagnostics = (): readonly AudioEngineDiagnostic[] =>
     instruments
@@ -658,6 +683,7 @@ export const createAudioEngine = (
     process,
     reset,
     seek,
+    meters,
     diagnostics,
   };
 };

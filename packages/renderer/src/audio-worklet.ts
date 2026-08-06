@@ -22,6 +22,7 @@ export type AudioWorkletEvent =
       nominalDurationFrames: number;
     }>
   | Readonly<{ type: "snapshot"; cursorFrame: number }>
+  | Readonly<{ type: "meter"; levels: ArrayLike<number> }>
   | Readonly<{ type: "ended"; cursorFrame: number }>
   | Readonly<{
       type: "underrun";
@@ -99,7 +100,12 @@ export const createResonaAudioWorkletProcessor = (
     private playing = false;
     private looping = false;
     private readonly interleaved = new Float32Array(quantumFrames * 2);
+    private meterLevels = new Float32Array(0);
     private readonly snapshotMessage = { type: "snapshot" as const, cursorFrame: 0 };
+    private readonly meterMessage: { type: "meter"; levels: ArrayLike<number> } = {
+      type: "meter",
+      levels: [],
+    };
     private readonly endedMessage = { type: "ended" as const, cursorFrame: 0 };
 
     public constructor() {
@@ -117,6 +123,8 @@ export const createResonaAudioWorkletProcessor = (
             this.nominalDurationFrames = command.plan.nominalDurationFrames;
             this.playing = false;
             this.looping = false;
+            this.meterLevels = new Float32Array(this.engine.meters().length);
+            this.meterMessage.levels = this.meterLevels;
             this.port.postMessage({
               type: "ready",
               sampleRate: 48_000,
@@ -173,6 +181,7 @@ export const createResonaAudioWorkletProcessor = (
         return true;
       }
       try {
+        this.meterLevels.fill(0);
         let outputFrame = 0;
         while (outputFrame < left.length) {
           if (this.engine.cursorFrame >= this.nominalDurationFrames) {
@@ -201,6 +210,10 @@ export const createResonaAudioWorkletProcessor = (
             } satisfies AudioWorkletEvent);
             return true;
           }
+          const levels = this.engine.meters();
+          for (let index = 0; index < this.meterLevels.length; index += 1) {
+            this.meterLevels[index] = Math.max(this.meterLevels[index] ?? 0, levels[index] ?? 0);
+          }
           for (let frame = 0; frame < frames; frame += 1) {
             left[outputFrame + frame] = this.interleaved[frame * 2] ?? 0;
             right[outputFrame + frame] = this.interleaved[frame * 2 + 1] ?? 0;
@@ -217,6 +230,7 @@ export const createResonaAudioWorkletProcessor = (
       }
       this.snapshotMessage.cursorFrame = this.engine.cursorFrame;
       this.port.postMessage(this.snapshotMessage satisfies AudioWorkletEvent);
+      this.port.postMessage(this.meterMessage satisfies AudioWorkletEvent);
       if (!this.looping && this.engine.cursorFrame >= this.nominalDurationFrames) {
         this.playing = false;
         this.endedMessage.cursorFrame = this.engine.cursorFrame;

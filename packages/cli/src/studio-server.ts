@@ -238,11 +238,31 @@ const shell = (state: StudioState): string => {
   return `<!doctype html>
 <html lang="en">
   <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Resona Studio</title>
-    <style>body{font:15px system-ui,sans-serif;max-width:1000px;margin:2rem auto;padding:0 1rem;background:#111827;color:#e5e7eb}button,select,input,textarea{font:inherit;padding:.45rem .7rem;margin:.25rem;background:#1f2937;color:#e5e7eb;border:1px solid #4b5563;border-radius:.35rem}textarea{display:block;width:100%;box-sizing:border-box;font-family:ui-monospace,monospace}fieldset{border:1px solid #4b5563;border-radius:.35rem;margin:.5rem 0;padding:.5rem}#input-error{display:block;color:#fca5a5;min-height:1.3rem}pre{white-space:pre-wrap;background:#030712;padding:1rem;border-radius:.4rem;overflow:auto}header{display:flex;align-items:center;gap:1rem}</style>
+    <style>body{font:15px system-ui,sans-serif;max-width:1000px;margin:2rem auto;padding:0 1rem;background:#111827;color:#e5e7eb}button,select,input,textarea{font:inherit;padding:.45rem .7rem;margin:.25rem;background:#1f2937;color:#e5e7eb;border:1px solid #4b5563;border-radius:.35rem}textarea{display:block;width:100%;box-sizing:border-box;font-family:ui-monospace,monospace}fieldset{border:1px solid #4b5563;border-radius:.35rem;margin:.5rem 0;padding:.5rem}#input-error{display:block;color:#fca5a5;min-height:1.3rem}pre{white-space:pre-wrap;background:#030712;padding:1rem;border-radius:.4rem;overflow:auto}header{display:flex;align-items:center;gap:1rem}#studio-inspection{margin-top:1.5rem}#studio-inspection h2,#studio-inspection h3{margin-bottom:.5rem}.inspection-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(18rem,1fr));gap:1rem}.inspection-card{border:1px solid #4b5563;border-radius:.35rem;padding:.75rem;margin:.75rem 0}.studio-timeline{position:relative;min-height:8rem;border:1px solid #4b5563;border-radius:.35rem;padding:2rem .75rem .75rem;overflow-x:auto}.studio-timeline-sequences{display:grid;gap:.2rem;margin-bottom:.5rem;color:#9ca3af}.studio-timeline-tracks{display:grid;gap:.4rem}.timeline-track{display:grid;grid-template-columns:minmax(8rem,12rem) minmax(20rem,1fr);gap:.75rem;align-items:center;min-height:2.5rem}.timeline-track-label{font-weight:600}.timeline-clips{position:relative;display:block;min-height:2rem;margin:0;padding:0;list-style:none}.timeline-clip{position:absolute;top:0;display:flex;align-items:center;box-sizing:border-box;min-width:2rem;min-height:2rem;padding:.35rem .5rem;border:1px solid #60a5fa;border-radius:.25rem;background:#1e3a5f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.timeline-playhead{position:absolute;z-index:1;top:0;bottom:0;width:2px;background:#fbbf24;pointer-events:none;transition:left .1s linear}.meter-row{display:grid;grid-template-columns:minmax(8rem,12rem) minmax(8rem,1fr);gap:.75rem;align-items:center;margin:.4rem 0}.meter-row meter{width:100%;height:1rem}.inspection-list{margin:.25rem 0;padding-left:1.2rem}.inspection-muted{color:#9ca3af}</style>
   </head>
   <body><header><h1>Resona Studio</h1><span id="status">Loading compositions…</span><span id="cursor"></span></header>
     <label>Composition <select id="composition"></select></label><button id="inspect">Prepare variant</button><button id="play" disabled>Play</button><button id="pause" disabled>Pause</button><label>Seek <input id="seek" type="range" min="0" max="0" value="0" step="1" disabled><span id="seek-value">0</span></label><label><input id="loop" type="checkbox" disabled> Loop</label>
     <section id="inputs" hidden><h2>Inputs</h2><div id="input-controls"></div><label>JSON fallback<textarea id="input-json" rows="8"></textarea></label><span id="input-error" role="alert"></span></section>
+    <section id="studio-inspection" hidden aria-labelledby="inspection-title">
+      <h2 id="inspection-title">Read-only composition inspection</h2>
+      <section class="inspection-card" aria-labelledby="timeline-title">
+        <h3 id="timeline-title">Timeline</h3>
+        <div id="studio-timeline" class="studio-timeline" aria-label="Composition timeline">
+          <div id="studio-timeline-sequences" class="studio-timeline-sequences" aria-label="Sequences"></div>
+          <div id="studio-timeline-tracks" class="studio-timeline-tracks" role="list"></div>
+          <div id="studio-timeline-playhead" class="timeline-playhead" aria-hidden="true"></div>
+        </div>
+      </section>
+      <div class="inspection-grid">
+        <section class="inspection-card" aria-labelledby="chain-title"><h3 id="chain-title">Track chains</h3><div id="studio-chain"></div></section>
+        <section class="inspection-card" aria-labelledby="meters-title"><h3 id="meters-title">Meters</h3><div class="meter-row"><span>Master</span><meter id="meter-master" min="0" max="1" low="0.2" high="0.8" optimum="0.6" value="0">0</meter></div><div id="studio-track-meters"></div></section>
+      </div>
+      <div class="inspection-grid">
+        <details id="composition-ir" class="inspection-card"><summary>CompositionIR</summary><pre id="composition-ir-json"></pre></details>
+        <details id="execution-plan" class="inspection-card"><summary>ExecutionPlan</summary><pre id="execution-plan-json"></pre></details>
+      </div>
+      <section id="studio-diagnostics" class="inspection-card" aria-labelledby="diagnostics-title"><h3 id="diagnostics-title">Diagnostics</h3><ol id="studio-diagnostics-list" class="inspection-list"></ol></section>
+    </section>
     <pre id="details"></pre>
     <script>
       const session = ${bootstrap};
@@ -261,6 +281,16 @@ const shell = (state: StudioState): string => {
       const inputControls = document.querySelector('#input-controls');
       const inputJson = document.querySelector('#input-json');
       const inputError = document.querySelector('#input-error');
+      const inspection = document.querySelector('#studio-inspection');
+      const timelineSequences = document.querySelector('#studio-timeline-sequences');
+      const timelineTracks = document.querySelector('#studio-timeline-tracks');
+      const timelinePlayhead = document.querySelector('#studio-timeline-playhead');
+      const chain = document.querySelector('#studio-chain');
+      const masterMeter = document.querySelector('#meter-master');
+      const trackMeters = document.querySelector('#studio-track-meters');
+      const compositionIrJson = document.querySelector('#composition-ir-json');
+      const executionPlanJson = document.querySelector('#execution-plan-json');
+      const diagnosticsList = document.querySelector('#studio-diagnostics-list');
       let audioContext;
       let audioNode;
       let activeVariant;
@@ -275,6 +305,8 @@ const shell = (state: StudioState): string => {
       let isPlaying = false;
       let fallbackInputs = false;
       let audioClosePromise = Promise.resolve();
+      let activePlan;
+      let activeMeterEntries = [];
       const isRecord = value => value !== null && typeof value === 'object' && !Array.isArray(value);
       const cloneJson = value => JSON.parse(JSON.stringify(value === undefined ? {} : value));
       const request = async (path, options = {}) => { const response = await fetch(path, { ...options, headers: {...headers(), ...(options.headers || {})} }); const value = await response.json(); if (!response.ok) throw new Error(value.error?.message || 'Studio request failed'); return value; };
@@ -341,6 +373,188 @@ const shell = (state: StudioState): string => {
         for (const control of inputControls.querySelectorAll('[data-input-path]')) { if (control.dataset.inputPresent !== 'true') continue; const path = JSON.parse(control.dataset.inputPath); let value; if (control.dataset.inputKind === 'audio-resource') value = {type: 'resona/static-audio', version: 1, path: control.value}; else if (control.dataset.inputKind === 'enum') value = JSON.parse(control.value); else if (control.type === 'checkbox') value = control.checked; else if (control.type === 'number') value = control.value === '' ? null : Number(control.value); else value = control.value; setAt(result, path, value); }
         return result;
       };
+      const rationalLabel = value => isRecord(value) ? String(value.numerator) + '/' + String(value.denominator) : '?';
+      const temporalLabel = value => {
+        if (!isRecord(value)) return '';
+        if (value.type === 'absolute-position' && isRecord(value.seconds)) return rationalLabel(value.seconds) + ' s';
+        if (value.type === 'musical-position' && isRecord(value.quarterNotes)) return rationalLabel(value.quarterNotes) + ' qn';
+        if (value.type === 'absolute-duration' && isRecord(value.seconds)) return rationalLabel(value.seconds) + ' s';
+        if (value.type === 'musical-duration' && isRecord(value.quarterNotes)) return rationalLabel(value.quarterNotes) + ' qn';
+        return '';
+      };
+      const rationalNumber = value => isRecord(value) ? Number(value.numerator) / Number(value.denominator) : 0;
+      const positionSeconds = (value, tempo) => {
+        if (!isRecord(value)) return 0;
+        if (value.type === 'absolute-position' && isRecord(value.seconds)) return rationalNumber(value.seconds);
+        if (value.type === 'musical-position' && isRecord(value.quarterNotes)) return rationalNumber(value.quarterNotes) * 60 / Math.max(1e-9, rationalNumber(tempo));
+        return 0;
+      };
+      const durationSeconds = (value, tempo) => {
+        if (!isRecord(value)) return 0;
+        if (value.type === 'absolute-duration' && isRecord(value.seconds)) return rationalNumber(value.seconds);
+        if (value.type === 'musical-duration' && isRecord(value.quarterNotes)) return rationalNumber(value.quarterNotes) * 60 / Math.max(1e-9, rationalNumber(tempo));
+        return 0;
+      };
+      const pathLabel = value => Array.isArray(value) ? value.join(' / ') : 'unknown node';
+      const secondsLabel = value => Number.isFinite(value) ? Number(value).toFixed(3) + ' s' : 'unknown';
+      const collectTracks = (sequence, tempo, output = [], depth = 0, parentStart = 0, parentEnd = Infinity) => {
+        if (!isRecord(sequence) || !Array.isArray(sequence.children)) return output;
+        const sequenceStart = parentStart + positionSeconds(sequence.from, tempo);
+        const sequenceEnd = sequence.duration ? Math.min(parentEnd, sequenceStart + durationSeconds(sequence.duration, tempo)) : parentEnd;
+        for (const child of sequence.children) {
+          if (child?.type === 'sequence') collectTracks(child, tempo, output, depth + 1, sequenceStart, sequenceEnd);
+          else if (child?.type === 'instrument-track' || child?.type === 'audio-track') output.push({track: child, depth, start: sequenceStart, end: sequenceEnd});
+        }
+        return output;
+      };
+      const collectSequences = (sequence, tempo, output = [], depth = 0, parentStart = 0, parentEnd = Infinity) => {
+        if (!isRecord(sequence)) return output;
+        const start = parentStart + positionSeconds(sequence.from, tempo);
+        const end = sequence.duration ? Math.min(parentEnd, start + durationSeconds(sequence.duration, tempo)) : parentEnd;
+        output.push({sequence, depth, start, end});
+        if (!Array.isArray(sequence.children)) return output;
+        for (const child of sequence.children) if (child?.type === 'sequence') collectSequences(child, tempo, output, depth + 1, start, end);
+        return output;
+      };
+      const textNode = (tag, text, className) => {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        node.textContent = text;
+        return node;
+      };
+      const updatePlayhead = frame => {
+        if (!activePlan || !timelinePlayhead) return;
+        const duration = Number(activePlan.nominalDurationFrames) || 1;
+        const ratio = Math.max(0, Math.min(1, Number(frame) / duration));
+        timelinePlayhead.style.left = String(ratio * 100) + '%';
+      };
+      const updateMeters = levels => {
+        if (!Array.isArray(levels) && !ArrayBuffer.isView(levels)) return;
+        const masterIndex = Number(activePlan?.masterProcessor);
+        const masterLevel = Number(levels[masterIndex]);
+        if (masterMeter && Number.isFinite(masterLevel)) masterMeter.value = Math.max(0, Math.min(1, masterLevel));
+        for (const entry of activeMeterEntries) {
+          const level = Number(levels[entry.processorIndex]);
+          if (Number.isFinite(level)) entry.meter.value = Math.max(0, Math.min(1, level));
+        }
+      };
+      const renderInspection = payload => {
+        if (!isRecord(payload) || !isRecord(payload.composition) || !isRecord(payload.plan)) return;
+        activePlan = payload.plan;
+        inspection.hidden = false;
+        timelineSequences.replaceChildren();
+        timelineTracks.replaceChildren();
+        chain.replaceChildren();
+        trackMeters.replaceChildren();
+        diagnosticsList.replaceChildren();
+        compositionIrJson.textContent = JSON.stringify(payload.composition, null, 2);
+        executionPlanJson.textContent = JSON.stringify(payload.plan, null, 2);
+        const tempo = payload.composition.tempo?.bpm;
+        const totalSeconds = Math.max(1e-9, durationSeconds(payload.composition.duration, tempo));
+        const sampleRate = Math.max(1, Number(activePlan.sampleRate) || 48_000);
+        const audioRegionsByDestination = new Map();
+        for (const region of Array.isArray(activePlan.audioRegions) ? activePlan.audioRegions : []) {
+          if (!isRecord(region)) continue;
+          const key = String(region.destination);
+          const bucket = audioRegionsByDestination.get(key);
+          if (bucket) bucket.push(region);
+          else audioRegionsByDestination.set(key, [region]);
+        }
+        for (const entry of collectSequences(payload.composition.root, tempo, [], 0, 0, totalSeconds)) {
+          const sequenceDuration = Math.max(0, Math.min(totalSeconds, entry.end) - entry.start);
+          const sequenceNode = textNode('div', (entry.depth ? '↳ ' : '') + 'Sequence · ' + String(entry.sequence.id) + ' · from ' + temporalLabel(entry.sequence.from) + ' · start ' + secondsLabel(entry.start) + ' · duration ' + secondsLabel(sequenceDuration), 'inspection-muted');
+          sequenceNode.dataset.nodePath = pathLabel(entry.sequence.path);
+          sequenceNode.dataset.startSeconds = String(entry.start);
+          sequenceNode.dataset.endSeconds = String(entry.end);
+          timelineSequences.append(sequenceNode);
+        }
+        const tracks = collectTracks(payload.composition.root, tempo, [], 0, 0, totalSeconds);
+        let processorIndex = 0;
+        activeMeterEntries = [];
+        for (const entry of tracks) {
+          const track = entry.track;
+          const trackRow = document.createElement('div');
+          trackRow.className = 'timeline-track';
+          trackRow.setAttribute('role', 'listitem');
+          trackRow.dataset.processorIndex = String(processorIndex);
+          const trackName = textNode('span', (entry.depth ? '↳ ' : '') + String(track.id), 'timeline-track-label');
+          trackRow.append(trackName);
+          const clips = document.createElement('ol');
+          clips.className = 'timeline-clips';
+          for (const clip of Array.isArray(track.clips) ? track.clips : []) {
+            const clipLabel = String(clip.type || 'clip') + ' · ' + String(clip.id || 'unnamed') + ' · from ' + temporalLabel(clip.from);
+            const clipNode = textNode('li', clipLabel, 'timeline-clip');
+            clipNode.dataset.nodePath = pathLabel(clip.path);
+            const clipStart = entry.start + positionSeconds(clip.from, tempo);
+            const regionBucket = audioRegionsByDestination.get(String(processorIndex));
+            const targetFrame = clipStart * sampleRate;
+            let audioRegion;
+            if (clip.type === 'audio-clip' && regionBucket) {
+              let bestIndex = -1;
+              let bestDistance = 0.51;
+              for (let regionIndex = 0; regionIndex < regionBucket.length; regionIndex += 1) {
+                const candidate = regionBucket[regionIndex];
+                const distance = Math.abs(Number(candidate.startFrame) - targetFrame);
+                if (distance < bestDistance) {
+                  bestIndex = regionIndex;
+                  bestDistance = distance;
+                }
+              }
+              if (bestIndex >= 0) audioRegion = regionBucket.splice(bestIndex, 1)[0];
+            }
+            const trackEnd = Math.min(totalSeconds, entry.end);
+            const availableDuration = Math.max(0, trackEnd - clipStart);
+            const eventDuration = Array.isArray(clip.events) ? clip.events.reduce((end, event) => Math.max(end, positionSeconds(event.at, tempo) + durationSeconds(event.duration, tempo)), 0) : 0;
+            const clipDuration = clip.type === 'audio-clip'
+              ? (audioRegion ? Number(audioRegion.durationFrames) / sampleRate : clip.duration ? durationSeconds(clip.duration, tempo) : availableDuration)
+              : eventDuration;
+            clipNode.style.left = String(Math.max(0, Math.min(100, clipStart / totalSeconds * 100))) + '%';
+            clipNode.style.width = String(Math.max(2, Math.min(100, Math.min(availableDuration, clipDuration) / totalSeconds * 100))) + '%';
+            clips.append(clipNode);
+          }
+          if (clips.children.length === 0) clips.append(textNode('li', 'No clips', 'inspection-muted'));
+          trackRow.append(clips);
+          timelineTracks.append(trackRow);
+
+          const chainRow = document.createElement('div');
+          chainRow.className = 'meter-row';
+          const chainLabel = track.type === 'instrument-track' && isRecord(track.instrument)
+            ? 'PolySynth · ' + String(track.instrument.oscillator)
+            : 'Audio source';
+          const effects = Array.isArray(track.effects) ? track.effects.map(effect => String(effect.type)).join(' → ') : '';
+          chainRow.append(textNode('span', String(track.id), 'timeline-track-label'));
+          chainRow.append(textNode('span', effects ? chainLabel + ' → ' + effects : chainLabel));
+          chain.append(chainRow);
+
+          const meterRow = document.createElement('div');
+          meterRow.className = 'meter-row';
+          meterRow.append(textNode('span', String(track.id)));
+          const meter = document.createElement('meter');
+          meter.min = 0;
+          meter.max = 1;
+          meter.low = 0.2;
+          meter.high = 0.8;
+          meter.optimum = 0.6;
+          meter.value = 0;
+          meter.setAttribute('aria-label', 'Level ' + String(track.id));
+          meterRow.append(meter);
+          trackMeters.append(meterRow);
+          const effectCount = Array.isArray(track.effects) ? track.effects.length : 0;
+          activeMeterEntries.push({meter, processorIndex: processorIndex + effectCount});
+          processorIndex += 1 + effectCount;
+        }
+        const diagnostics = Array.isArray(payload.diagnostics) ? payload.diagnostics : [];
+        if (diagnostics.length === 0) diagnosticsList.append(textNode('li', 'No diagnostics', 'inspection-muted'));
+        for (const diagnostic of diagnostics) {
+          const item = document.createElement('li');
+          item.textContent = String(diagnostic.code || 'diagnostic') + ' — ' + String(diagnostic.message || '');
+          if (diagnostic.nodePath) item.textContent += ' [' + pathLabel(diagnostic.nodePath) + ']';
+          if (diagnostic.source) item.textContent += ' (' + String(diagnostic.source.file || '') + ':' + String(diagnostic.source.line || '') + ')';
+          diagnosticsList.append(item);
+        }
+        updatePlayhead(0);
+        updateMeters([]);
+      };
       const load = async () => { const value = await request('/api/v1/compositions'); compositions = value.compositions; try { const resources = await request('/api/v1/static-resources'); staticResources = resources.payload.resources; } catch { staticResources = []; } for (const composition of compositions) { const option = document.createElement('option'); option.value = composition.id; option.textContent = composition.id; select.append(option); } if (compositions[0] !== undefined) renderInputs(compositions[0]); status.textContent = compositions.length + ' compositions'; };
       const closeAudio = () => { const close = async () => { ready = false; isPlaying = false; const node = audioNode; const context = audioContext; audioNode = undefined; audioContext = undefined; node?.disconnect(); if (context !== undefined) await context.close(); play.disabled = true; pause.disabled = true; seek.disabled = true; loop.disabled = true; }; audioClosePromise = audioClosePromise.then(close, close); return audioClosePromise; };
       const prepareAudio = async (variantId, payload, resumeFrame, resumePlayback, requestSequence, signal) => {
@@ -365,7 +579,8 @@ const shell = (state: StudioState): string => {
               if (!isCurrent()) return;
               const message = event.data;
               if (message.type === 'ready') { clearTimeout(timeout); signal.removeEventListener('abort', abort); ready = true; resolve(message); }
-              if (message.type === 'snapshot') { currentCursorFrame = message.cursorFrame; cursor.textContent = ' · frame ' + message.cursorFrame; seekValue.textContent = String(message.cursorFrame); if (document.activeElement !== seek) seek.value = String(message.cursorFrame); }
+              if (message.type === 'snapshot') { currentCursorFrame = message.cursorFrame; cursor.textContent = ' · frame ' + message.cursorFrame; seekValue.textContent = String(message.cursorFrame); if (document.activeElement !== seek) seek.value = String(message.cursorFrame); updatePlayhead(message.cursorFrame); }
+              if (message.type === 'meter') updateMeters(message.levels);
               if (message.type === 'ended') { currentCursorFrame = message.cursorFrame; isPlaying = false; ended = true; play.disabled = false; pause.disabled = true; status.textContent = 'Playback ended'; }
               if (message.type === 'underrun') { const code = message.diagnostic?.code || 'audio.underrun'; clearTimeout(timeout); signal.removeEventListener('abort', abort); ready = false; isPlaying = false; play.disabled = true; pause.disabled = true; seek.disabled = true; loop.disabled = true; inputError.textContent = message.diagnostic.message + ' (' + code + ')'; status.textContent = 'Preview error: ' + message.diagnostic.message; void context.suspend(); const error = new Error(message.diagnostic.message); error.name = code; reject(error); }
               if (message.type === 'error') { clearTimeout(timeout); signal.removeEventListener('abort', abort); ready = false; play.disabled = true; pause.disabled = true; seek.disabled = true; loop.disabled = true; status.textContent = 'Preview error: ' + message.message; reject(new Error(message.message)); }
@@ -400,8 +615,8 @@ const shell = (state: StudioState): string => {
           if (!completed || !isCurrent()) { node?.disconnect(); if (audioNode === node) audioNode = undefined; if (audioContext === context) audioContext = undefined; await context.close(); }
         }
       };
-      const invalidateVariantRequest = () => { variantRequestSequence += 1; variantController?.abort(); variantController = undefined; activeVariant = undefined; details.textContent = ''; currentCursorFrame = 0; cursor.textContent = ''; seek.value = '0'; seek.max = '0'; seekValue.textContent = '0'; ready = false; isPlaying = false; inspect.disabled = false; play.disabled = true; pause.disabled = true; seek.disabled = true; loop.disabled = true; void closeAudio(); };
-      const prepareVariant = async () => { const requestSequence = ++variantRequestSequence; variantController?.abort(); const controller = new AbortController(); variantController = controller; const resumeFrame = currentCursorFrame; const resumePlayback = isPlaying; status.textContent = 'Preparing…'; inspect.disabled = true; play.disabled = true; pause.disabled = true; seek.disabled = true; loop.disabled = true; inputError.textContent = ''; let inputs; try { inputs = readInputs(); await closeAudio(); if (requestSequence !== variantRequestSequence) return; const requestId = 'studio-variant-' + requestSequence + '-' + Date.now(); const value = await request('/api/v1/variants', {method: 'POST', headers: {'x-resona-request-id': requestId}, signal: controller.signal, body: JSON.stringify({compositionId: select.value, inputs, requestId})}); if (requestSequence !== variantRequestSequence) return; activeVariant = value.variantId; ended = false; details.textContent = JSON.stringify(value.payload, null, 2); await prepareAudio(value.variantId, value.payload, resumeFrame, resumePlayback, requestSequence, controller.signal); if (requestSequence !== variantRequestSequence) return; status.textContent = resumePlayback ? 'Playing variant ' + value.variantId : 'Variant ' + value.variantId + ' ready'; } catch (error) { if (error?.name === 'AbortError' || requestSequence !== variantRequestSequence) return; inputError.textContent = error.message; status.textContent = error.message; await closeAudio(); } finally { if (requestSequence === variantRequestSequence) { variantController = undefined; inspect.disabled = false; } } };
+      const invalidateVariantRequest = () => { variantRequestSequence += 1; variantController?.abort(); variantController = undefined; activeVariant = undefined; details.textContent = ''; inspection.hidden = true; activePlan = undefined; activeMeterEntries = []; currentCursorFrame = 0; cursor.textContent = ''; seek.value = '0'; seek.max = '0'; seekValue.textContent = '0'; ready = false; isPlaying = false; inspect.disabled = false; play.disabled = true; pause.disabled = true; seek.disabled = true; loop.disabled = true; void closeAudio(); };
+      const prepareVariant = async () => { const requestSequence = ++variantRequestSequence; variantController?.abort(); const controller = new AbortController(); variantController = controller; const resumeFrame = currentCursorFrame; const resumePlayback = isPlaying; status.textContent = 'Preparing…'; inspect.disabled = true; play.disabled = true; pause.disabled = true; seek.disabled = true; loop.disabled = true; inputError.textContent = ''; let inputs; try { inputs = readInputs(); await closeAudio(); if (requestSequence !== variantRequestSequence) return; const requestId = 'studio-variant-' + requestSequence + '-' + Date.now(); const value = await request('/api/v1/variants', {method: 'POST', headers: {'x-resona-request-id': requestId}, signal: controller.signal, body: JSON.stringify({compositionId: select.value, inputs, requestId})}); if (requestSequence !== variantRequestSequence) return; activeVariant = value.variantId; ended = false; details.textContent = JSON.stringify(value.payload, null, 2); renderInspection(value.payload); await prepareAudio(value.variantId, value.payload, resumeFrame, resumePlayback, requestSequence, controller.signal); if (requestSequence !== variantRequestSequence) return; status.textContent = resumePlayback ? 'Playing variant ' + value.variantId : 'Variant ' + value.variantId + ' ready'; } catch (error) { if (error?.name === 'AbortError' || requestSequence !== variantRequestSequence) return; inputError.textContent = error.message; status.textContent = error.message; await closeAudio(); } finally { if (requestSequence === variantRequestSequence) { variantController = undefined; inspect.disabled = false; } } };
       select.addEventListener('change', () => { invalidateVariantRequest(); const composition = compositions.find(candidate => candidate.id === select.value); if (composition !== undefined) renderInputs(composition); });
       inspect.addEventListener('click', () => { void prepareVariant(); });
       inputControls.addEventListener('change', event => { if (!fallbackInputs) { event.target?.dataset && (event.target.dataset.inputPresent = 'true'); void prepareVariant(); } });
