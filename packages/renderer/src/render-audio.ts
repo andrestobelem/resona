@@ -121,8 +121,14 @@ export const renderAudio = (
   };
   reportProgress(0);
   if (startFrame > 0) {
-    engine.seek(startFrame);
-    reportProgress(startFrame);
+    const preRoll = new Float32Array(blockFrames * job.plan.channels);
+    let preRolledFrames = 0;
+    while (preRolledFrames < startFrame) {
+      const frames = Math.min(blockFrames, startFrame - preRolledFrames);
+      engine.process(preRoll, frames);
+      preRolledFrames += frames;
+      reportProgress(preRolledFrames);
+    }
   }
   let completedFrames = startFrame;
   while (completedFrames < processEnd) {
