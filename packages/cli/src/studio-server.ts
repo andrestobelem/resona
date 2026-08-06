@@ -1,6 +1,6 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
-import { realpath } from "node:fs/promises";
+import { readFile, realpath } from "node:fs/promises";
 import { relative, resolve } from "node:path";
 
 import {
@@ -17,6 +17,7 @@ const protocolFormat = "resona/studio-envelope" as const;
 const protocolVersion = 1 as const;
 const host = "127.0.0.1" as const;
 const maxBodyBytes = 1_048_576;
+const rendererDist = new URL("../../renderer/dist/", import.meta.url);
 
 export type StudioServerOptions = Readonly<{
   projectRoot: string;
@@ -219,22 +220,66 @@ const shell = (state: StudioState): string => {
   <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Resona Studio</title>
     <style>body{font:15px system-ui,sans-serif;max-width:1000px;margin:2rem auto;padding:0 1rem;background:#111827;color:#e5e7eb}button,select{font:inherit;padding:.45rem .7rem;margin:.25rem;background:#1f2937;color:#e5e7eb;border:1px solid #4b5563;border-radius:.35rem}pre{white-space:pre-wrap;background:#030712;padding:1rem;border-radius:.4rem;overflow:auto}header{display:flex;align-items:center;gap:1rem}</style>
   </head>
-  <body><header><h1>Resona Studio</h1><span id="status">Loading compositions…</span></header>
-    <label>Composition <select id="composition"></select></label><button id="inspect">Inspect variant</button><pre id="details"></pre>
+  <body><header><h1>Resona Studio</h1><span id="status">Loading compositions…</span><span id="cursor"></span></header>
+    <label>Composition <select id="composition"></select></label><button id="inspect">Inspect variant</button><button id="play" disabled>Play</button><button id="pause" disabled>Pause</button><pre id="details"></pre>
     <script>
       const session = ${bootstrap};
       const headers = () => ({Authorization: 'Bearer ' + session.token, 'Content-Type': 'application/json'});
       const status = document.querySelector('#status');
+      const cursor = document.querySelector('#cursor');
       const select = document.querySelector('#composition');
       const details = document.querySelector('#details');
+      const inspect = document.querySelector('#inspect');
+      const play = document.querySelector('#play');
+      const pause = document.querySelector('#pause');
+      let audioContext;
+      let audioNode;
+      let activeVariant;
+      let ready = false;
+      let ended = false;
       const request = async (path, options = {}) => fetch(path, { ...options, headers: {...headers(), ...(options.headers || {})} }).then(async response => { const value = await response.json(); if (!response.ok) throw new Error(value.error?.message || 'Studio request failed'); return value; });
       const load = async () => { const value = await request('/api/v1/compositions'); for (const composition of value.compositions) { const option = document.createElement('option'); option.value = composition.id; option.textContent = composition.id; select.append(option); } status.textContent = value.compositions.length + ' compositions'; };
-      document.querySelector('#inspect').addEventListener('click', async () => { status.textContent = 'Preparing…'; try { const value = await request('/api/v1/variants', {method: 'POST', body: JSON.stringify({compositionId: select.value})}); details.textContent = JSON.stringify(value.payload, null, 2); status.textContent = 'Variant ' + value.variantId; } catch (error) { status.textContent = error.message; } });
+      const closeAudio = async () => { ready = false; audioNode?.disconnect(); audioNode = undefined; if (audioContext !== undefined) await audioContext.close(); audioContext = undefined; play.disabled = true; pause.disabled = true; };
+      const prepareAudio = async (variantId, payload) => {
+        if (typeof AudioContext === 'undefined') throw new Error('This browser does not support AudioWorklet preview.');
+        audioContext = new AudioContext({sampleRate: 48000});
+        if (audioContext.sampleRate !== 48000) throw new Error('Studio preview requires a 48 kHz AudioContext.');
+        await audioContext.audioWorklet.addModule('/studio/audio-worklet.js');
+        const node = new AudioWorkletNode(audioContext, 'resona-audio', {numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2]});
+        audioNode = node;
+        node.connect(audioContext.destination);
+        const readyPromise = new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => reject(new Error('AudioWorklet readiness timed out.')), 5000);
+          node.port.onmessage = event => {
+            const message = event.data;
+            if (message.type === 'ready') { clearTimeout(timeout); ready = true; resolve(message); }
+            if (message.type === 'snapshot') cursor.textContent = ' · frame ' + message.cursorFrame;
+            if (message.type === 'ended') { ended = true; play.disabled = false; pause.disabled = true; status.textContent = 'Playback ended'; }
+            if (message.type === 'error') { clearTimeout(timeout); ready = false; play.disabled = true; pause.disabled = true; status.textContent = 'Preview error: ' + message.message; reject(new Error(message.message)); }
+          };
+        });
+        const resources = [];
+        for (const resource of payload.resources) {
+          const value = await request('/api/v1/variants/' + encodeURIComponent(variantId) + '/resources/' + encodeURIComponent(resource.hash));
+          const resolved = value.payload.resource;
+          resources.push({...resolved, samples: Float32Array.from(resolved.samples)});
+        }
+        node.port.postMessage({type: 'load', plan: payload.plan, resources}, resources.map(resource => resource.samples.buffer));
+        await readyPromise;
+        play.disabled = false;
+        pause.disabled = false;
+      };
+      inspect.addEventListener('click', async () => { status.textContent = 'Preparing…'; inspect.disabled = true; play.disabled = true; pause.disabled = true; try { await closeAudio(); const value = await request('/api/v1/variants', {method: 'POST', body: JSON.stringify({compositionId: select.value})}); activeVariant = value.variantId; ended = false; details.textContent = JSON.stringify(value.payload, null, 2); await prepareAudio(value.variantId, value.payload); status.textContent = 'Variant ' + value.variantId + ' ready'; } catch (error) { status.textContent = error.message; await closeAudio(); } finally { inspect.disabled = false; } });
+      play.addEventListener('click', async () => { if (!ready || audioNode === undefined || audioContext === undefined) return; try { if (ended) { audioNode.port.postMessage({type: 'seek', frame: 0}); ended = false; } await audioContext.resume(); audioNode.port.postMessage({type: 'play'}); status.textContent = 'Playing'; } catch (error) { status.textContent = error.message; } });
+      pause.addEventListener('click', async () => { if (!ready || audioNode === undefined || audioContext === undefined) return; audioNode.port.postMessage({type: 'pause'}); await audioContext.suspend(); status.textContent = 'Paused'; });
       load().catch(error => { status.textContent = error.message; });
     </script>
   </body>
 </html>`;
 };
+
+const studioModule = async (name: "audio-worklet.js" | "audio-engine.js"): Promise<Buffer> =>
+  readFile(new URL(name, rendererDist));
 
 const handle = async (
   state: StudioState,
@@ -263,6 +308,31 @@ const handle = async (
     response.setHeader("cache-control", "no-store");
     response.setHeader("x-content-type-options", "nosniff");
     response.end(shell(state));
+    return;
+  }
+  const moduleName =
+    parsed.pathname === "/studio/audio-worklet.js"
+      ? "audio-worklet.js"
+      : parsed.pathname === "/studio/audio-engine.js"
+        ? "audio-engine.js"
+        : undefined;
+  if (moduleName !== undefined && request.method === "GET") {
+    const hostOrigin = hostOriginError(state, request);
+    if (hostOrigin !== undefined) {
+      response.statusCode = hostOrigin.status;
+      response.end();
+      return;
+    }
+    try {
+      response.statusCode = 200;
+      response.setHeader("content-type", "text/javascript; charset=utf-8");
+      response.setHeader("cache-control", "no-store");
+      response.setHeader("x-content-type-options", "nosniff");
+      response.end(await studioModule(moduleName));
+    } catch {
+      response.statusCode = 404;
+      response.end();
+    }
     return;
   }
   if (!parsed.pathname.startsWith("/api/v1/")) {

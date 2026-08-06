@@ -32,3 +32,9 @@ the versioned `/api/v1/session`, `/api/v1/compositions`, `/api/v1/variants`,
 against the exact loopback URL, and resource requests are authorized against hashes already
 resolved by that variant. The browser receives serializable IR, plans, metadata, diagnostics,
 and resource samples; it never receives or evaluates the authoring bundle.
+
+The first Studio shell also loads the private same-origin `/studio/audio-worklet.js` and
+`/studio/audio-engine.js` modules. It converts authorized JSON resource samples into
+`Float32Array` buffers, transfers them with the plan through the `load` command, and enables
+play/pause only after a 48 kHz stereo `AudioContext` and the worklet report `ready`. The
+worklet owns the sample cursor and reports snapshots; the shell only presents them.
