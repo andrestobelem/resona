@@ -292,29 +292,29 @@ describe("Resona AudioWorklet adapter", () => {
   });
 
   it("reconstructs state from the origin when seeking", () => {
-    const rendered = renderAudio({ plan, runtimeResources: [] } as never);
+    const rendered = renderAudio({ plan: statefulPlan, runtimeResources: [] } as never);
     const Processor = createResonaAudioWorkletProcessor(FakeBase);
     const processor = new Processor();
     const port = processor.port as FakePort;
-    port.send({ type: "load", plan, resources: [] });
-    port.send({ type: "seek", frame: 2 });
+    port.send({ type: "load", plan: statefulPlan, resources: [] });
+    port.send({ type: "seek", frame: 3 });
     port.send({ type: "play" });
-    const left = new Float32Array(2);
-    const right = new Float32Array(2);
+    const left = new Float32Array(5);
+    const right = new Float32Array(5);
 
     processor.process([], [[left, right]]);
 
     expect(Array.from(left)).toEqual(
       Array.from(rendered.samples)
-        .slice(4, 8)
+        .slice(6, 16)
         .filter((_, index) => index % 2 === 0),
     );
     expect(Array.from(right)).toEqual(
       Array.from(rendered.samples)
-        .slice(4, 8)
+        .slice(6, 16)
         .filter((_, index) => index % 2 === 1),
     );
-    expect(port.messages).toContainEqual({ type: "ended", cursorFrame: 4 });
+    expect(port.messages).toContainEqual({ type: "ended", cursorFrame: 8 });
   });
 
   it("pauses and reports a structured diagnostic when the engine underruns", () => {
