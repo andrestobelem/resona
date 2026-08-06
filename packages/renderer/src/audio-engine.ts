@@ -142,6 +142,9 @@ const validatePlan = (plan: ExecutionPlan): void => {
     throw new RangeError("The audio plan must terminate at its master processor.");
   }
   for (const processor of plan.processors) {
+    if (!["sum", "poly-synth", "gain", "delay"].includes(processor.type)) {
+      throw new RangeError("The audio plan contains an unsupported processor.");
+    }
     if (processor.type === "poly-synth") {
       if (
         !["sine", "saw", "square"].includes(processor.oscillator) ||
@@ -192,21 +195,40 @@ const validatePlan = (plan: ExecutionPlan): void => {
       throw new RangeError("Audio routes reference invalid processors.");
     }
   }
+  let previousEventFrame = -1;
   for (const event of plan.events) {
     if (
       !Number.isSafeInteger(event.frame) ||
       event.frame < 0 ||
+      event.frame < previousEventFrame ||
       event.instrument < 0 ||
-      event.instrument >= plan.masterProcessor
+      event.instrument >= plan.masterProcessor ||
+      !Number.isSafeInteger(event.occurrence) ||
+      event.occurrence < 0
     ) {
-      throw new RangeError("Audio events must use non-negative integer frames.");
+      throw new RangeError("Audio events must use ordered, non-negative integer frames.");
     }
+    if (event.type !== "note-attack" && event.type !== "note-release") {
+      throw new RangeError("Audio events contain an unsupported event type.");
+    }
+    if (
+      event.type === "note-attack" &&
+      (!Number.isSafeInteger(event.semitonesFromA4) ||
+        !isCanonicalF32(event.velocity) ||
+        event.velocity < 0 ||
+        event.velocity > 1)
+    ) {
+      throw new RangeError("Audio note events contain invalid pitch or velocity.");
+    }
+    previousEventFrame = event.frame;
   }
   for (const region of plan.audioRegions) {
+    const resource = plan.resources[region.resource];
     if (
       !Number.isSafeInteger(region.resource) ||
       region.resource < 0 ||
       region.resource >= plan.resources.length ||
+      resource === undefined ||
       !Number.isSafeInteger(region.destination) ||
       region.destination < 0 ||
       region.destination >= plan.masterProcessor ||
@@ -215,7 +237,8 @@ const validatePlan = (plan: ExecutionPlan): void => {
       !Number.isSafeInteger(region.durationFrames) ||
       region.durationFrames <= 0 ||
       !Number.isSafeInteger(region.sourceOffsetFrame) ||
-      region.sourceOffsetFrame < 0
+      region.sourceOffsetFrame < 0 ||
+      region.sourceOffsetFrame >= resource.frameCount
     ) {
       throw new RangeError("Audio regions reference invalid frames or processors.");
     }
@@ -301,14 +324,18 @@ export const createAudioEngine = (
     length: plan.processors.length,
   });
   for (const lane of plan.automation) gainLanes[lane.target] = lane;
-  const delayStates = new Map<number, DelayState>();
-  for (const [index, processor] of plan.processors.entries()) {
+  const delayStates: (DelayState | undefined)[] = Array.from({
+    length: plan.processors.length,
+  });
+  for (let index = 0; index < plan.processors.length; index += 1) {
+    const processor = plan.processors[index];
+    if (processor === undefined) continue;
     if (processor.type === "delay") {
-      delayStates.set(index, {
+      delayStates[index] = {
         left: new Float32Array(processor.delayFrames),
         right: new Float32Array(processor.delayFrames),
         position: 0,
-      });
+      };
     }
   }
   const scratch = new Float32Array(seekBlockFrames * plan.channels);
@@ -334,7 +361,9 @@ export const createAudioEngine = (
   let selectedVoiceStolen = false;
   const selectVoice = (instrument: InstrumentState, frame: number): Voice => {
     selectedVoiceStolen = false;
-    for (const voice of instrument.voices) {
+    for (let index = 0; index < instrument.voices.length; index += 1) {
+      const voice = instrument.voices[index];
+      if (voice === undefined) continue;
       if (!voice.active) return voice;
     }
     let releasingVoice: Voice | undefined;
@@ -384,7 +413,9 @@ export const createAudioEngine = (
     let previousFrame = 0;
     let previousValue = processor.gain;
     let previousInterpolation: "hold" | "linear" = "hold";
-    for (const point of lane.points) {
+    for (let index = 0; index < lane.points.length; index += 1) {
+      const point = lane.points[index];
+      if (point === undefined) continue;
       if (frame < point.frame) {
         if (previousInterpolation === "linear") {
           const span = point.frame - previousFrame;
@@ -406,8 +437,12 @@ export const createAudioEngine = (
   const processFrame = (frame: number, output: Float32Array, outputOffset: number): void => {
     sourceLeft.fill(0);
     sourceRight.fill(0);
-    for (const instrument of instruments) {
-      for (const voice of instrument.voices) {
+    for (let instrumentIndex = 0; instrumentIndex < instruments.length; instrumentIndex += 1) {
+      const instrument = instruments[instrumentIndex];
+      if (instrument === undefined) continue;
+      for (let voiceIndex = 0; voiceIndex < instrument.voices.length; voiceIndex += 1) {
+        const voice = instrument.voices[voiceIndex];
+        if (voice === undefined) continue;
         if (
           voice.active &&
           voice.releaseFrame !== undefined &&
@@ -446,7 +481,9 @@ export const createAudioEngine = (
         delete voice.releaseLevel;
       } else {
         let voice: Voice | undefined;
-        for (const candidate of instrument.voices) {
+        for (let voiceIndex = 0; voiceIndex < instrument.voices.length; voiceIndex += 1) {
+          const candidate = instrument.voices[voiceIndex];
+          if (candidate === undefined) continue;
           if (candidate.active && candidate.occurrence === event.occurrence) {
             voice = candidate;
             break;
@@ -460,9 +497,13 @@ export const createAudioEngine = (
       }
     }
 
-    for (const instrument of instruments) {
+    for (let instrumentIndex = 0; instrumentIndex < instruments.length; instrumentIndex += 1) {
+      const instrument = instruments[instrumentIndex];
+      if (instrument === undefined) continue;
       let instrumentSample = 0;
-      for (const voice of instrument.voices) {
+      for (let voiceIndex = 0; voiceIndex < instrument.voices.length; voiceIndex += 1) {
+        const voice = instrument.voices[voiceIndex];
+        if (voice === undefined) continue;
         if (!voice.active) continue;
         const envelope = envelopeLevelAt(voice, frame, instrument.processor);
         const phaseDelta = voice.frequencyHz / plan.sampleRate;
@@ -478,7 +519,9 @@ export const createAudioEngine = (
       sourceLeft[instrument.processorIndex] = canonicalF32(instrumentSample);
       sourceRight[instrument.processorIndex] = sourceLeft[instrument.processorIndex] ?? 0;
     }
-    for (const region of plan.audioRegions) {
+    for (let regionIndex = 0; regionIndex < plan.audioRegions.length; regionIndex += 1) {
+      const region = plan.audioRegions[regionIndex];
+      if (region === undefined) continue;
       if (frame < region.startFrame || frame >= region.startFrame + region.durationFrames) continue;
       const resourcePlan = plan.resources[region.resource];
       const resource = resourcesByPlanIndex[region.resource];
@@ -504,6 +547,7 @@ export const createAudioEngine = (
     }
     for (let processorIndex = 0; processorIndex < plan.masterProcessor; processorIndex += 1) {
       const processor = plan.processors[processorIndex];
+      if (processor === undefined) continue;
       if (processor?.type !== "gain" && processor?.type !== "delay") continue;
       const inputIndex = inputRouteFrom[processorIndex] ?? -1;
       const inputLeft = inputIndex < 0 ? 0 : (sourceLeft[inputIndex] ?? 0);
@@ -513,7 +557,7 @@ export const createAudioEngine = (
         sourceLeft[processorIndex] = canonicalF32(inputLeft * gain);
         sourceRight[processorIndex] = canonicalF32(inputRight * gain);
       } else {
-        const state = delayStates.get(processorIndex);
+        const state = delayStates[processorIndex];
         if (state === undefined) throw new RangeError("Delay processor state is unavailable.");
         const delayedLeft = state.left[state.position] ?? 0;
         const delayedRight = state.right[state.position] ?? 0;
@@ -530,7 +574,9 @@ export const createAudioEngine = (
     }
     let left = 0;
     let right = 0;
-    for (const route of plan.routes) {
+    for (let routeIndex = 0; routeIndex < plan.routes.length; routeIndex += 1) {
+      const route = plan.routes[routeIndex];
+      if (route === undefined) continue;
       if (route.to !== plan.masterProcessor) continue;
       left = canonicalF32(left + (sourceLeft[route.from] ?? 0));
       right = canonicalF32(right + (sourceRight[route.from] ?? 0));
@@ -542,9 +588,13 @@ export const createAudioEngine = (
   const reset = (): void => {
     cursorFrame = 0;
     eventCursor = 0;
-    for (const instrument of instruments) {
+    for (let instrumentIndex = 0; instrumentIndex < instruments.length; instrumentIndex += 1) {
+      const instrument = instruments[instrumentIndex];
+      if (instrument === undefined) continue;
       instrument.voiceSteals = 0;
-      for (const voice of instrument.voices) {
+      for (let voiceIndex = 0; voiceIndex < instrument.voices.length; voiceIndex += 1) {
+        const voice = instrument.voices[voiceIndex];
+        if (voice === undefined) continue;
         voice.active = false;
         voice.occurrence = -1;
         voice.phase = 0;
@@ -555,7 +605,9 @@ export const createAudioEngine = (
         delete voice.releaseLevel;
       }
     }
-    for (const state of delayStates.values()) {
+    for (let stateIndex = 0; stateIndex < delayStates.length; stateIndex += 1) {
+      const state = delayStates[stateIndex];
+      if (state === undefined) continue;
       state.left.fill(0);
       state.right.fill(0);
       state.position = 0;

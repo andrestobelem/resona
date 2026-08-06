@@ -118,4 +118,12 @@ describe("AudioEngine", () => {
       ]),
     ).toThrow("non-finite");
   });
+
+  it("rejects unsupported processors at the browser boundary", () => {
+    const invalidPlan = {
+      ...plan,
+      processors: [{ type: "unsupported" }, { type: "sum" as const }],
+    } as never;
+    expect(() => createAudioEngine(invalidPlan, [])).toThrow("unsupported processor");
+  });
 });

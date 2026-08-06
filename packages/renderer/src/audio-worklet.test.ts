@@ -6,6 +6,7 @@ import {
   type AudioWorkletEvent,
   type AudioWorkletPortLike,
 } from "./audio-worklet.js";
+import { renderAudio } from "./render-audio.js";
 
 const plan = {
   format: "resona/execution-plan" as const,
@@ -41,6 +42,34 @@ const plan = {
     },
   ],
   automation: [],
+};
+
+const stereoResource = {
+  type: "wav" as const,
+  hash: `sha256:${"b".repeat(64)}` as `sha256:${string}`,
+  channels: 2 as const,
+  sampleRate: 48_000 as const,
+  frameCount: 4,
+};
+
+const stereoPlan = {
+  ...plan,
+  compositionId: "worklet-stereo-test",
+  processors: [{ type: "sum" as const }, { type: "sum" as const }],
+  routes: [{ from: 0, to: 1 }],
+  resources: [stereoResource],
+  audioRegions: [
+    {
+      type: "audio-region" as const,
+      resource: 0,
+      destination: 0,
+      startFrame: 0,
+      durationFrames: 4,
+      sourceOffsetFrame: 0,
+      loop: false,
+    },
+  ],
+  events: [],
 };
 
 class FakePort implements AudioWorkletPortLike {
@@ -89,6 +118,66 @@ describe("Resona AudioWorklet adapter", () => {
     processor.process([], [[left, right]]);
     expect(Array.from(left)).toEqual([0, 0, 0, 0]);
     expect(Array.from(right)).toEqual([0, 0, 0, 0]);
+  });
+
+  it("keeps the Worklet adapter sample-compatible with the offline renderer", () => {
+    const rendered = renderAudio({ plan, runtimeResources: [] } as never);
+    const Processor = createResonaAudioWorkletProcessor(FakeBase);
+    const processor = new Processor();
+    const port = processor.port as FakePort;
+    port.send({ type: "load", plan, resources: [] });
+    port.send({ type: "play" });
+    const left = new Float32Array(4);
+    const right = new Float32Array(4);
+    processor.process([], [[left, right]]);
+    expect(Array.from(left)).toEqual(
+      Array.from(rendered.samples).filter((_, index) => index % 2 === 0),
+    );
+    expect(Array.from(right)).toEqual(
+      Array.from(rendered.samples).filter((_, index) => index % 2 === 1),
+    );
+
+    const samples = new Float32Array([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8]);
+    const resource = { ...stereoResource, samples };
+    const renderedResource = renderAudio({
+      plan: stereoPlan,
+      runtimeResources: [{ ...resource, sourcePaths: [] }],
+    } as never);
+    const resourceProcessor = new (createResonaAudioWorkletProcessor(FakeBase))();
+    const resourcePort = resourceProcessor.port as FakePort;
+    resourcePort.send({ type: "load", plan: stereoPlan, resources: [resource] });
+    resourcePort.send({ type: "play" });
+    const resourceLeft = new Float32Array(4);
+    const resourceRight = new Float32Array(4);
+    resourceProcessor.process([], [[resourceLeft, resourceRight]]);
+    expect(Array.from(resourceLeft)).toEqual(
+      Array.from(renderedResource.samples).filter((_, index) => index % 2 === 0),
+    );
+    expect(Array.from(resourceRight)).toEqual(
+      Array.from(renderedResource.samples).filter((_, index) => index % 2 === 1),
+    );
+  });
+
+  it("reports a DSP validation error instead of terminating on invalid samples", () => {
+    const Processor = createResonaAudioWorkletProcessor(FakeBase);
+    const processor = new Processor();
+    const port = processor.port as FakePort;
+    port.send({
+      type: "load",
+      plan: {
+        ...plan,
+        events: [{ ...plan.events[0], semitonesFromA4: Number.NaN }],
+      } as never,
+      resources: [],
+    });
+    expect(port.messages).toContainEqual({
+      type: "error",
+      message: "Audio note events contain invalid pitch or velocity.",
+    } satisfies AudioWorkletEvent);
+    const left = new Float32Array(4);
+    const right = new Float32Array(4);
+    processor.process([], [[left, right]]);
+    expect(Array.from(left)).toEqual([0, 0, 0, 0]);
   });
 
   it("reports invalid commands without touching the audio callback", () => {
