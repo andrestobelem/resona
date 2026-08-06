@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Context Map · Resona</title>
+    <link rel="stylesheet" href=".resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">CONTEXT-MAP.md</p>
+      <article>
+        <h1 id="context-map">Context Map</h1>
+        <p>
+          Read the shared Resona glossary first, followed by the context documentation relevant to
+          the workspace being changed.
+        </p>
+        <p>
+          | Context | Domain documentation | Scope | | -------------------- |
+          --------------------------------- | -------------------------------------- | | Shared
+          Resona domain | `CONTEXT.md` | System-wide musical domain vocabulary | | Engine |
+          `CONTEXT.md` | IR, execution planning, and DSP terms | | CLI | `packages/cli/CONTEXT.md` |
+          Discovery, validation, protocol output | | Renderer | `packages/renderer/CONTEXT.md` |
+          Offline DSP execution and WAV encoding | | Zod input adapter | `packages/zod/CONTEXT.md` |
+          Zod validation and schema description |
+        </p>
+        <p>
+          As workspaces are introduced, add each context and its `CONTEXT.md` to this map.
+          Context-specific ADRs live alongside that context; system-wide decisions remain in
+          `docs/adr/`.
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

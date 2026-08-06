@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Out-of-Scope Knowledge Base · Resona</title>
+    <link rel="stylesheet" href="../../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">.agents/skills/triage/OUT-OF-SCOPE.md</p>
+      <article>
+        <h1 id="out-of-scope-knowledge-base">Out-of-Scope Knowledge Base</h1>
+        <p>
+          The `.out-of-scope/` directory in a repo stores persistent records of rejected feature
+          requests. It serves two purposes:
+        </p>
+        <p>
+          1. **Institutional memory** — why a feature was rejected, so the reasoning isn't lost when
+          the issue is closed 2. **Deduplication** — when a new issue comes in that matches a prior
+          rejection, the skill can surface the previous decision instead of re-litigating it
+        </p>
+        <h2 id="directory-structure">Directory structure</h2>
+        <pre><code>
+.out-of-scope/
+├── dark-mode.md
+├── plugin-system.md
+└── graphql-api.md
+        </code></pre>
+        <p>
+          One file per **concept**, not per issue. Multiple issues requesting the same thing are
+          grouped under one file.
+        </p>
+        <h2 id="file-format">File format</h2>
+        <p>
+          The file should be written in a relaxed, readable style — more like a short design
+          document than a database entry. Use paragraphs, code samples, and examples to make the
+          reasoning clear and useful to someone encountering it for the first time.
+        </p>
+        <pre><code class="language-markdown">
+# Dark Mode
+
+This project does not support dark mode or user-facing theming.
+
+## Why this is out of scope
+
+The rendering pipeline assumes a single color palette defined in
+`ThemeConfig`. Supporting multiple themes would require:
+
+- A theme context provider wrapping the entire component tree
+- Per-component theme-aware style resolution
+- A persistence layer for user theme preferences
+
+This is a significant architectural change that doesn't align with the
+project's focus on content authoring. Theming is a concern for downstream
+consumers who embed or redistribute the output.
+
+        </code></pre>
+        <p>
+          // The current ThemeConfig interface is not designed for runtime switching: interface
+          ThemeConfig { colors: ColorPalette; // single palette, resolved at build time fonts:
+          FontStack; }
+        </p>
+        <pre><code>
+
+## Prior requests
+
+- #42 — &quot;Add dark mode support&quot;
+- #87 — &quot;Night theme for accessibility&quot;
+- #134 — &quot;Dark theme option&quot;
+        </code></pre>
+        <h3 id="naming-the-file">Naming the file</h3>
+        <p>
+          Use a short, descriptive kebab-case name for the concept: `dark-mode.md`,
+          `plugin-system.md`, `graphql-api.md`. The name should be recognizable enough that someone
+          browsing the directory understands what was rejected without opening the file.
+        </p>
+        <h3 id="writing-the-reason">Writing the reason</h3>
+        <p>
+          The reason should be substantive — not &quot;we don't want this&quot; but why. Good
+          reasons reference:
+        </p>
+        <p>
+          - Project scope or philosophy (&quot;This project focuses on X; theming is a downstream
+          concern&quot;) - Technical constraints (&quot;Supporting this would require Y, which
+          conflicts with our Z architecture&quot;) - Strategic decisions (&quot;We chose to use A
+          instead of B because...&quot;)
+        </p>
+        <p>
+          The reason should be durable. Avoid referencing temporary circumstances (&quot;we're too
+          busy right now&quot;) — those aren't real rejections, they're deferrals.
+        </p>
+        <h2 id="when-to-check-out-of-scope">When to check `.out-of-scope/`</h2>
+        <p>
+          During triage (Step 1: Gather context), read all files in `.out-of-scope/`. When
+          evaluating a new issue:
+        </p>
+        <p>
+          - Check if the request matches an existing out-of-scope concept - Matching is by concept
+          similarity, not keyword — &quot;night theme&quot; matches `dark-mode.md` - If there's a
+          match, surface it to the maintainer: &quot;This is similar to `.out-of-scope/dark-mode.md`
+          — we rejected this before because [reason]. Do you still feel the same way?&quot;
+        </p>
+        <p>The maintainer may:</p>
+        <p>
+          - **Confirm** — the new issue gets added to the existing file's &quot;Prior requests&quot;
+          list, then closed - **Reconsider** — the out-of-scope file gets deleted or updated, and
+          the issue proceeds through normal triage - **Disagree** — the issues are related but
+          distinct, proceed with normal triage
+        </p>
+        <h2 id="when-to-write-to-out-of-scope">When to write to `.out-of-scope/`</h2>
+        <p>
+          Only when an **enhancement** (not a bug) is *rejected* as `wontfix`. This applies to
+          enhancement PRs exactly as it does to issues — a rejected PR is recorded here so the same
+          request doesn't return as fresh code.
+        </p>
+        <p>
+          Do **not** write here when something is closed as `wontfix` because it's **already
+          implemented**. That's a built feature, not a rejected one; recording it would poison the
+          dedup checks with false rejections. Instead, the closing comment points to where the
+          feature already lives.
+        </p>
+        <p>The flow:</p>
+        <p>
+          1. Maintainer decides a feature request is out of scope 2. Check if a matching
+          `.out-of-scope/` file already exists 3. If yes: append the new issue to the &quot;Prior
+          requests&quot; list 4. If no: create a new file with the concept name, decision, reason,
+          and first prior request 5. Post a comment on the issue explaining the decision and
+          mentioning the `.out-of-scope/` file 6. Close the issue with the `wontfix` label
+        </p>
+        <h2 id="updating-or-removing-out-of-scope-files">
+          Updating or removing out-of-scope files
+        </h2>
+        <p>If the maintainer changes their mind about a previously rejected concept:</p>
+        <p>
+          - Delete the `.out-of-scope/` file - The skill does not need to reopen old issues —
+          they're historical records - The new issue that triggered the reconsideration proceeds
+          through normal triage
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

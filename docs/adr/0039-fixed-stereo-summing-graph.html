@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>El grafo del MVP es estéreo y suma sin procesamiento oculto · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">docs/adr/0039-fixed-stereo-summing-graph.md</p>
+      <article>
+        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <h1 id="el-grafo-del-mvp-es-estereo-y-suma-sin-procesamiento-oculto">
+          El grafo del MVP es estéreo y suma sin procesamiento oculto
+        </h1>
+        <p>
+          Todo el grafo ejecutable del MVP tiene dos canales. Las fuentes mono se duplican con igual
+          amplitud a izquierda y derecha, las estéreo conservan sus canales y todas las mezclas
+          suman muestras directamente.
+        </p>
+        <h2 id="opciones-consideradas">Opciones consideradas</h2>
+        <p>
+          - Propagar layouts variables y adaptar canales en cada conexión. - Ejecutar internamente
+          en mono y convertir solo al exportar. - Normalizar todas las fuentes a un grafo estéreo
+          fijo.
+        </p>
+        <p>
+          Se eligió la tercera opción porque cubre los recursos acordados y reduce el contrato de
+          cada procesador sin perder la información de fuentes estéreo.
+        </p>
+        <h2 id="consecuencias">Consecuencias</h2>
+        <p>
+          - La salida mono del sintetizador se duplica a ambos canales. - `Gain` y `Delay` mantienen
+          estado y procesamiento independiente por canal. - Voces, clips y pistas se suman muestra a
+          muestra; los slots de voz usan índice ascendente. - El master no normaliza, limita ni
+          recorta automáticamente. - El WAV float puede contener muestras fuera de `[-1, 1]`. - Pan,
+          surround y layouts adicionales quedan fuera del MVP. - El orden y el redondeo de cada
+          aporte a una suma se fijan en el [ADR 0078](0078-explicit-float32-audio-boundaries.md).
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

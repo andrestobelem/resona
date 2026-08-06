@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Setup Git Guardrails · Resona</title>
+    <link rel="stylesheet" href="../../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">.agents/skills/git-guardrails-claude-code/SKILL.md</p>
+      <article>
+        <p>
+          --- name: git-guardrails-claude-code description: Set up Claude Code hooks to block
+          dangerous git commands (push, reset --hard, clean, branch -D, etc.) before they execute.
+          Use when user wants to prevent destructive git operations, add git safety hooks, or block
+          git push/reset in Claude Code. ---
+        </p>
+        <h1 id="setup-git-guardrails">Setup Git Guardrails</h1>
+        <p>
+          Sets up a PreToolUse hook that intercepts and blocks dangerous git commands before Claude
+          executes them.
+        </p>
+        <h2 id="what-gets-blocked">What Gets Blocked</h2>
+        <p>
+          - `git push` (all variants including `--force`) - `git reset --hard` - `git clean -f` /
+          `git clean -fd` - `git branch -D` - `git checkout .` / `git restore .`
+        </p>
+        <p>
+          When blocked, Claude sees a message telling it that it does not have authority to access
+          these commands.
+        </p>
+        <h2 id="steps">Steps</h2>
+        <h3 id="1-ask-scope">1. Ask scope</h3>
+        <p>
+          Ask the user: install for **this project only** (`.claude/settings.json`) or **all
+          projects** (`~/.claude/settings.json`)?
+        </p>
+        <h3 id="2-copy-the-hook-script">2. Copy the hook script</h3>
+        <p>
+          The bundled script is at: [scripts/block-dangerous-git.sh](scripts/block-dangerous-git.sh)
+        </p>
+        <p>Copy it to the target location based on scope:</p>
+        <p>
+          - **Project**: `.claude/hooks/block-dangerous-git.sh` - **Global**:
+          `~/.claude/hooks/block-dangerous-git.sh`
+        </p>
+        <p>Make it executable with `chmod +x`.</p>
+        <h3 id="3-add-hook-to-settings">3. Add hook to settings</h3>
+        <p>Add to the appropriate settings file:</p>
+        <p>**Project** (`.claude/settings.json`):</p>
+        <pre><code class="language-json">
+{
+  &quot;hooks&quot;: {
+    &quot;PreToolUse&quot;: [
+      {
+        &quot;matcher&quot;: &quot;Bash&quot;,
+        &quot;hooks&quot;: [
+          {
+            &quot;type&quot;: &quot;command&quot;,
+            &quot;command&quot;: &quot;\&quot;$CLAUDE_PROJECT_DIR\&quot;/.claude/hooks/block-dangerous-git.sh&quot;
+          }
+        ]
+      }
+    ]
+  }
+}
+        </code></pre>
+        <p>**Global** (`~/.claude/settings.json`):</p>
+        <pre><code class="language-json">
+{
+  &quot;hooks&quot;: {
+    &quot;PreToolUse&quot;: [
+      {
+        &quot;matcher&quot;: &quot;Bash&quot;,
+        &quot;hooks&quot;: [
+          {
+            &quot;type&quot;: &quot;command&quot;,
+            &quot;command&quot;: &quot;~/.claude/hooks/block-dangerous-git.sh&quot;
+          }
+        ]
+      }
+    ]
+  }
+}
+        </code></pre>
+        <p>
+          If the settings file already exists, merge the hook into existing `hooks.PreToolUse` array
+          — don't overwrite other settings.
+        </p>
+        <h3 id="4-ask-about-customization">4. Ask about customization</h3>
+        <p>
+          Ask if user wants to add or remove any patterns from the blocked list. Edit the copied
+          script accordingly.
+        </p>
+        <h3 id="5-verify">5. Verify</h3>
+        <p>Run a quick test:</p>
+        <pre><code class="language-bash">
+echo '{&quot;tool_input&quot;:{&quot;command&quot;:&quot;git push origin main&quot;}}' | &lt;path-to-script&gt;
+        </code></pre>
+        <p>Should exit with code 2 and print a BLOCKED message to stderr.</p>
+      </article>
+    </main>
+  </body>
+</html>

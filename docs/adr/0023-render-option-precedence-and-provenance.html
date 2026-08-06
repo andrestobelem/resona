@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Las opciones de render tienen precedencia y procedencia explícitas · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">docs/adr/0023-render-option-precedence-and-provenance.md</p>
+      <article>
+        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <h1 id="las-opciones-de-render-tienen-precedencia-y-procedencia-explicitas">
+          Las opciones de render tienen precedencia y procedencia explícitas
+        </h1>
+        <p>
+          Cada opción de render se resuelve una sola vez al construir el `RenderJob`, con la
+          precedencia `invocación explícita &gt; configuración del proyecto &gt; default de Resona`.
+          El resultado conserva el valor efectivo y la capa que lo aportó.
+        </p>
+        <h2 id="opciones-consideradas">Opciones consideradas</h2>
+        <p>
+          - Dejar que cada superficie combine opciones según sus propias reglas. - Resolver valores
+          efectivos sin conservar de dónde provienen. - Compartir descriptores y resolver valores
+          con una precedencia y procedencia explícitas.
+        </p>
+        <p>
+          Se eligió la tercera opción para que API, CLI y Studio produzcan el mismo trabajo, y para
+          que una diferencia de configuración pueda explicarse sin reconstruir implícitamente la
+          ejecución.
+        </p>
+        <h2 id="consecuencias">Consecuencias</h2>
+        <p>
+          - Un descriptor compartido define tipo, validación y default de cada opción. - Los
+          adaptadores de CLI y Studio no redefinen las reglas de resolución. - El `RenderJob`
+          contiene opciones efectivas junto con su procedencia. - La metadata musical no puede
+          sobrescribir silenciosamente una opción de render. - Una contradicción entre una opción y
+          un invariante musical produce un diagnóstico. - Agregar una nueva capa de configuración
+          exige otra decisión explícita de precedencia.
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

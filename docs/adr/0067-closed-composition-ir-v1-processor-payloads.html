@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CompositionIR v1 fija payloads cerrados de procesadores · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">docs/adr/0067-closed-composition-ir-v1-processor-payloads.md</p>
+      <article>
+        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <h1 id="compositionir-v1-fija-payloads-cerrados-de-procesadores">
+          CompositionIR v1 fija payloads cerrados de procesadores
+        </h1>
+        <p>Instrumento y efectos usan estas formas:</p>
+        <pre><code class="language-ts">
+type PolySynthIR = IRNodeBase &amp; Readonly&lt;{
+  type: &quot;poly-synth&quot;;
+  maxVoices: number;
+  oscillator: &quot;sine&quot; | &quot;saw&quot; | &quot;square&quot;;
+  envelope: Readonly&lt;{
+    attack: AbsoluteDurationIR;
+    decay: AbsoluteDurationIR;
+    sustain: number;
+    release: AbsoluteDurationIR;
+  }&gt;;
+}&gt;;
+
+type GainIR = IRNodeBase &amp; Readonly&lt;{
+  type: &quot;gain&quot;;
+  gain: number;
+}&gt;;
+
+type DelayIR = IRNodeBase &amp; Readonly&lt;{
+  type: &quot;delay&quot;;
+  time: AbsoluteDurationIR;
+  feedback: number;
+  mix: number;
+}&gt;;
+        </code></pre>
+        <h2 id="opciones-consideradas">Opciones consideradas</h2>
+        <p>
+          - Usar un nodo genérico de procesador con `params: Record&lt;string, unknown&gt;`. -
+          Omitir defaults y resolverlos recién al compilar el plan. - Definir una unión exhaustiva
+          cuyos valores ya estén completos y validados.
+        </p>
+        <p>
+          Se eligió la tercera opción para que Studio y el planificador puedan inspeccionar y
+          validar cada procesador exhaustivamente sin un registro dinámico ni otra fase de defaults
+          ocultos.
+        </p>
+        <h2 id="consecuencias">Consecuencias</h2>
+        <p>
+          - Todos los defaults del sintetizador, envolvente y efectos están materializados en la IR.
+          - `maxVoices` es un entero seguro positivo. - Attack, decay y release son duraciones
+          absolutas no negativas; sustain pertenece a `[0, 1]`. - `gain` es finito, no negativo y su
+          conversión a `Float32` también debe ser finita. - Delay exige tiempo positivo, `feedback`
+          en `[0, 1)` y `mix` en `[0, 1]`. - El parámetro automatizable de `GainIR` se identifica
+          como `&quot;gain&quot;`. - Delay no admite automatización en v1. - No existen parámetros
+          desconocidos: agregar campos o procesadores requiere evolucionar el schema. - La forma de
+          automatizar `GainIR.gain` se fija en el [ADR
+          0068](0068-explicit-gain-automation-lanes-in-composition-ir.md). - La canonización de
+          parámetros al compilar el plan se fija en el [ADR
+          0078](0078-explicit-float32-audio-boundaries.md).
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

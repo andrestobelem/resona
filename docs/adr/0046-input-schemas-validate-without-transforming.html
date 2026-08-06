@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Los schemas de inputs validan sin transformar · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">docs/adr/0046-input-schemas-validate-without-transforming.md</p>
+      <article>
+        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <h1 id="los-schemas-de-inputs-validan-sin-transformar">
+          Los schemas de inputs validan sin transformar
+        </h1>
+        <p>
+          Un `InputSchema` del MVP valida de forma sincrónica un objeto JSON sin devolver un valor
+          parseado. Los defaults pertenecen exclusivamente a `Composition.defaultInputs`; el schema
+          no coacciona, completa ni transforma el candidato canónico que conserva Resona.
+        </p>
+        <h2 id="opciones-consideradas">Opciones consideradas</h2>
+        <p>
+          - Admitir toda capacidad de transformación del validador elegido. - Permitir
+          transformations y defaults, registrando solo su resultado. - Restringir la frontera a
+          aceptación o rechazo de valores ya canónicos.
+        </p>
+        <p>
+          Se eligió la tercera opción para que Studio, preparación y `RenderSpec` observen el mismo
+          input y para evitar reglas de merge o normalización duplicadas.
+        </p>
+        <h2 id="consecuencias">Consecuencias</h2>
+        <p>
+          - El schema raíz representa un objeto. - Constraints y refinements sincrónicos pueden
+          aceptar o rechazar. - Coerción, `transform`, `preprocess`, `catch` y defaults de Zod son
+          incompatibles. - La validación asíncrona queda fuera del MVP. - `defaultInputs` es la
+          única fuente de defaults de composición. - Un adaptador rechaza al registrarse toda
+          asincronía que pueda detectar estructuralmente. - JavaScript no permite demostrar que un
+          callback arbitrario nunca devolverá una promesa para algún valor futuro. Por eso cada
+          validación síncrona conserva además un guard contra thenables; si aparece uno, la variante
+          falla antes de evaluar autoría o ejecutar DSP. - Los refinements sincrónicos siguen
+          admitidos. Esta defensa runtime no habilita validación asíncrona ni adopta su resultado. -
+          La representación serializable se fija en el [ADR
+          0079](0079-versioned-json-schema-input-description.md).
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

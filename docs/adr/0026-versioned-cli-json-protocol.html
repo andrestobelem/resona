@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>El CLI ofrece un protocolo JSON versionado · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">docs/adr/0026-versioned-cli-json-protocol.md</p>
+      <article>
+        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <h1 id="el-cli-ofrece-un-protocolo-json-versionado">
+          El CLI ofrece un protocolo JSON versionado
+        </h1>
+        <p>
+          Todos los comandos muestran texto legible por defecto y aceptan `--json`. Las operaciones
+          finitas emiten un documento JSON versionado; el render emite envelopes JSON Lines tipados
+          para representar su naturaleza incremental.
+        </p>
+        <h2 id="opciones-consideradas">Opciones consideradas</h2>
+        <p>
+          - Mantener solo salida humana y permitir que cada automatización la interprete. - Emitir
+          JSON sin separar logs ni versionar su forma. - Definir un modo JSON versionado cuyo
+          `stdout` esté reservado al protocolo.
+        </p>
+        <p>
+          Se eligió la tercera opción porque la automatización es parte del producto y no debe
+          depender de mensajes destinados a personas ni de detalles accidentales del proceso.
+        </p>
+        <h2 id="consecuencias">Consecuencias</h2>
+        <p>
+          - `compositions --json` y `validate --json` emiten un único documento. - `render --json`
+          emite JSON Lines con eventos de progreso, diagnóstico y resultado. - Cada documento o
+          envelope declara una versión; los eventos incluyen un `type`. - En modo JSON, `stdout` no
+          contiene texto informal. - Los logs incidentales se escriben en `stderr`. - Los
+          diagnósticos del resultado conservan su representación estructurada. - El código `0`
+          representa éxito, aunque existan advertencias. - El código `1` representa una falla de
+          validación, compilación o render. - El código `2` representa uso inválido o configuración
+          ilegible. - El código `130` representa cancelación por el usuario. - El detalle de una
+          falla vive en los datos estructurados, no en más códigos numéricos. - La forma exacta y la
+          política de compatibilidad del protocolo deben diseñarse antes de declararlo estable.
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

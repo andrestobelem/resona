@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>La raíz del proyecto se resuelve una vez · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">docs/adr/0044-explicit-stable-project-root.md</p>
+      <article>
+        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <h1 id="la-raiz-del-proyecto-se-resuelve-una-vez">
+          La raíz del proyecto se resuelve una vez
+        </h1>
+        <p>
+          El CLI puede descubrir la raíz del proyecto, mientras que la API exige una ruta absoluta.
+          Una vez creado el proyecto, todas las rutas relativas se resuelven contra esa raíz
+          congelada y no contra el directorio de trabajo actual.
+        </p>
+        <h2 id="opciones-consideradas">Opciones consideradas</h2>
+        <p>
+          - Resolver cada path contra el `cwd` en el momento de usarlo. - Aplicar búsqueda implícita
+          tanto en CLI como en API. - Limitar el descubrimiento al CLI y hacer explícita la raíz
+          programática.
+        </p>
+        <p>
+          Se eligió la tercera opción porque conserva una experiencia cómoda en terminal y elimina
+          dependencias ambientales ocultas en integraciones programáticas y operaciones largas.
+        </p>
+        <h2 id="consecuencias">Consecuencias</h2>
+        <p>
+          - `--config` fija como raíz el directorio de ese archivo. - Sin ese flag, el CLI busca
+          hacia arriba el config más cercano. - Si no existe config, el CLI usa su `cwd` inicial
+          como raíz. - `createProject({root})` exige una ruta absoluta. - `entry`, `staticDir` y
+          otras rutas relativas se resuelven contra la raíz congelada. - Cambiar el `cwd` después de
+          crear el proyecto no cambia sus recursos.
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

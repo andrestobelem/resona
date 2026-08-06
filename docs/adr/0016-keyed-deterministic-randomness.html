@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>La aleatoriedad es determinista y direccionada por claves · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">docs/adr/0016-keyed-deterministic-randomness.md</p>
+      <article>
+        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <h1 id="la-aleatoriedad-es-determinista-y-direccionada-por-claves">
+          La aleatoriedad es determinista y direccionada por claves
+        </h1>
+        <p>
+          Cada valor aleatorio de Resona deriva de la seed de composición, la ruta estable del nodo
+          y una clave explícita. No existe un generador global mutable cuyo estado dependa del orden
+          de evaluación.
+        </p>
+        <h2 id="opciones-consideradas">Opciones consideradas</h2>
+        <p>
+          - Permitir `Math.random()` y documentar que el resultado no es reproducible. - Usar un
+          único generador con seed que avance secuencialmente. - Derivar valores y streams
+          explícitos mediante claves jerárquicas.
+        </p>
+        <p>
+          Se eligió la tercera opción para que insertar o eliminar una llamada no cambie valores
+          aleatorios no relacionados y para que React, Studio y renderer no dependan del orden de
+          evaluación.
+        </p>
+        <h2 id="consecuencias">Consecuencias</h2>
+        <p>
+          - La ruta pública del nodo forma parte de su dominio de aleatoriedad. - Cada uso declara
+          una clave estable; los streams secuenciales se crean explícitamente con una clave propia.
+          - El algoritmo de derivación se versiona para detectar cambios de resultado. - Una regla
+          de lint prohíbe `Math.random()` en código que afecta una composición.
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

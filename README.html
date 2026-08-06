@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Resona · Resona</title>
+    <link rel="stylesheet" href=".resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">README.md</p>
+      <article>
+        <h1 id="resona">Resona</h1>
+        <p>
+          &gt; Estado: exploración inicial. El repositorio todavía no contiene una implementación.
+        </p>
+        <p>
+          Resona busca ser **el Remotion de la música**: un framework code-first para definir,
+          previsualizar y renderizar composiciones musicales programables con audio, MIDI y efectos.
+        </p>
+        <p>
+          La fuente del proyecto es una combinación versionable de código y datos declarativos, no
+          primariamente un archivo opaco controlado por una interfaz visual. Una misma definición
+          debería alimentar tanto la experiencia de desarrollo como el render final.
+        </p>
+        <h2 id="que-queremos-construir">Qué queremos construir</h2>
+        <p>
+          - Una API declarativa y componible para expresar estructura musical y procesamiento. -
+          Audio, MIDI, instrumentos y efectos como conceptos de primera clase. - Un Studio para
+          reproducir, inspeccionar y depurar composiciones durante el desarrollo. - Un renderer para
+          producir audio de manera reproducible desde una CLI o una API. - Composiciones
+          parametrizables, versionables y automatizables con herramientas de desarrollo normales.
+        </p>
+        <h2 id="ejemplo-conceptual">Ejemplo conceptual</h2>
+        <p>
+          La API todavía no está definida. Este ejemplo solo muestra la experiencia que buscamos:
+        </p>
+        <pre><code class="language-tsx">
+&lt;Composition id=&quot;Demo&quot; component={Demo} bpm={120} durationInBars={32} /&gt;
+
+const Demo = () =&gt; (
+  &lt;MidiTrack instrument={&lt;Synth preset=&quot;AnalogBass&quot; /&gt;}&gt;
+    &lt;MidiClip from=&quot;1:1:0&quot; notes={bassline} /&gt;
+    &lt;Delay mix={0.2} /&gt;
+  &lt;/MidiTrack&gt;
+);
+        </code></pre>
+        <p>
+          La versión completa y sus supuestos están en la [visión de
+          producto](docs/product.md#interfaz-conceptual).
+        </p>
+        <h2 id="documentacion">Documentación</h2>
+        <p>
+          - [Visión de producto](docs/product.md) - [Arquitectura propuesta](docs/architecture.md) -
+          [Estudio de Remotion aplicado a Resona](docs/research/remotion-study.md) - [Lenguaje del
+          dominio](CONTEXT.md) - [ADR 0001: la fuente versionable es la única fuente de
+          verdad](docs/adr/0001-versionable-source-as-source-of-truth.md)
+        </p>
+        <h2 id="licencia">Licencia</h2>
+        <p>[MIT](LICENSE)</p>
+      </article>
+    </main>
+  </body>
+</html>

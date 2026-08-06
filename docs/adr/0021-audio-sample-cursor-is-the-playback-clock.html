@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>El cursor de muestras es el reloj autoritativo de playback · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">docs/adr/0021-audio-sample-cursor-is-the-playback-clock.md</p>
+      <article>
+        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <h1 id="el-cursor-de-muestras-es-el-reloj-autoritativo-de-playback">
+          El cursor de muestras es el reloj autoritativo de playback
+        </h1>
+        <p>
+          Durante playback, la posición autoritativa es el cursor de frames de muestras que avanza
+          el núcleo DSP dentro del `AudioWorklet`. Studio observa esa posición para dibujar, pero su
+          ciclo de render no gobierna tiempo musical.
+        </p>
+        <h2 id="opciones-consideradas">Opciones consideradas</h2>
+        <p>
+          - Programar eventos desde el ciclo de render de React. - Usar `requestAnimationFrame` como
+          reloj y corregir drift contra el audio. - Hacer que el motor de audio gobierne y que la UI
+          siga sus snapshots.
+        </p>
+        <p>
+          Se eligió la tercera opción porque solo el callback de audio conoce qué frames se
+          entregaron realmente al dispositivo y no se suspende bajo las mismas condiciones que la
+          UI.
+        </p>
+        <h2 id="consecuencias">Consecuencias</h2>
+        <p>
+          - `requestAnimationFrame` solo actualiza presentación. - Eventos, automatización y DSP se
+          programan contra frames de muestras. - Playhead y medidores pueden refrescarse a menor
+          frecuencia sin cambiar el sonido. - Seek y loop se expresan como comandos al transporte y
+          se aplican en la seam del motor.
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

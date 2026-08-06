@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Trunk-based development · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">docs/agents/trunk-based-development.md</p>
+      <article>
+        <h1 id="trunk-based-development">Trunk-based development</h1>
+        <h2 id="readiness">Readiness</h2>
+        <p>
+          - Status: `partial`. - Evidence captured: 2026-08-04T22:58:50-03:00. - Integration line:
+          `main`. - Baseline commit: `327e1b4c184efdf7b6fdfd0e8b0e6234d00d2fcf`. - Worktree
+          condition: dirty with T01 on `feat/engine-compile-note-plan`. - Local runtime: Node.js
+          `24.15.0` and pnpm `11.20.0`; pnpm reports the Node version is below the declared
+          `&gt;=24.18.0 &lt;25` range. - Reason: local fast and full gates pass with a non-vacuous
+          integration test. GitHub Actions also passed both gates for PR #22. Remote enforcement has
+          not been inspected.
+        </p>
+        <p>
+          The current gates verify the repository scaffold, documentation, exact rational
+          nearest-even rounding, and the first source-project-to-plan vertical slice. They do not
+          yet verify DSP output, browser playback, or release artifacts.
+        </p>
+        <h2 id="integration-and-review-model">Integration and review model</h2>
+        <p>
+          - `main` is the only integration line across all workspaces. - Short-lived pull requests
+          are the default while readiness is not `ready`. - A direct commit is allowed only for
+          low-risk work after the verified fast gate passes. - Andrés Tobelem and future maintainers
+          explicitly authorized in GitHub may integrate changes. - Every author self-reviews the
+          complete diff and verifies the fast gate. - Changes to public APIs, DSP behavior, CI,
+          security, or dependencies also require an independent human or review-agent review. - The
+          author classifies risk and the integrator confirms it. Uncertainty means high risk. - Work
+          integrates the same day and may not remain on a branch or pull request for more than 24
+          hours. - `$trunk-based-development` is the single source of truth for selecting how
+          incomplete behavior remains hidden. This contract does not duplicate that strategy
+          hierarchy.
+        </p>
+        <h2 id="stop-the-line">Stop the line</h2>
+        <p>When `main` becomes newly red:</p>
+        <p>
+          1. Stop further integrations. 2. Identify the smallest responsible batch. 3. Repair it
+          immediately or revert that atomic batch. 4. Run the verified fast gate again. 5. Resume
+          integration only after the baseline is restored.
+        </p>
+        <p>The recovery-time target is p95 at or below ten minutes.</p>
+        <h2 id="gate-contract">Gate contract</h2>
+        <h3 id="verified-fast-gate">Verified fast gate</h3>
+        <p>Command:</p>
+        <pre><code class="language-bash">
+pnpm check:fast
+        </code></pre>
+        <p>Expansion:</p>
+        <pre><code class="language-bash">
+pnpm format:check
+pnpm lint
+pnpm typecheck
+pnpm test:unit
+        </code></pre>
+        <p>Recorded result:</p>
+        <p>
+          - Run date: 2026-08-04. - Exit code: `0`. - Observed wall duration: 5.29 seconds. -
+          Baseline commit: `327e1b4c184efdf7b6fdfd0e8b0e6234d00d2fcf`. - Worktree: dirty with T01 on
+          `feat/engine-compile-note-plan`. - Formatting, ESLint, and Markdown validation passed. -
+          Typecheck compiled the `@resona/engine` workspace without emitting files. - Vitest ran one
+          unit suite containing seven passing tests.
+        </p>
+        <p>
+          The fast gate runs after every integration batch. Its duration target is p95 at or below
+          five minutes.
+        </p>
+        <h3 id="verified-full-gate">Verified full gate</h3>
+        <p>Command:</p>
+        <pre><code class="language-bash">
+pnpm check:full
+        </code></pre>
+        <p>Expansion:</p>
+        <pre><code class="language-bash">
+pnpm check:fast
+pnpm build
+pnpm test:integration
+        </code></pre>
+        <p>Recorded result:</p>
+        <p>
+          - Run date: 2026-08-04. - Exit code: `0`. - Observed wall duration: 7.41 seconds. -
+          Baseline commit: `327e1b4c184efdf7b6fdfd0e8b0e6234d00d2fcf`. - Worktree: dirty with T01 on
+          `feat/engine-compile-note-plan`. - The embedded fast gate passed. - Build emitted the
+          private `@resona/engine` workspace successfully. - Vitest ran the source-project
+          integration suite with six passing tests.
+        </p>
+        <p>
+          The full gate runs before handoff or release. There is currently no executable release
+          workflow.
+        </p>
+        <h3 id="available-gates">Available gates</h3>
+        <p>None. Every currently executable project gate has a recorded local result.</p>
+        <h3 id="setup-validations">Setup validations</h3>
+        <p>The following setup validations passed:</p>
+        <pre><code class="language-bash">
+pnpm exec prettier --check . --ignore-unknown
+pnpm exec eslint .
+pnpm exec markdownlint-cli2
+git diff --check
+        </code></pre>
+        <p>Markdownlint checked 92 files and reported zero issues.</p>
+        <p>
+          The first Prettier run detected only missing trailing commas in
+          `.markdownlint-cli2.jsonc`. The setup-owned configuration was corrected and the complete
+          check passed on rerun.
+        </p>
+        <h3 id="proposed-future-checks">Proposed future checks</h3>
+        <p>The following checks remain proposed until the relevant implementation exists:</p>
+        <p>
+          - broader product-code typechecking, builds, and unit coverage beyond the first vertical
+          slice; - additional integration coverage for audio clips, effects, automation, and source
+          maps; - browser and Player tests; - deterministic render tests; - audio compatibility
+          fixtures; - package-export validation beyond package build scripts; - Agent Skill
+          validation; - release and rollback verification.
+        </p>
+        <h3 id="recorded-failures">Recorded failures</h3>
+        <p>No current gate failure remains.</p>
+        <p>
+          The first fast-gate run for the engine batch stopped on formatting in the two new
+          TypeScript files. Prettier corrected only those files, the focused unit test passed again,
+          and the fast and full gates then passed. The later T01 full gate passed with six
+          integration tests. Missing historical results remain unavailable evidence, not passing
+          evidence.
+        </p>
+        <h2 id="bootstrap-limitations">Bootstrap limitations</h2>
+        <p>
+          The first engine workspace retires the empty-workspace allowances for build, typecheck,
+          unit tests, and integration tests:
+        </p>
+        <p>
+          - recursive `build` and `typecheck` fail when no workspace matches; - unit tests fail when
+          no test file exists; - integration tests fail when no test file exists.
+        </p>
+        <p>Every production workspace must expose `build` and `typecheck` scripts.</p>
+        <h2 id="missing-prerequisites">Missing prerequisites</h2>
+        <p>
+          The current batch satisfies the first local prerequisite: a real workspace exposes
+          non-vacuous `typecheck` and `build` scripts and runs a meaningful unit suite.
+        </p>
+        <p>Readiness cannot move to `ready` until:</p>
+        <p>
+          - product coverage extends beyond the first vertical slice; - browser, Player, DSP, and
+          deterministic-render coverage exist; - remote protection is reconsidered against a stable
+          passing check.
+        </p>
+        <h2 id="ci-and-enforcement">CI and enforcement</h2>
+        <p>The local workflow exists at `.github/workflows/ci.yml`.</p>
+        <p>Provider-verified check names:</p>
+        <p>- `CI / Fast gate`; - `CI / Full gate`.</p>
+        <p>
+          Both jobs are configured for pull requests targeting `main`, pushes to `main`, and manual
+          workflow dispatch. The full job depends on the fast job.
+        </p>
+        <p>
+          PR #22 passed both `CI / Fast gate` and `CI / Full gate` on 2026-08-05 UTC. Neither check
+          has yet been approved as required branch protection.
+        </p>
+        <p>
+          No Git hook is configured. Hooks remain deferred until repository behavior demonstrates a
+          need for one.
+        </p>
+        <p>
+          No remote protection or ruleset mutation is approved by this contract. Provider evidence
+          for pull-request history, required checks, protection, and rulesets was unavailable during
+          exploration and must not be interpreted as disabled.
+        </p>
+        <p>
+          After the workflow has passed in GitHub and its exact check name is observed, rerun this
+          setup before proposing any required check, force-push restriction, deletion restriction,
+          or ruleset.
+        </p>
+        <h2 id="recovery-and-rollback">Recovery and rollback</h2>
+        <p>
+          There is no automated deployment or rollback workflow. For repository regressions, revert
+          the smallest responsible atomic batch. A future release system must define how to preserve
+          and restore the last valid build before readiness can cover releases.
+        </p>
+        <h2 id="metrics">Metrics</h2>
+        <p>
+          | Metric | Source and calculation | Window | Target | Initial evidence | | --- | --- | ---
+          | --- | --- | | Active development branches | GitHub branch refs and open PR heads; count
+          non-`main` branches carrying unintegrated work | Point-in-time at each review | At most 3
+          | Deferred until provider branch data is available | | Integration cadence | Timestamps of
+          commits or merges reaching `main`; measure gaps during active development | Rolling 30
+          days | Integrate at least daily | No usable history yet | | Branch or PR lifetime | GitHub
+          PR `createdAt` to `mergedAt`; this is the documented proxy because GitHub does not expose
+          reliable branch creation time | Rolling 30 days | p95 below 24 hours | Deferred until PR
+          history exists | | Fast-gate duration | GitHub Actions start and completion timestamps for
+          `CI / Fast gate` | Rolling 30 days | p95 at most 5 minutes | Deferred until the job runs |
+          | Red-main recovery | First failing fast-gate result on `main` to the first succeeding run
+          or revert restoring the baseline | Rolling 30 days | p95 at most 10 minutes | Deferred
+          until CI history exists | | Integration freezes | GitHub incidents or issues explicitly
+          recording an integration freeze; count qualifying events | Rolling 30 days | 0 | Deferred
+          until an incident-recording mechanism exists | | Feature-flag ownership | Active flags
+          with both an owner and removal condition divided by all active flags | Current repository
+          snapshot | 100% | Deferred until a flag registry exists |
+        </p>
+        <p>No metric is currently reported as passing. The required data does not exist yet.</p>
+        <h2 id="review-cadence">Review cadence</h2>
+        <p>Review this contract:</p>
+        <p>
+          - 30 days after the first successful GitHub CI run; - monthly after that; - whenever the
+          integration model, gate commands, provider, CI, or protection policy changes.
+        </p>
+        <p>
+          `$trunk-based-development` reads this file during daily delivery. Rerun
+          `$setup-trunk-based-development` when the contract itself must change.
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

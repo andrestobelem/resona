@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ExecutionPlan v1 usa procesadores cerrados y routing topológico · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">docs/adr/0070-closed-execution-plan-v1-processors-and-routing.md</p>
+      <article>
+        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <h1 id="executionplan-v1-usa-procesadores-cerrados-y-routing-topologico">
+          ExecutionPlan v1 usa procesadores cerrados y routing topológico
+        </h1>
+        <p>
+          El plan ejecutable representa cada fuente, efecto y mezcla mediante una unión cerrada de
+          procesadores. Las conexiones usan índices locales al plan y forman cadenas de pista
+          acíclicas que terminan en un único sumador master.
+        </p>
+        <pre><code class="language-ts">
+type ProcessorPlan =
+  | Readonly&lt;{type: &quot;sum&quot;}&gt;
+  | Readonly&lt;{
+      type: &quot;poly-synth&quot;;
+      maxVoices: number;
+      oscillator: &quot;sine&quot; | &quot;saw&quot; | &quot;square&quot;;
+      attackFrames: number;
+      decayFrames: number;
+      sustain: number;
+      releaseFrames: number;
+    }&gt;
+  | Readonly&lt;{type: &quot;gain&quot;; gain: number}&gt;
+  | Readonly&lt;{
+      type: &quot;delay&quot;;
+      delayFrames: number;
+      feedback: number;
+      mix: number;
+    }&gt;;
+
+type SignalRoute = Readonly&lt;{
+  from: ProcessorIndex;
+  to: ProcessorIndex;
+}&gt;;
+        </code></pre>
+        <h2 id="opciones-consideradas">Opciones consideradas</h2>
+        <p>
+          - Publicar opcodes genéricos con diccionarios abiertos de parámetros. - Conservar IDs
+          estables de la IR dentro de cada procesador y permitir routing arbitrario. - Compilar a
+          una unión cerrada, índices posicionales y rutas ordenadas topológicamente.
+        </p>
+        <p>
+          Se eligió la tercera opción. El motor puede validar y ejecutar una cantidad cerrada de
+          casos sin interpretar metadata editorial, mientras que `trace` mantiene la correspondencia
+          diagnóstica con la IR.
+        </p>
+        <h2 id="consecuencias">Consecuencias</h2>
+        <p>
+          - `processors` está ordenado topológicamente, toda ruta satisface `from &lt; to` y no
+          existen rutas duplicadas. - Los procesadores no duplican su índice ni contienen ID o path
+          de la IR. - Un `poly-synth` no recibe rutas de señal; los eventos lo alimentan mediante su
+          tabla especializada. - Cada `gain` y `delay` recibe exactamente una ruta de señal. - Cada
+          pista de audio empieza en un `sum` que recibe cero o más regiones de audio; no recibe
+          rutas desde otros procesadores. Puede quedar vacío cuando todas fueron recortadas. - Cada
+          pista instrumental empieza en un `poly-synth`. - Los efectos de una pista se conectan
+          exactamente en el orden declarado. Si no hay efectos, la fuente se conecta directamente al
+          master. - Todo procesador salvo el master tiene exactamente una ruta saliente; no existen
+          branching ni sends implícitos. - Existe exactamente un `sum` por pista de audio y otro
+          sumador terminal compartido. - `masterProcessor` referencia el sumador terminal y último
+          procesador, que no tiene rutas salientes y recibe la salida de cada pista, pero no
+          regiones de audio directas. - Todo procesador alcanza el master; no se admiten ciclos,
+          nodos huérfanos, buses, sends, sidechain ni feedback entre procesadores. - El orden de las
+          rutas que entran a un sumador determina el orden exacto de suma `Float32`. El planificador
+          recorre `root.children` en profundidad y en orden estable, emite la fuente y los efectos
+          de cada pista en orden declarado, y agrega el master al final. - Cada aporte en ese orden
+          vuelve a canonizar el acumulador según el [ADR
+          0078](0078-explicit-float32-audio-boundaries.md). - `maxVoices` y los parámetros DSP
+          conservan las invariantes ya validadas en la IR. Attack, decay y release están expresados
+          en frames enteros no negativos; `delayFrames` es un entero positivo. - `sustain`, `gain`,
+          `feedback` y `mix` son `Float32` canónicos y satisfacen de nuevo sus rangos después de la
+          conversión. - Los descriptores de recursos y regiones se fijan en el [ADR
+          0071](0071-content-addressed-resources-and-audio-regions.md).
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Zod input adapter context · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">packages/zod/CONTEXT.md</p>
+      <article>
+        <h1 id="zod-input-adapter-context">Zod input adapter context</h1>
+        <p>
+          `@resona/zod` adapts Zod 4 object schemas to the Resona-owned `InputSchema` seam. It is
+          the only workspace allowed to inspect Zod internals; Engine and future Studio code consume
+          only `InputSchema` and its serializable `InputSchemaIR`.
+        </p>
+        <p>
+          The adapter validates synchronously and never returns parsed data. It rejects coercion,
+          transforms, preprocess, catch, defaults, stripping objects, overwrites and detectable
+          async refinements when `fromZod()` is called. A runtime guard converts a latent refinement
+          promise into a validation failure before authoring or DSP.
+        </p>
+        <p>
+          The descriptor is a Resona-versioned envelope around JSON Schema Draft 2020-12. JSON
+          Schema supports inspection and controls; the original `InputSchema` remains the
+          authoritative validator.
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

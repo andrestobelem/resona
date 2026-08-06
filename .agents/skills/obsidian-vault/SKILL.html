@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Obsidian Vault · Resona</title>
+    <link rel="stylesheet" href="../../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">.agents/skills/obsidian-vault/SKILL.md</p>
+      <article>
+        <p>
+          --- name: obsidian-vault description: Search, create, and manage notes in the Obsidian
+          vault with wikilinks and index notes. Use when user wants to find, create, or organize
+          notes in Obsidian. ---
+        </p>
+        <h1 id="obsidian-vault">Obsidian Vault</h1>
+        <h2 id="vault-location">Vault location</h2>
+        <p>`/mnt/d/Obsidian Vault/AI Research/`</p>
+        <p>Mostly flat at root level.</p>
+        <h2 id="naming-conventions">Naming conventions</h2>
+        <p>
+          - **Index notes**: aggregate related topics (e.g., `Ralph Wiggum Index.md`, `Skills
+          Index.md`, `RAG Index.md`) - **Title case** for all note names - No folders for
+          organization - use links and index notes instead
+        </p>
+        <h2 id="linking">Linking</h2>
+        <p>
+          - Use Obsidian `[[wikilinks]]` syntax: `[[Note Title]]` - Notes link to
+          dependencies/related notes at the bottom - Index notes are just lists of `[[wikilinks]]`
+        </p>
+        <h2 id="workflows">Workflows</h2>
+        <h3 id="search-for-notes">Search for notes</h3>
+        <pre><code class="language-bash">
+# Search by filename
+find &quot;/mnt/d/Obsidian Vault/AI Research/&quot; -name &quot;*.md&quot; | grep -i &quot;keyword&quot;
+
+# Search by content
+grep -rl &quot;keyword&quot; &quot;/mnt/d/Obsidian Vault/AI Research/&quot; --include=&quot;*.md&quot;
+        </code></pre>
+        <p>Or use Grep/Glob tools directly on the vault path.</p>
+        <h3 id="create-a-new-note">Create a new note</h3>
+        <p>
+          1. Use **Title Case** for filename 2. Write content as a unit of learning (per vault
+          rules) 3. Add `[[wikilinks]]` to related notes at the bottom 4. If part of a numbered
+          sequence, use the hierarchical numbering scheme
+        </p>
+        <h3 id="find-related-notes">Find related notes</h3>
+        <p>Search for `[[Note Title]]` across the vault to find backlinks:</p>
+        <pre><code class="language-bash">
+grep -rl &quot;\\[\\[Note Title\\]\\]&quot; &quot;/mnt/d/Obsidian Vault/AI Research/&quot;
+        </code></pre>
+        <h3 id="find-index-notes">Find index notes</h3>
+        <pre><code class="language-bash">
+find &quot;/mnt/d/Obsidian Vault/AI Research/&quot; -name &quot;*Index*&quot;
+        </code></pre>
+      </article>
+    </main>
+  </body>
+</html>

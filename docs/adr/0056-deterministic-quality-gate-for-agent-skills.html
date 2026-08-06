@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Las Agent Skills tienen un gate de calidad determinista · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">docs/adr/0056-deterministic-quality-gate-for-agent-skills.md</p>
+      <article>
+        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <h1 id="las-agent-skills-tienen-un-gate-de-calidad-determinista">
+          Las Agent Skills tienen un gate de calidad determinista
+        </h1>
+        <p>
+          Una Agent Skill oficial solo se publica cuando sus metadatos y workflows verificables
+          pasan pruebas deterministas contra el mismo release de Resona. Las evaluaciones ejecutadas
+          por modelos concretos aportan señales de calidad, pero inicialmente no bloquean releases.
+        </p>
+        <h2 id="opciones-consideradas">Opciones consideradas</h2>
+        <p>
+          - Revisar las skills manualmente y asumir que su versión garantiza vigencia. - Bloquear
+          releases mediante evaluaciones end-to-end ejecutadas por modelos de IA. - Bloquear
+          mediante verificaciones reproducibles y usar las evaluaciones con modelos como
+          observabilidad complementaria.
+        </p>
+        <p>
+          Se eligió la tercera opción porque detecta referencias rotas y workflows obsoletos sin
+          hacer que la publicación dependa de resultados variables, proveedores externos o modelos
+          específicos.
+        </p>
+        <h2 id="consecuencias">Consecuencias</h2>
+        <p>
+          - Cada skill valida frontmatter, versión, enlaces y referencias internas. - Sus comandos y
+          ejemplos se ejecutan o compilan en un proyecto fixture. - Cada workflow publicado tiene
+          una prueba de punta a punta contra la CLI y las APIs reales. - Todas las verificaciones
+          deterministas usan los artefactos del release correspondiente. - Una falla determinista
+          impide publicar las skills y el release que promete incluirlas. - Evals con Codex, Claude
+          u otros modelos producen métricas y casos de mejora, pero no son un gate bloqueante
+          inicialmente.
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

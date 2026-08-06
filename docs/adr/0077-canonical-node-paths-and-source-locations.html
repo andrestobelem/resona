@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NodePath es jerárquico y SourceLocation es solo diagnóstica · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">docs/adr/0077-canonical-node-paths-and-source-locations.md</p>
+      <article>
+        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <h1 id="nodepath-es-jerarquico-y-sourcelocation-es-solo-diagnostica">
+          NodePath es jerárquico y SourceLocation es solo diagnóstica
+        </h1>
+        <p>
+          Los nodos de `CompositionIR` se identifican mediante arrays de segmentos canónicos. La
+          ubicación de código se conserva por separado y puede cambiar sin modificar identidad ni
+          resultado musical.
+        </p>
+        <pre><code class="language-ts">
+type NodePath = readonly [
+  compositionId: string,
+  rootNodeId: string,
+  ...descendantNodeIds: string[],
+];
+
+type SourceLocation = Readonly&lt;{
+  file: string;
+  line: number;
+  column: number;
+}&gt;;
+        </code></pre>
+        <h2 id="opciones-consideradas">Opciones consideradas</h2>
+        <p>
+          - Serializar paths como strings unidos por `/` y escapar separadores cuando sea necesario.
+          - Usar UUIDs globales sin conservar jerarquía en la identidad. - Usar arrays JSON de IDs
+          validados y mantener la ubicación fuente como metadata separada.
+        </p>
+        <p>
+          Se eligió la tercera opción. Evita reglas de escaping, conserva la estructura que Studio y
+          diagnósticos necesitan y permite comparar paths sin depender de presentación o filesystem.
+        </p>
+        <h2 id="consecuencias">Consecuencias</h2>
+        <p>
+          - Los IDs públicos distinguen mayúsculas y cumplen `^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$`. -
+          El primer segmento de todo path es `compositionId` y el segundo es el ID de la secuencia
+          raíz. - El `id` de un nodo coincide con el último segmento de su path. - El path de un
+          hijo es el path de su padre seguido por su propio ID. - La forma canónica es el array
+          JSON; una representación unida por `/` es solo presentación. - La comparación es
+          lexicográfica por segmentos según orden ASCII. Un prefijo más corto se ordena antes que su
+          extensión. - Los segmentos internos cumplen `^~[a-z][a-z0-9-]*:(0|[1-9][0-9]*)$`; la API
+          pública rechaza `~` y el compilador asigna ordinales deterministas. -
+          `SourceLocation.file` es un path lógico no vacío, relativo a la raíz estable del proyecto
+          y escrito con `/`. - El archivo no comienza con `./` ni contiene backslashes, segmentos
+          vacíos, `.` o `..`. - `line` y `column` son enteros seguros positivos basados en uno y
+          señalan el comienzo del nodo. - Si algún dato de ubicación no está disponible, se omite
+          `source` completo. - Instancias diferentes pueden compartir ubicación fuente y conservar
+          paths distintos. - `NodePath` participa en identidad y orden canónico. `SourceLocation`
+          queda fuera de música, hashes y fingerprints.
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

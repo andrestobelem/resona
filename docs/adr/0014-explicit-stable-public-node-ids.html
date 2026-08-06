@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Los nodos públicos tienen IDs explícitos y estables · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">docs/adr/0014-explicit-stable-public-node-ids.md</p>
+      <article>
+        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <h1 id="los-nodos-publicos-tienen-ids-explicitos-y-estables">
+          Los nodos públicos tienen IDs explícitos y estables
+        </h1>
+        <p>
+          Toda composición, pista, clip, instrumento, efecto y parámetro que pueda inspeccionarse,
+          automatizarse o referenciarse declara un ID público estable. La posición en un array y la
+          etiqueta mostrada al usuario no definen identidad.
+        </p>
+        <h2 id="opciones-consideradas">Opciones consideradas</h2>
+        <p>
+          - Derivar identidad de la posición producida por React. - Usar nombres visibles como
+          referencias. - Exigir IDs explícitos para nodos públicos y generar IDs internos solo para
+          estructura anónima.
+        </p>
+        <p>
+          Se eligió la tercera opción para que Studio, automatización, diagnósticos y referencias
+          conserven identidad a través de reordenamientos y cambios de presentación.
+        </p>
+        <h2 id="consecuencias">Consecuencias</h2>
+        <p>
+          - Los nodos referenciables deben declarar un ID aunque su etiqueta visible sea opcional. -
+          Reordenar hermanos no cambia su identidad. - El ID de composición es único dentro del
+          proyecto. - Cada otro ID público es único entre los hijos de su padre público; la
+          identidad canónica es la ruta completa de IDs ancestrales. - Las instancias de un
+          componente reutilizable pueden repetir IDs internos bajo padres públicos diferentes. - Los
+          contenedores puramente estructurales pueden recibir IDs internos deterministas que no
+          forman parte de la interfaz pública. - La gramática, serialización y comparación de paths
+          se fijan en el [ADR 0077](0077-canonical-node-paths-and-source-locations.md).
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

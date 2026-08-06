@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MIDI es un formato de borde, no el modelo musical interno · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">docs/adr/0006-midi-is-a-boundary-format.md</p>
+      <article>
+        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <h1 id="midi-es-un-formato-de-borde-no-el-modelo-musical-interno">
+          MIDI es un formato de borde, no el modelo musical interno
+        </h1>
+        <p>
+          Resona representa internamente la música mediante eventos musicales propios. MIDI es una
+          capacidad de primera clase para clips e interoperabilidad, pero sus mensajes se normalizan
+          antes de llegar al motor.
+        </p>
+        <h2 id="opciones-consideradas">Opciones consideradas</h2>
+        <p>
+          - Usar mensajes MIDI como representación musical interna universal. - Definir eventos
+          musicales propios y adaptar MIDI en los bordes. - Exponer solamente un modelo musical de
+          alto nivel sin soporte MIDI explícito.
+        </p>
+        <p>
+          Se eligió la segunda opción para conservar interoperabilidad sin imponer al motor y a las
+          APIs futuras los canales, resoluciones y límites expresivos de MIDI.
+        </p>
+        <h2 id="consecuencias">Consecuencias</h2>
+        <p>
+          - Un adaptador MIDI puede ser parte de la API pública, pero no entrega mensajes MIDI
+          crudos a un instrumento interno. - Los instrumentos consumen eventos musicales
+          normalizados y producen señal de audio. - El orden de eventos simultáneos forma parte del
+          contrato cuando afecta el resultado. - Importar y exportar archivos `.mid`, enviar MIDI a
+          hardware y recibirlo en tiempo real son capacidades separadas que pueden incorporarse en
+          alcances distintos. - La granularidad de autoría se define en el [ADR
+          0028](0028-tsx-structures-typed-musical-event-data.md); la nota mínima se define en el
+          [ADR 0029](0029-public-notes-are-interval-events.md).
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

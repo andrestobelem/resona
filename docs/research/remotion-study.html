@@ -1,0 +1,1030 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Estudio de Remotion para Resona · Resona</title>
+    <link rel="stylesheet" href="../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">docs/research/remotion-study.md</p>
+      <article>
+        <h1 id="estudio-de-remotion-para-resona">Estudio de Remotion para Resona</h1>
+        <p>
+          &gt; Estado: investigación técnica sobre Remotion `v4.0.506`, commit &gt;
+          `5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec`, realizada el 2026-08-04.
+        </p>
+        <h2 id="conclusion-ejecutiva">Conclusión ejecutiva</h2>
+        <p>
+          Sí: Remotion es una referencia mucho más rica que “usar componentes para producir un
+          archivo”. Su arquitectura une una fuente programable con cinco superficies coherentes:
+          registro de composiciones, Studio, Player embebible, renderer programático y CLI. El
+          código del autor se compila una vez, las variantes se resuelven mediante inputs y
+          metadata, y las superficies interpretan el mismo contrato en lugar de mantener modelos
+          paralelos ([README][readme-source-of-truth], [bundle][docs-bundle],
+          [Player][docs-player-integration]).
+        </p>
+        <p>La idea principal que Resona debería adoptar es esa continuidad:</p>
+        <pre><code class="language-text">
+fuente versionable
+        ↓
+composición + inputs + metadata
+        ↓
+modelo normalizado compartido
+   ┌────┴────────┐
+   ↓             ↓
+Studio/Player    renderer offline
+        </code></pre>
+        <p>
+          La implementación central de Remotion, en cambio, no se puede trasladar literalmente.
+          Remotion puede evaluar y renderizar cuadros independientes en paralelo; audio, MIDI,
+          instrumentos y efectos forman un sistema continuo y con estado. El equivalente correcto no
+          es `frame -&gt; muestra`, sino:
+        </p>
+        <pre><code class="language-text">
+programa de composición
+        ↓
+eventos + grafo + automatizaciones
+        ↓
+motor stateful que procesa bloques de muestras
+        </code></pre>
+        <p>
+          El propio pipeline de audio de Remotion confirma la diferencia: durante el render registra
+          por cuadro referencias a assets, posición y volumen; después reconstruye intervalos y
+          curvas, preprocesa los archivos y los mezcla. No es un motor DAW ni un grafo DSP ejecutado
+          de forma continua ([AudioForRendering][src-audio-rendering],
+          [calculateAssetPositions][src-asset-positions], [createAudio][src-create-audio]).
+        </p>
+        <p>
+          La recomendación es copiar la forma de producto y sus límites entre módulos; adaptar
+          tiempo, reproducción, render y edición visual; y no copiar ni el renderer basado en
+          Chromium/FFmpeg ni la escala actual del monorepo.
+        </p>
+        <h3 id="advertencia-sobre-copiar">Advertencia sobre “copiar”</h3>
+        <p>
+          En este documento, **copiar** significa adoptar una idea, un contrato o un patrón propio,
+          no copiar código fuente. La licencia del snapshot permite ciertos usos de Remotion, pero
+          prohíbe copiar o modificar su código para vender, licenciar o sublicenciar un derivado
+          ([licencia][license-restriction]). Cualquier reutilización literal necesita una revisión
+          jurídica independiente; este informe no es asesoramiento legal.
+        </p>
+        <h2 id="alcance-y-metodo">Alcance y método</h2>
+        <p>
+          Se estudió un clon local shallow, limpio y fijado al tag `v4.0.506` y al commit completo
+          indicado arriba. Por ser shallow, este informe no usa conteos de commits, antigüedad,
+          contribuidores ni evolución histórica como evidencia. Las conclusiones se basan en:
+        </p>
+        <p>
+          - documentación oficial incluida en el monorepo y publicada en `remotion.dev`; -
+          implementación actual de core, bundler, renderer, CLI, Player, Studio y protocolo; -
+          pruebas unitarias, de integración y contratos del monorepo; - manifests y configuración de
+          build del mismo snapshot.
+        </p>
+        <p>
+          Cada afirmación sobre el funcionamiento actual lleva una fuente primaria. Las hipótesis
+          sobre por qué el producto tuvo éxito están separadas y rotuladas como inferencias; el
+          repositorio no puede demostrar causalidad comercial.
+        </p>
+        <h2 id="1-el-modelo-mental-de-remotion">1. El modelo mental de Remotion</h2>
+        <h3 id="1-1-el-codigo-registra-composiciones-no-ejecuta-un-guion-imperativo">
+          1.1 El código registra composiciones, no ejecuta un guion imperativo
+        </h3>
+        <p>
+          `registerRoot()` registra un único componente raíz. Su implementación guarda un singleton,
+          rechaza un segundo registro y permite que otras partes esperen hasta que el root esté
+          disponible. La separación existe además para convivir con la reevaluación provocada por
+          Fast Refresh ([documentación][docs-register-root], [implementación][src-register-root]).
+        </p>
+        <p>
+          El root declara una o más `Composition`. Cada composición combina una identidad estable,
+          un componente o lazy component, metadata temporal/visual, defaults, schema y una función
+          opcional para calcular metadata. El sistema de tipos permite omitir metadata estática sólo
+          cuando `calculateMetadata` puede resolverla, y el registro guarda el contrato completo
+          para que las demás superficies lo descubran ([Composition tipos][src-composition-types],
+          [registro][src-composition-register]).
+        </p>
+        <p>
+          `Folder` agrega jerarquía de navegación sin modificar el comportamiento de la composición,
+          y `Still` es una especialización de un solo frame ([Folder][docs-composition-folder],
+          [Still][src-still]).
+        </p>
+        <p>
+          **Decisión para Resona:** copiar el root único, IDs estables, descubrimiento y folders;
+          adaptar `Composition` a metadata musical; no inventar todavía un equivalente de `Still` si
+          no representa una necesidad musical real.
+        </p>
+        <p>Una composición musical candidata debería registrar, al menos:</p>
+        <p>
+          - componente o fábrica declarativa; - ID y nombre; - defaults y schema de inputs; - BPM o
+          tempo map, métrica y duración nominal; - sample rate, canales y política de cola; -
+          metadata calculable para assets, duración, salidas y stems.
+        </p>
+        <h3 id="1-2-una-api-comoda-puede-compilar-a-primitivas-mas-pequenas">
+          1.2 Una API cómoda puede compilar a primitivas más pequeñas
+        </h3>
+        <p>
+          `Sequence` crea tiempo local: desplaza el frame observado por sus descendientes, acumula
+          offsets al anidarse, limita duración y admite trim. Internamente calcula el origen
+          absoluto, propaga contexto temporal y sólo monta el contenido que cae dentro del rango
+          ([documentación][docs-sequence], [implementación][src-sequence-range],
+          [useCurrentFrame][src-current-frame]).
+        </p>
+        <p>
+          `Series` no crea otro motor temporal. Aplana sus hijos, calcula recursivamente el inicio
+          de cada segmento y los expresa como `Sequence`; offsets positivos abren huecos y negativos
+          crean solapamientos ([Series código][src-series], [Series docs][docs-series]).
+        </p>
+        <p>
+          Éste es un patrón muy fuerte para Resona: ofrecer azúcar musical distinta —arreglo,
+          patrón, clip, región, repetición— que se normalice a un único IR temporal. La API pública
+          puede hablar de barras, beats y ticks, mientras el plan ejecutable usa posiciones de
+          muestra enteras.
+        </p>
+        <p>
+          No hay que copiar la regla “fuera de rango = desmontar”. Un note release, una reverb o un
+          delay siguen produciendo señal después de que termina el evento que los inició. En Resona,
+          una región debe separar duración nominal, preroll, estado y cola audible.
+        </p>
+        <h3 id="1-3-el-runtime-se-auto-describe-para-alimentar-herramientas">
+          1.3 El runtime se auto-describe para alimentar herramientas
+        </h3>
+        <p>
+          En Studio, `Sequence` registra tracks de audio, video, imagen o secuencia con tiempo,
+          source, efectos y referencias al origen. Esa instrumentación sólo se activa en el entorno
+          relevante y alimenta la timeline sin convertirla en otra fuente de verdad ([registro de
+          tracks][src-sequence-tracks]).
+        </p>
+        <p>
+          El bundler inyecta wrappers sobre `createElement` y los runtimes JSX para asociar
+          componentes editables con archivo, línea y columna; el core mantiene ese stack para que
+          Studio pueda vincular un nodo vivo con su definición ([inyección de source
+          locations][src-source-traces], [registro de stacks][src-stack-registry]).
+        </p>
+        <p>
+          **Decisión para Resona:** copiar la auto-descripción del runtime y los IDs estables. La
+          timeline, el mixer y el inspector deberían observar el modelo que produjo el programa, no
+          inferirlo de audio ya renderizado.
+        </p>
+        <h2 id="2-inputs-schemas-y-resolucion-previa">2. Inputs, schemas y resolución previa</h2>
+        <p>
+          El mecanismo separado con el que Remotion enseña estos workflows a Codex, Claude Code y
+          otros agentes está detallado en el estudio enfocado [Remotion Agent
+          Skills](remotion-agent-skills.md).
+        </p>
+        <h3 id="2-1-un-pipeline-de-variantes-explicito">2.1 Un pipeline de variantes explícito</h3>
+        <p>
+          Remotion resuelve una variante en etapas: defaults, `inputProps` aportados al invocar,
+          `calculateMetadata` y configuración final. `calculateMetadata` puede ser síncrona o
+          asíncrona, recibe un `AbortSignal`, conoce el ID y el modo de render, y puede devolver
+          tanto props finales como metadata final ([flujo documentado][docs-props-flow],
+          [invocación][src-resolve-config-calculate]).
+        </p>
+        <p>
+          La implementación conserva además la procedencia de metadata y aplica una precedencia
+          explícita antes de validar la configuración final ([resolución y
+          precedencia][src-resolve-config-precedence]).
+        </p>
+        <p>
+          Los props que cruzan la frontera se serializan con reglas explícitas. Remotion soporta
+          JSON y marca casos especiales como `Date` y archivos estáticos; en Studio hace un
+          round-trip temprano para detectar antes del render valores que no podrían viajar
+          ([serialización][src-input-serialization]).
+        </p>
+        <p>
+          **Decisión para Resona:** copiar el pipeline, pero devolver un único
+          `ResolvedComposition`/`RenderJob` inmutable. Así Studio, Player y renderer reciben
+          exactamente la misma variante resuelta y no repiten inputs al seleccionar y renderizar. La
+          propia API de Remotion exige pasar los mismos `inputProps` a selección y `renderMedia()`,
+          una fricción que conviene evitar ([renderMedia inputs][docs-render-media-inputs]).
+        </p>
+        <p>La fase previa de Resona debería resolver fuera del callback de audio:</p>
+        <p>
+          - inputs y seed; - tempo map y duración; - assets y sus metadatos; - grafo, canales y
+          buses; - instrumentos y plugins disponibles; - sample rate, formato, stems y política de
+          tails.
+        </p>
+        <h3 id="2-2-un-schema-que-sirve-al-programa-y-a-la-ui">
+          2.2 Un schema que sirve al programa y a la UI
+        </h3>
+        <p>
+          Remotion usa Zod para validar props, inferir tipos y generar controles en Studio
+          ([schemas][docs-schemas]). La edición más nueva de elementos de timeline tiene además un
+          `InteractivitySchema` específico, separado del schema general de props
+          ([InteractivitySchema][docs-interactivity-schema]).
+        </p>
+        <p>
+          El código revela un costo que la documentación pública no hace tan visible. El core une
+          tipos estructurales de Zod 3 y 4 e infiere props desde campos internos, aunque evita una
+          dependencia runtime mediante imports de tipos ([AnyZodObject][src-any-zod-object],
+          [inferencia][src-infer-zod-props]). Studio mantiene después un adaptador que interpreta
+          `_def` y `_zod.def` para normalizar ambas versiones y elegir editores ([adaptador de
+          Studio][src-studio-zod-adapter]). El seam está localizado, pero la interfaz pública
+          continúa siendo específica de Zod.
+        </p>
+        <p>
+          **Decisión para Resona:** adaptar este patrón y definir conscientemente tres conceptos,
+          aun si inicialmente comparten implementación:
+        </p>
+        <p>
+          1. validación del dominio; 2. metadata para construir controles; 3. capacidad de
+          automatización, modulación o keyframes.
+        </p>
+        <p>
+          Un parámetro puede ser válido pero no editable visualmente, o editable pero no
+          automatizable. Separar esas capacidades evita que el primer schema se convierta
+          accidentalmente en tres APIs incompatibles.
+        </p>
+        <p>
+          Resona conservará esta ventaja mediante un `InputSchema&lt;T&gt;` propio y una
+          `InputSchemaIR` serializable. Zod 4 será el primer adaptador oficial, no una dependencia
+          conceptual del core ni algo que Studio deba inspeccionar directamente.
+        </p>
+        <h3 id="2-3-determinismo-y-asincronia-son-parte-del-contrato">
+          2.3 Determinismo y asincronía son parte del contrato
+        </h3>
+        <p>
+          Remotion provee un PRNG determinista por seed y un rule de ESLint que denuncia
+          `Math.random()`. También dispone de `delayRender()`/`continueRender()` con timeout, retry
+          y estado explícito para bloquear el render hasta que un recurso esté listo
+          ([random][src-random], [regla de lint][src-random-lint], [delayRender][src-delay-render]).
+        </p>
+        <p>
+          **Decisión para Resona:** copiar seeds explícitas y reglas estáticas; adaptar las barreras
+          asíncronas a una fase `prepare()`. Ninguna red, I/O, promesa o evaluación de componentes
+          debe ocurrir dentro del callback de audio en tiempo real.
+        </p>
+        <h2 id="3-un-contrato-semantico-varias-implementaciones">
+          3. Un contrato semántico, varias implementaciones
+        </h2>
+        <h3 id="3-1-preview-y-render-no-son-la-misma-mecanica">
+          3.1 Preview y render no son la misma mecánica
+        </h3>
+        <p>
+          Remotion mantiene una API de audio común, pero elige implementaciones distintas según esté
+          previsualizando o renderizando. En preview coordina elementos de media, AudioContext,
+          buffering, trims, loop y el estado del Player; en render registra un asset determinista
+          con source, frame, volumen, playback rate y posición de media ([audio
+          común][src-modern-audio], [preview][src-modern-audio-preview],
+          [render][src-audio-rendering]).
+        </p>
+        <p>
+          El renderer recoge esos assets cuadro por cuadro, agrupa intervalos según presencia e ID,
+          construye curvas de volumen, prepara pistas y las mezcla/comprime después
+          ([reconstrucción][src-asset-positions], [mezcla][src-create-audio]).
+        </p>
+        <p>Esto enseña dos cosas distintas:</p>
+        <p>
+          - **copiar:** un componente semántico puede tener adapters de preview y render; - **no
+          copiar:** la mecánica de assets por frame no sirve como motor musical.
+        </p>
+        <p>
+          Resona necesita que ambos adapters ejecuten el mismo plan musical y el mismo contrato DSP.
+          El backend de tiempo real puede usar AudioWorklet, WASM o un proceso nativo, y el offline
+          puede avanzar más rápido que el reloj; la equivalencia auditiva y numérica debe definirse
+          y probarse.
+        </p>
+        <h3 id="3-2-react-debe-quedar-fuera-del-nucleo-puro">
+          3.2 React debe quedar fuera del núcleo puro
+        </h3>
+        <p>
+          El paquete `remotion` publica una entrada `remotion/no-react`, y renderer, bundler y CLI
+          la usan para tipos, validaciones y utilidades sin cargar la superficie React ([export
+          `no-react`][pkg-core-no-react], [uso en renderer][src-asset-positions]).
+        </p>
+        <p>
+          **Decisión para Resona:** copiar y profundizar ese límite. Timing, IR, validación,
+          scheduler y DSP no deben depender de React. React puede ser una frontend declarativa que
+          produce el IR; el engine debe poder ejecutarlo desde Node, tests, Studio u otro lenguaje
+          anfitrión.
+        </p>
+        <h2 id="4-bundling-y-evaluacion">4. Bundling y evaluación</h2>
+        <h3 id="4-1-el-bundle-es-un-artefacto-reutilizable">
+          4.1 El bundle es un artefacto reutilizable
+        </h3>
+        <p>
+          `bundle()` resuelve el entry point, exige que registre un root, compila la entrada del
+          usuario junto con entradas generadas para Studio, maneja assets públicos y produce una
+          carpeta o URL servida. La documentación recomienda compilar una vez y reutilizar el
+          resultado para varios renders, en vez de bundlear cada variante ([bundle
+          docs][docs-bundle], [bundle pipeline][src-bundle-pipeline], [validación y
+          retry][src-bundle-validation]).
+        </p>
+        <p>
+          La configuración común fija aliases para evitar múltiples React/Remotion, loaders de
+          assets y CSS, source maps, cache persistente y un hash de configuración. Rspack y webpack
+          quedan detrás de una seam común con overrides ([config compartida][src-bundler-shared],
+          [Rspack][src-rspack]).
+        </p>
+        <p>
+          Studio agrega entradas generadas en orden —refresh, entorno, source traces, código del
+          usuario, shim y UI— y el HTML resultante incluye versión tanto de Remotion como del
+          contrato del sitio ([entry points][src-studio-entry-points], [HTML y
+          versión][src-studio-html]).
+        </p>
+        <p>**Decisión para Resona:** adaptar el pipeline a:</p>
+        <pre><code class="language-text">
+entry TS/TSX + assets
+        ↓
+bundle evaluable
+        ↓
+registro + resolución de variante
+        ↓
+ProjectIR normalizado y versionado
+        </code></pre>
+        <p>
+          El bundle es el artefacto de código; el IR es el contrato musical; el plan DSP es el
+          artefacto ejecutable. No conviene confundirlos ni soportar dos bundlers en el MVP.
+        </p>
+        <h2 id="5-renderer-y-la-divergencia-esencial-del-audio">
+          5. Renderer y la divergencia esencial del audio
+        </h2>
+        <h3 id="5-1-lo-que-si-hay-que-copiar-del-orquestador">
+          5.1 Lo que sí hay que copiar del orquestador
+        </h3>
+        <p>
+          La API de alto nivel separa `selectComposition()` de `renderMedia()`. El selector carga el
+          bundle, espera que esté listo, ejecuta la resolución de metadata una vez y devuelve una
+          configuración serializada. `renderMedia()` valida temprano, calcula concurrencia y
+          memoria, reporta progreso por fases, admite cancelación y hace cleanup explícito
+          ([selectComposition][src-select-composition], [renderMedia setup][src-render-media-setup],
+          [renderMedia cleanup][src-render-media-cleanup]).
+        </p>
+        <p>**Decisión para Resona:** copiar la orquestación y sus responsabilidades:</p>
+        <pre><code class="language-text">
+compile/evaluate
+    → resolve composition
+    → validate plan
+    → create clean engine
+    → process offline blocks
+    → encode mix/stems
+    → cleanup
+        </code></pre>
+        <p>
+          Progreso, cancelación, ownership de recursos y cleanup no deberían agregarse después; son
+          parte del contrato inicial del renderer.
+        </p>
+        <h3 id="5-2-lo-que-no-hay-que-copiar">5.2 Lo que no hay que copiar</h3>
+        <p>
+          Remotion distribuye cuadros entre una pool concurrente, reintenta cuadros por página y
+          luego entrega el resultado en orden al encoder. Esa estrategia es correcta cuando cada
+          frame visual puede evaluarse por su posición ([pool de frames][src-render-frames], [pipe
+          ordenado][src-render-media-pipe]).
+        </p>
+        <p>
+          Un sintetizador, delay, reverb, compresor o automatización depende de lo procesado antes.
+          Resona no debe paralelizar muestras o bloques temporales arbitrarios. Sólo podrá
+          paralelizar pistas o regiones cuando defina de forma comprobable estado inicial, warm-up,
+          latencia, interacción, tails y merge.
+        </p>
+        <p>
+          Tampoco debe usar Chromium para producir audio ni reconstruir la timeline mirando qué
+          assets aparecieron en cada frame. El modelo musical debe declarar de antemano eventos,
+          rutas, automatizaciones y procesadores; el motor debe avanzar ese plan de forma continua.
+        </p>
+        <h3 id="5-3-un-backend-nativo-es-una-seam-posible-no-una-decision-inicial">
+          5.3 Un backend nativo es una seam posible, no una decisión inicial
+        </h3>
+        <p>
+          Remotion distribuye compositor nativo por plataforma y lo opera como proceso persistente
+          con mensajes tipados, nonce y streaming ([resolución del binario][src-native-resolver],
+          [protocolo del proceso][src-compositor]).
+        </p>
+        <p>
+          Esto es una referencia útil si Resona termina aislando un engine Rust/C++/WASM detrás de
+          Node, pero decidirlo antes de probar el scheduler, el grafo y la paridad preview/offline
+          sería prematuro.
+        </p>
+        <h2 id="6-player-una-superficie-embebible-no-una-miniatura-de-studio">
+          6. Player: una superficie embebible, no una miniatura de Studio
+        </h2>
+        <p>
+          El Player acepta directamente componente, duración, FPS, dimensiones e input props; no
+          exige que el consumidor monte una `Composition`. Internamente crea el contexto necesario
+          para reutilizar el core ([API del Player][docs-player-api], [contexto
+          sintético][src-player-context]).
+        </p>
+        <p>
+          Su ref expone play, pause, seek, volumen, fullscreen y eventos. El playback coordina gesto
+          de usuario, AudioContext, elementos precalentados, buffering, loop y un reloj basado en
+          `requestAnimationFrame`/timeouts apropiado para el timeline visual
+          ([métodos][src-player-methods], [play/pause][src-player-use-methods],
+          [reloj][src-player-playback]).
+        </p>
+        <p>
+          **Decisión para Resona:** copiar un `@resona/player` pequeño, embebible, controlable por
+          ref y eventos. Adaptar el transporte: el reloj autoritativo debe ser el engine de audio;
+          React, la playhead y las visualizaciones siguen ese reloj, nunca lo gobiernan.
+        </p>
+        <p>
+          Conviene modelar `buffering`, `preparing`, `playing`, `paused`, `seeking`, `ended` y
+          `error` como estados observables. Remotion ya separa buffering de play/pause y permite
+          preparar recursos antes de que entren en escena ([buffer state][docs-buffer-state],
+          [premount][docs-premount]).
+        </p>
+        <h2 id="7-cli-y-opciones-compartidas">7. CLI y opciones compartidas</h2>
+        <h3 id="7-1-la-cli-es-un-adapter-no-otro-engine">
+          7.1 La CLI es un adapter, no otro engine
+        </h3>
+        <p>
+          El entry de CLI enruta comandos, valida compatibilidad de versiones antes de ejecutar y
+          centraliza errores y cleanup. El comando `render` reúne argumentos y configuración pero
+          termina en el mismo flujo que usa bundler, selector y renderer programático
+          ([router][src-cli-index], [render adapter][src-cli-render], [flujo
+          compartido][src-cli-render-flow]).
+        </p>
+        <p>**Decisión para Resona:** comenzar con tres comandos:</p>
+        <pre><code class="language-text">
+resona studio &lt;entry&gt;
+resona compositions &lt;entry&gt;
+resona render &lt;entry&gt; &lt;composition-id&gt; &lt;output&gt;
+        </code></pre>
+        <p>
+          La API programática debe existir primero; la CLI sólo resuelve archivos/flags, muestra
+          progreso y traduce errores a exit codes.
+        </p>
+        <h3 id="7-2-una-opcion-se-define-una-sola-vez">7.2 Una opción se define una sola vez</h3>
+        <p>
+          Remotion modela cada opción con nombre, flag de CLI, nombre de API SSR, descripción, docs,
+          tipo, setter de config y una función que devuelve tanto valor como procedencia. Un mapa
+          central reutiliza esos descriptores para construir tipos y superficies; opciones como
+          concurrencia o codec codifican precedencia y validan conflictos ([descriptor][src-option],
+          [mapa][src-options-map], [concurrencia][src-concurrency-option], [codec y
+          precedencia][src-codec-option]).
+        </p>
+        <p>
+          **Decisión para Resona:** copiar este patrón desde el primer flag. Sample rate, formato,
+          bit depth, canales, stems, tail, normalización, seed y concurrencia deben tener una
+          definición canónica reutilizada por config, CLI, API y Studio, con `source` visible para
+          diagnóstico.
+        </p>
+        <h3 id="7-3-el-skew-de-versiones-se-trata-como-error-de-producto">
+          7.3 El skew de versiones se trata como error de producto
+        </h3>
+        <p>
+          La CLI explica paquetes desalineados y el core detecta múltiples versiones cargadas; una
+          prueba de monorepo exige que dependencias internas compartan versión ([doctor de
+          versiones][src-cli-versions], [warning runtime][src-multiple-versions],
+          [invariante][test-same-version]).
+        </p>
+        <p>
+          **Decisión para Resona:** si publicamos varios paquetes coordinados, validar versiones en
+          CLI y runtime desde el principio. El error debe señalar paquete encontrado, versión
+          esperada y acción correctiva.
+        </p>
+        <h2 id="8-studio-frontend-backend-y-protocolo-explicito">
+          8. Studio: frontend, backend y protocolo explícito
+        </h2>
+        <h3 id="8-1-el-servidor-de-desarrollo-es-una-pieza-propia">
+          8.1 El servidor de desarrollo es una pieza propia
+        </h3>
+        <p>
+          El preview server combina bundling, file watching, HMR/SSE, rutas de API y lifecycle del
+          puerto. Un mapa exhaustivo asocia cada path con tipos request/response y el backend debe
+          implementar un handler por ruta ([preview server][src-preview-server],
+          [contratos][src-api-contracts], [dispatch][src-api-routes]).
+        </p>
+        <p>
+          Los eventos server-to-client son una tagged union; el servidor mantiene clientes SSE y
+          puede hacer broadcast o unicast. Entre los eventos hay cambios de bundle, progreso,
+          errores, actualizaciones de timeline y operaciones de edición
+          ([eventos][src-live-event-types], [servidor SSE][src-live-events]).
+        </p>
+        <p>**Decisión para Resona:** copiar la separación:</p>
+        <pre><code class="language-text">
+@resona/studio          frontend
+@resona/studio-server   filesystem, build, engine y render jobs
+@resona/studio-shared   contratos de API y eventos
+        </code></pre>
+        <p>
+          SSE basta para HMR, progreso y eventos de baja frecuencia. Meters, waveform streaming o
+          datos de transporte de alta frecuencia pueden necesitar WebSocket, SharedArrayBuffer u
+          otro canal; no deberían inflar el protocolo de control.
+        </p>
+        <h3 id="8-2-seguridad-local-sigue-siendo-seguridad">
+          8.2 Seguridad local sigue siendo seguridad
+        </h3>
+        <p>
+          Las mutaciones del servidor validan same-origin, y el protocolo para integraciones
+          externas versiona capabilities, limita la vigencia de targets y pide confirmación antes de
+          instalar contenido ([same-origin][src-same-origin], [discovery][src-studio-discovery],
+          [instalación][src-install-in-studio]).
+        </p>
+        <p>
+          **Decisión para Resona:** copiar validación de origen, rutas con targets dentro del
+          proyecto, payloads acotados y confirmaciones explícitas. Un Studio local que puede
+          escribir código, descargar assets o cargar plugins tiene una superficie de seguridad real.
+        </p>
+        <h2 id="9-edicion-visual-que-persiste-al-codigo">
+          9. Edición visual que persiste al código
+        </h2>
+        <h3 id="9-1-remotion-no-pretende-editar-javascript-arbitrario">
+          9.1 Remotion no pretende editar JavaScript arbitrario
+        </h3>
+        <p>
+          Studio permite cambiar ciertos props, tener undo/redo y guardar al archivo fuente, pero
+          sólo reconoce formas estáticas. Expresiones complejas quedan read-only; las guías piden
+          valores inline, literales y patrones de interpolación reconocibles
+          ([interactividad][docs-interactivity],
+          [restricciones][docs-interactivity-best-practices]).
+        </p>
+        <p>El round-trip no es un `replace()` textual:</p>
+        <p>
+          - el bundler conecta nodos vivos con ubicaciones de código ([source
+          traces][src-source-traces]); - el servidor parsea y transforma AST, y rechaza una
+          `Composition` cuyo objeto no sea hardcoded ([codemod defaults][src-update-default-props]);
+          - una cola serializa escrituras y la ruta valida que el archivo esté dentro del proyecto,
+          aplica el cambio, formatea y coordina watchers/HMR ([write queue][src-write-queue],
+          [ruta][src-update-default-props-route]); - cambios multiarchivo se agrupan como
+          transacción y el undo guarda snapshots ([save sequences][src-save-sequences],
+          [undo][src-undo-stack]); - si el usuario modifica externamente un archivo implicado, el
+          historial relevante se invalida para no pisarlo ([cambios externos][src-undo-external]).
+        </p>
+        <h3 id="9-2-que-significa-esto-para-resona">9.2 Qué significa esto para Resona</h3>
+        <p>
+          La promesa “la UI edita el código” es valiosa y coherente con el ADR de fuente
+          versionable, pero es un editor estructural, no un formulario. Requiere un subconjunto de
+          autoría bien definido, identidad estable, parser, formatter, diffs, escritura atómica,
+          undo transaccional y resolución de cambios externos.
+        </p>
+        <p>**Decisión:** adaptar después del primer corte vertical. Dos caminos viables son:</p>
+        <p>
+          1. AST sobre un subconjunto TS/TSX deliberadamente editable, dejando el resto read-only;
+          2. un manifest declarativo serializable importado por código, más fácil de editar sin
+          crear una segunda fuente canónica.
+        </p>
+        <p>
+          No conviene ocultar estado musical en una base de datos de Studio ni prometer que
+          cualquier expresión TypeScript será editable. El primer Studio debería observar,
+          reproducir y depurar; el writeback llega cuando el IR y el lenguaje de autoría sean
+          estables.
+        </p>
+        <h2 id="10-tests-y-contratos-de-calidad">10. Tests y contratos de calidad</h2>
+        <p>
+          Remotion separa suites de unidad, render real, SSR/bundle, templates, browser Studio y
+          otros subsistemas. Turbo expresa dependencias de build y un gate agregado, mientras
+          `it-tests` divide render, SSR, bundle, WebCodecs y contratos del monorepo ([scripts
+          raíz][pkg-root-scripts], [Turbo][turbo-tasks], [it-tests][pkg-it-tests]).
+        </p>
+        <p>
+          Las pruebas no se quedan en snapshots de funciones. Hay integraciones que generan media
+          real y la inspeccionan con herramientas externas; por ejemplo, el test de sample rate
+          renderiza, ejecuta `ffprobe` y comprueba 44.1 kHz y el default de 48 kHz ([sample rate
+          real][test-sample-rate]). También hay pruebas de exactitud de cuadros con codecs
+          distintos, del protocolo HTTP de Studio, golden tests de codemods, export maps y
+          uniformidad de versiones ([frame accuracy][test-frame-accuracy],
+          [protocolo][test-studio-protocol], [codemod][test-update-default-props],
+          [exports][test-exports], [versiones][test-same-version]).
+        </p>
+        <p>**Decisión para Resona:** copiar la pirámide, cambiando sus oráculos por audio:</p>
+        <p>
+          - unit: conversión bar/beat/tick -&gt; sample, orden MIDI, curvas, validación de grafo; -
+          engine: voces, note-off, automatización, latencia, reset y tails; - renderer real:
+          WAV/FLAC válido, sample rate, canales, sample count y stems; - determinismo: PCM idéntico
+          bajo el backend acordado o tolerancia numérica explícita; - paridad: preview y offline
+          sobre el mismo fixture; - transporte: seek, loop, preroll y snapshots con un delay
+          stateful; - protocolo/writeback: payloads, seguridad, golden diffs, undo y cambios
+          externos; - paquete: exports, dependencias permitidas y versiones coordinadas.
+        </p>
+        <h2 id="11-monorepo-y-limites-de-paquetes">11. Monorepo y límites de paquetes</h2>
+        <p>
+          Los límites maduros de Remotion siguen runtimes y despliegues: core React/browser, Player
+          embebible, bundler Node, renderer Node/native, Studio frontend, Studio server y contratos
+          compartidos. Los manifests muestran dependencias dirigidas —por ejemplo Player depende del
+          core, CLI compone bundler/renderer/Studio y renderer distribuye binarios opcionales por
+          plataforma— ([core][pkg-core], [Player][pkg-player], [CLI][pkg-cli],
+          [renderer][pkg-renderer], [Studio shared][pkg-studio-shared]).
+        </p>
+        <p>
+          El monorepo raíz usa Bun workspaces y Turbo y ya tiene muchas suites y paquetes
+          especializados ([workspace][pkg-root-workspaces], [Turbo][turbo-tasks]). Esa escala es
+          evidencia del producto actual, no una plantilla para el día uno.
+        </p>
+        <p>**Decisión para Resona:** copiar seams, no cantidad. Una forma inicial razonable es:</p>
+        <pre><code class="language-text">
+resona                 DSL pública, tipos y registro
+@resona/engine         IR, scheduler, grafo y contrato DSP sin React
+@resona/renderer       ejecución offline y encoders
+@resona/player         transporte embebible
+@resona/studio         UI de desarrollo
+@resona/cli            adapter de comandos
+        </code></pre>
+        <p>
+          `studio-server` y `studio-shared` pueden empezar como límites internos y separarse cuando
+          exista consumo independiente. `bundler` tampoco necesita ser paquete público hasta tener
+          más de un consumidor estable.
+        </p>
+        <p>
+          No copiaría la exportación amplia de internals ni abriría muchas extensiones antes de
+          tener un vertical slice. La API pública debe ser pequeña y el IR puede versionarse sin
+          publicarlo como un conjunto de estructuras mutables.
+        </p>
+        <h2 id="12-patrones-de-producto-e-ingenieria-que-plausiblemente-explican-su-exito">
+          12. Patrones de producto e ingeniería que plausiblemente explican su éxito
+        </h2>
+        <p>
+          &gt; Esta sección es una inferencia razonada a partir del producto y del snapshot, no una
+          prueba &gt; causal. No usa métricas históricas, contributors ni popularidad del
+          repositorio.
+        </p>
+        <h3 id="12-1-una-frase-comprensible-y-una-demostracion-inmediata">
+          12.1 Una frase comprensible y una demostración inmediata
+        </h3>
+        <p>
+          El README expresa que React es la fuente de verdad y presenta programación, edición y
+          agents como workflows intercambiables sobre el mismo proyecto. El onboarding empieza con
+          un solo comando y enlaza templates ([mensaje][readme-source-of-truth],
+          [onboarding][readme-onboarding]).
+        </p>
+        <p>
+          **Inferencia:** “hacer videos programáticamente” es una categoría fácil de repetir, y el
+          primer resultado visible requiere poca ceremonia. Resona necesita una frase igual de clara
+          y un ejemplo audible en minutos: “componé, reproducí y renderizá música programable desde
+          la misma fuente”.
+        </p>
+        <h3 id="12-2-un-camino-continuo-desde-juguete-hasta-produccion">
+          12.2 Un camino continuo desde juguete hasta producción
+        </h3>
+        <p>
+          El mismo componente puede verse en Studio, embeberse con Player y renderizarse desde Node;
+          el bundle puede reutilizarse para múltiples variantes ([Player
+          integration][docs-player-integration], [SSR][docs-ssr], [bundle][docs-bundle]).
+        </p>
+        <p>
+          **Inferencia:** la continuidad reduce el salto entre experimento y producto. El
+          equivalente de Resona debe ser una composición que suena en Studio, se integra en una app
+          y se renderiza en batch sin ser reescrita.
+        </p>
+        <h3 id="12-3-documentacion-y-errores-son-parte-del-producto">
+          12.3 Documentación y errores son parte del producto
+        </h3>
+        <p>
+          El monorepo compila ejemplos con Twoslash, el CLI enlaza documentación en su ayuda y el
+          runtime incluye errores accionables y diagnóstico de versiones ([docs build][pkg-docs],
+          [ayuda CLI][src-cli-help], [version doctor][src-cli-versions]).
+        </p>
+        <p>
+          **Inferencia:** una API novedosa necesita feedback pedagógico. Resona debería documentar
+          cada primitiva con ejemplos ejecutables y hacer que errores de timing, assets, plugins o
+          grafo apunten a una solución concreta.
+        </p>
+        <h3 id="12-4-un-nucleo-pequeno-rodeado-por-superficies-especializadas">
+          12.4 Un núcleo pequeño rodeado por superficies especializadas
+        </h3>
+        <p>
+          El registro y la composición son conceptos relativamente pequeños; Player, renderer,
+          Studio, server y CLI viven en paquetes con responsabilidades distintas
+          ([registerRoot][src-register-root], [manifests][pkg-player]). El repositorio incluye
+          además un scaffolder y múltiples paquetes/templates especializados
+          ([create-video][pkg-create-video], [README ecosystem][readme-ecosystem]).
+        </p>
+        <p>
+          **Inferencia:** el núcleo fácil de aprender habilita un ecosistema sin obligar a todos a
+          cargar todas las superficies. Resona debe lograr primero un core musical pequeño y
+          extensible; la amplitud de instrumentos, efectos, cloud y templates puede crecer después.
+        </p>
+        <h3 id="12-5-restricciones-explicitas-en-vez-de-magia-fragil">
+          12.5 Restricciones explícitas en vez de magia frágil
+        </h3>
+        <p>
+          La edición visual documenta qué formas de código puede modificar y deja el resto
+          read-only; el renderer valida opciones antes de hacer trabajo costoso
+          ([restricciones][docs-interactivity-best-practices],
+          [validación][src-render-media-setup]).
+        </p>
+        <p>
+          **Inferencia:** límites honestos aumentan la confianza. Para Resona es mejor declarar qué
+          parte de una composición puede editar Studio y qué contrato de paridad ofrece el engine
+          que simular compatibilidad universal.
+        </p>
+        <h2 id="13-matriz-de-decisiones-para-resona">13. Matriz de decisiones para Resona</h2>
+        <p>“Copiar” siempre significa reimplementar el patrón con diseño y código propios.</p>
+        <p>
+          | Idea o técnica | Decisión | Aplicación en Resona | | --- | --- | --- | | Código/datos
+          versionables como única verdad | **Copiar** | Todas las superficies consumen la misma
+          composición. | | Root y registro con IDs estables | **Copiar** | Descubrimiento uniforme
+          desde Studio, CLI y API. | | `Composition` + defaults + schema + metadata | **Adaptar** |
+          Metadata musical, outputs y tails. | | `Folder` editorial | **Copiar** | Organización sin
+          cambiar semántica. | | `Still` | **No copiar** | No hay aún un equivalente musical útil. |
+          | Tiempo local y secuencias anidadas | **Adaptar** | Bars/beats/ticks normalizados a
+          samples. | | APIs cómodas compiladas a una primitiva | **Copiar** | Clips, patterns y
+          arrangements convergen en un IR. | | Desmontar contenido fuera del rango | **No copiar** |
+          Releases, estado y colas siguen reglas explícitas. | | Pipeline defaults/input/metadata |
+          **Copiar** | Un `ResolvedComposition` inmutable. | | Schemas que generan controles |
+          **Adaptar** | Separar validación, UI y automatización. | | Seed determinista + lint |
+          **Copiar** | Reproducibilidad por defecto. | | `delayRender()` dentro del árbol |
+          **Adaptar** | Fase previa `prepare()`, nunca callback realtime. | | Misma semántica en
+          preview/render | **Copiar** | Un plan y contrato DSP, adapters de ejecución. | | React
+          fuera del core puro | **Copiar** | IR, timing y engine independientes de UI. | | Bundle
+          reutilizable | **Adaptar** | Bundle de autor + IR versionado + plan ejecutable. | |
+          Chromium screenshots + FFmpeg | **No copiar** | Renderer musical por bloques y encoder de
+          audio. | | Paralelismo por frames | **No copiar** | Sólo paralelismo con estados/tails
+          demostrados. | | Player embebible e imperativo | **Copiar** | Transporte y eventos sobre
+          audio clock. | | Clock por `requestAnimationFrame` | **No copiar** | UI esclava del reloj
+          de audio. | | CLI fina sobre API | **Copiar** | `studio`, `compositions`, `render`. | |
+          Opciones canónicas con procedencia | **Copiar** | Misma definición en config, API, CLI y
+          Studio. | | Protocolo tipado frontend/backend | **Copiar** | Control y progreso; canal
+          aparte para alta frecuencia. | | Runtime nodes vinculados al source | **Adaptar** |
+          Inspección primero; edición segura después. | | AST writeback sobre cualquier código |
+          **No copiar** | Sólo subset explícito o manifest editable. | | Write queue, diff, undo y
+          conflictos | **Copiar** | Requisitos del writeback, no extras. | | Proceso nativo
+          multiplataforma | **Adaptar después** | Sólo si el prototipo demuestra su necesidad. | |
+          Pruebas de artefacto real | **Copiar** | Render WAV/FLAC y verificar propiedades/PCM. | |
+          Muchos paquetes e internals públicos | **No copiar** | Pocos límites profundos, extraer
+          por necesidad. | | Docs ejecutables, errores y templates | **Copiar** | Parte del producto
+          desde el primer ejemplo. |
+        </p>
+        <h2 id="14-arquitectura-objetivo-derivada">14. Arquitectura objetivo derivada</h2>
+        <p>La síntesis recomendada es:</p>
+        <pre><code class="language-text">
+┌──────────────────────────────────────────────────────────────┐
+│ Fuente del autor: TS/TSX + datos + assets                    │
+└──────────────────────────────┬───────────────────────────────┘
+                               ↓
+                    bundle y evaluación aislada
+                               ↓
+            defaults + inputs + calculateMetadata/prepare
+                               ↓
+┌──────────────────────────────────────────────────────────────┐
+│ ProjectIR versionado                                         │
+│ tempo · tracks · clips · MIDI · graph · FX · automation     │
+└──────────────────────────────┬───────────────────────────────┘
+                               ↓
+                    validación y compilación
+                               ↓
+┌──────────────────────────────────────────────────────────────┐
+│ ExecutionPlan inmutable                                      │
+│ eventos ordenados · samples · buffers · latencias · tails   │
+└──────────────────────┬───────────────────────┬───────────────┘
+                       ↓                       ↓
+              realtime engine          offline renderer
+                       ↓                       ↓
+                Studio / Player           mix / stems
+        </code></pre>
+        <p>Propiedades importantes de esta frontera:</p>
+        <p>
+          - La capa declarativa no procesa muestras. - El IR no depende de React ni de Studio. -
+          Toda posición musical se normaliza una vez a samples con una regla de redondeo explícita.
+          - El engine comienza cada ejecución desde estado limpio. - Seek y loop usan preroll o
+          snapshots definidos, no un salto de playhead cosmético. - Duración nominal y tail audible
+          son conceptos diferentes. - Preview y offline consumen el mismo `ExecutionPlan`; cualquier
+          diferencia de backend se declara y se prueba. - Studio observa el IR y el estado del
+          engine; no crea un modelo musical paralelo.
+        </p>
+        <h2 id="15-primer-corte-vertical-recomendado">15. Primer corte vertical recomendado</h2>
+        <p>
+          El primer hito debería probar una única historia end-to-end y evitar una DAW UI completa:
+        </p>
+        <p>
+          1. Registrar una composición con ID, defaults, schema, BPM, duración y sample rate. 2.
+          Declarar un `AudioClip`, un clip de eventos que alimente un instrumento simple y un delay.
+          3. Normalizar todo a un IR inspeccionable. 4. Reproducirlo en una página Studio con play,
+          pause, seek y loop. 5. Renderizar el mismo plan a WAV desde una API y una CLI fina. 6.
+          Cambiar un input y producir una variante sin duplicar la composición. 7. Repetir el render
+          desde estado limpio y verificar el contrato de determinismo.
+        </p>
+        <h3 id="gates-de-aceptacion">Gates de aceptación</h3>
+        <p>
+          - El WAV tiene sample rate, canales, duración y sample count esperados. - Eventos MIDI
+          simultáneos conservan un orden definido. - El delay prueba estado, reset, preroll de seek
+          y política de tail. - Preview y offline coinciden dentro de una tolerancia documentada. -
+          Dos renders con la misma seed cumplen el contrato de igualdad elegido. - Cancelar cierra
+          engine, archivos temporales y encoder. - Un error muestra composición, nodo/track y
+          ubicación de fuente cuando exista. - CLI y API resuelven las opciones con la misma
+          precedencia y reportan su procedencia.
+        </p>
+        <h3 id="deliberadamente-fuera-de-este-corte">Deliberadamente fuera de este corte</h3>
+        <p>
+          - edición de piano roll o timeline que escriba al código; - mixer completo, feedback,
+          sidechain y compensación general de latencia; - VST/AU y sandbox de plugins de terceros; -
+          colaboración, cloud rendering y marketplace; - engine nativo multiplataforma antes de
+          medir la implementación mínima; - muchos packages públicos y compatibilidad con varias
+          frontends de autoría.
+        </p>
+        <h2 id="16-decisiones-que-el-prototipo-debe-contestar">
+          16. Decisiones que el prototipo debe contestar
+        </h2>
+        <p>
+          1. ¿React/TSX resulta una capa de autoría natural para música o conviene una DSL de datos
+          con wrappers React opcionales? 2. ¿Cuál es la representación canónica de posiciones y qué
+          redondeo usa al pasar a samples? 3. ¿Qué igualdad se promete entre preview y offline:
+          perceptual, sample-exact por plataforma o bit-exact cross-platform? 4. ¿Cómo se representa
+          el estado serializable de un instrumento/efecto para seek, loop y render distribuido? 5.
+          ¿La cola se corta, se calcula, se declara o combina políticas? 6. ¿El primer engine vive
+          en AudioWorklet/WASM, en Node o detrás de un proceso nativo? 7. ¿Qué subset podrá editar
+          Studio sin romper abstracciones del autor? 8. ¿El manifest serializable es una ayuda de
+          round-trip o introduce una segunda verdad?
+        </p>
+        <p>
+          La secuencia prudente es responder primero tiempo, IR, engine y paridad; después diseñar
+          la edición visual. Ésas son las decisiones irreversibles. La timeline bonita es una
+          consumidora de esas respuestas, no su sustituto.
+        </p>
+        <h2 id="fuentes">Fuentes</h2>
+        <p>
+          [readme-source-of-truth]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/README.md#L15-L29
+          [readme-onboarding]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/README.md#L31-L43
+          [readme-ecosystem]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/README.md#L45-L83
+          [license-restriction]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/LICENSE.md#L25-L31
+          [docs-register-root]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/docs/docs/register-root.mdx#L8-L12
+          [docs-composition-folder]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/docs/docs/composition.mdx#L125-L145
+          [docs-sequence]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/docs/docs/sequence.mdx#L15-L47
+          [docs-series]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/docs/docs/series.mdx#L49-L76
+          [docs-props-flow]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/docs/docs/parameterized-rendering.mdx#L9-L55
+          [docs-render-media-inputs]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/docs/docs/renderer/render-media.mdx#L73-L83
+          [docs-schemas]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/docs/docs/schemas.mdx#L9-L26
+          [docs-interactivity-schema]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/docs/docs/interactivity-schema.mdx#L10-L15
+          [src-any-zod-object]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/core/src/any-zod-type.ts#L1-L15
+          [src-infer-zod-props]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/core/src/props-if-has-props.ts#L10-L48
+          [src-studio-zod-adapter]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/studio/src/components/RenderModal/SchemaEditor/zod-schema-type.ts#L41-L120
+          [docs-bundle]: https://www.remotion.dev/docs/bundle [docs-player-integration]:
+          https://www.remotion.dev/docs/player/integration [docs-player-api]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/docs/docs/player/api.mdx#L8-L37
+          [docs-buffer-state]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/docs/docs/player/buffer-state.mdx#L143-L175
+          [docs-premount]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/docs/docs/player/premounting.mdx#L13-L42
+          [docs-interactivity]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/docs/docs/studio/interactivity.mdx#L7-L34
+          [docs-interactivity-best-practices]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/docs/docs/studio/interactivity-best-practices.mdx#L19-L80
+          [docs-ssr]: https://www.remotion.dev/docs/ssr [src-register-root]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/core/src/register-root.ts#L3-L45
+          [src-composition-types]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/core/src/Composition.tsx#L34-L119
+          [src-composition-register]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/core/src/Composition.tsx#L130-L237
+          [src-still]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/core/src/Still.tsx#L7-L25
+          [src-sequence-range]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/core/src/Sequence.tsx#L206-L289
+          [src-current-frame]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/core/src/use-current-frame.ts#L7-L34
+          [src-series]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/core/src/series/index.tsx#L145-L235
+          [src-sequence-tracks]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/core/src/Sequence.tsx#L445-L566
+          [src-source-traces]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/bundler/src/setup-sequence-stack-traces.ts#L1-L91
+          [src-stack-registry]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/core/src/enable-sequence-stack-traces.ts#L4-L38
+          [src-resolve-config-calculate]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/core/src/resolve-video-config.ts#L168-L230
+          [src-resolve-config-precedence]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/core/src/resolve-video-config.ts#L15-L165
+          [src-input-serialization]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/core/src/input-props-serialization.ts#L16-L108
+          [src-random]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/core/src/random.ts#L1-L45
+          [src-random-lint]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/eslint-plugin/src/rules/deterministic-randomness.ts#L11-L55
+          [src-delay-render]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/core/src/delay-render.ts#L60-L188
+          [src-modern-audio]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/media/src/audio/audio.tsx#L164-L212
+          [src-modern-audio-preview]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/media/src/audio/audio-for-preview.tsx#L172-L220
+          [src-audio-rendering]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/core/src/audio/AudioForRendering.tsx#L54-L139
+          [src-asset-positions]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/renderer/src/assets/calculate-asset-positions.ts#L54-L130
+          [src-create-audio]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/renderer/src/create-audio.ts#L27-L202
+          [pkg-core-no-react]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/core/package.json#L52-L71
+          [src-bundle-pipeline]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/bundler/src/bundle.ts#L121-L161
+          [src-bundle-validation]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/bundler/src/bundle.ts#L251-L367
+          [src-bundler-shared]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/bundler/src/shared-bundler-config.ts#L24-L179
+          [src-rspack]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/bundler/src/rspack-config.ts#L19-L155
+          [src-studio-entry-points]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/studio-shared/src/studio-entry-points.ts#L1-L27
+          [src-studio-html]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/studio-shared/src/studio-html.ts#L67-L189
+          [src-select-composition]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/renderer/src/select-composition.ts#L100-L195
+          [src-render-media-setup]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/renderer/src/render-media.ts#L294-L403
+          [src-render-media-cleanup]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/renderer/src/render-media.ts#L834-L952
+          [src-render-frames]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/renderer/src/render-frames.ts#L213-L474
+          [src-render-media-pipe]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/renderer/src/render-media.ts#L623-L757
+          [src-native-resolver]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/renderer/src/compositor/get-executable-path.ts#L46-L134
+          [src-compositor]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/renderer/src/compositor/compositor.ts#L74-L157
+          [src-player-context]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/player/src/SharedPlayerContext.tsx#L20-L104
+          [src-player-methods]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/player/src/player-methods.ts#L9-L28
+          [src-player-use-methods]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/player/src/use-player-methods.ts#L114-L167
+          [src-player-playback]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/player/src/use-playback.ts#L154-L341
+          [src-cli-index]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/cli/src/index.ts#L55-L180
+          [src-cli-render]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/cli/src/render.tsx#L67-L140
+          [src-cli-render-flow]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/cli/src/render-flows/render.ts#L287-L431
+          [src-option]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/renderer/src/options/option.ts#L3-L29
+          [src-options-map]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/renderer/src/options/options-map.ts#L37-L117
+          [src-concurrency-option]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/renderer/src/options/concurrency.tsx#L33-L75
+          [src-codec-option]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/renderer/src/options/video-codec.tsx#L50-L184
+          [src-cli-versions]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/cli/src/versions.ts#L102-L195
+          [src-multiple-versions]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/core/src/multiple-versions-warning.ts#L4-L52
+          [src-preview-server]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/studio-server/src/preview-server/start-server.ts#L48-L296
+          [src-api-contracts]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/studio-shared/src/api-requests.ts#L1068-L1240
+          [src-api-routes]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/studio-server/src/preview-server/api-routes.ts#L66-L131
+          [src-live-event-types]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/studio-shared/src/event-source-event.ts#L16-L116
+          [src-live-events]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/studio-server/src/preview-server/live-events.ts#L13-L140
+          [src-same-origin]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/studio-server/src/preview-server/validate-same-origin.ts#L3-L27
+          [src-studio-discovery]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/studio-protocol/src/studio-discovery.ts#L122-L229
+          [src-install-in-studio]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/studio-protocol/src/install-in-studio.ts#L63-L235
+          [src-update-default-props]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/studio-server/src/codemods/update-default-props.ts#L35-L192
+          [src-write-queue]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/studio-server/src/preview-server/routes/source-file-write-queue.ts#L1-L13
+          [src-update-default-props-route]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/studio-server/src/preview-server/routes/update-default-props.ts#L25-L102
+          [src-save-sequences]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/studio-server/src/preview-server/routes/save-sequence-props.ts#L545-L576
+          [src-undo-stack]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/studio-server/src/preview-server/undo-stack.ts#L124-L235
+          [src-undo-external]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/studio-server/src/preview-server/undo-stack.ts#L297-L375
+          [pkg-root-scripts]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/package.json#L6-L55
+          [pkg-root-workspaces]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/package.json#L77-L118
+          [turbo-tasks]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/turbo.json#L15-L68
+          [pkg-it-tests]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/it-tests/package.json#L5-L16
+          [test-sample-rate]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/it-tests/src/ssr/render-media-sample-rate.test.ts#L42-L102
+          [test-frame-accuracy]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/it-tests/src/rendering/frame-accuracy.test.ts#L7-L49
+          [test-studio-protocol]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/studio-server/src/test/studio-protocol-routes.test.ts#L105-L320
+          [test-update-default-props]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/studio-server/src/test/update-default-props.test.ts#L10-L62
+          [test-exports]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/it-tests/src/monorepo/exports-field.test.ts#L5-L30
+          [test-same-version]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/it-tests/src/monorepo/all-same-version.test.ts#L5-L59
+          [pkg-core]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/core/package.json#L5-L27
+          [pkg-player]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/player/package.json#L5-L54
+          [pkg-cli]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/cli/package.json#L5-L51
+          [pkg-renderer]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/renderer/package.json#L5-L55
+          [pkg-studio-shared]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/studio-shared/package.json#L5-L73
+          [pkg-docs]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/docs/package.json#L8-L23
+          [src-cli-help]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/cli/src/print-help.ts#L17-L177
+          [pkg-create-video]:
+          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/create-video/package.json#L5-L17
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>When to Mock · Resona</title>
+    <link rel="stylesheet" href="../../../.resona-docs/styles.css" />
+  </head>
+  <body>
+    <main>
+      <p class="source-path">.agents/skills/tdd/mocking.md</p>
+      <article>
+        <h1 id="when-to-mock">When to Mock</h1>
+        <p>Mock at **system boundaries** only:</p>
+        <p>
+          - External APIs (payment, email, etc.) - Databases (sometimes - prefer test DB) -
+          Time/randomness - File system (sometimes)
+        </p>
+        <p>Don't mock:</p>
+        <p>- Your own classes/modules - Internal collaborators - Anything you control</p>
+        <h2 id="designing-for-mockability">Designing for Mockability</h2>
+        <p>At system boundaries, design interfaces that are easy to mock:</p>
+        <p>**1. Use dependency injection**</p>
+        <p>Pass external dependencies in rather than creating them internally:</p>
+        <pre><code class="language-typescript">
+// Easy to mock
+function processPayment(order, paymentClient) {
+  return paymentClient.charge(order.total);
+}
+
+// Hard to mock
+function processPayment(order) {
+  const client = new StripeClient(process.env.STRIPE_KEY);
+  return client.charge(order.total);
+}
+        </code></pre>
+        <p>**2. Prefer SDK-style interfaces over generic fetchers**</p>
+        <p>
+          Create specific functions for each external operation instead of one generic function with
+          conditional logic:
+        </p>
+        <pre><code class="language-typescript">
+// GOOD: Each function is independently mockable
+const api = {
+  getUser: (id) =&gt; fetch(`/users/${id}`),
+  getOrders: (userId) =&gt; fetch(`/users/${userId}/orders`),
+  createOrder: (data) =&gt; fetch('/orders', { method: 'POST', body: data }),
+};
+
+// BAD: Mocking requires conditional logic inside the mock
+const api = {
+  fetch: (endpoint, options) =&gt; fetch(endpoint, options),
+};
+        </code></pre>
+        <p>
+          The SDK approach means: - Each mock returns one specific shape - No conditional logic in
+          test setup - Easier to see which endpoints a test exercises - Type safety per endpoint
+        </p>
+      </article>
+    </main>
+  </body>
+</html>
