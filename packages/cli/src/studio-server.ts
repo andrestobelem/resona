@@ -1020,7 +1020,7 @@ const handle = async (
       }
       return;
     }
-    if (request.method !== "GET") {
+    if (request.method !== "GET" || variantMatch[2] === "render") {
       const failure = errorEnvelope(
         state,
         requestId,

@@ -481,6 +481,16 @@ describe("Studio local service", () => {
         variantId: variant.variantId,
         error: { code: "studio.invalid-request" },
       });
+
+      const wrongMethod = await fetch(`${server.url}/api/v1/variants/${variant.variantId}/render`, {
+        headers: apiHeaders(server),
+      });
+      expect(wrongMethod.status).toBe(404);
+      await expect(wrongMethod.json()).resolves.toMatchObject({
+        type: "error",
+        variantId: variant.variantId,
+        error: { code: "studio.route-not-found" },
+      });
     } finally {
       await rm(outputPath, { force: true });
     }
