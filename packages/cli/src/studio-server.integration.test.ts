@@ -113,6 +113,16 @@ describe("Studio local service", () => {
     expect(html).toContain("audioClosePromise");
     expect(html).toContain("schema.additionalProperties !== false");
     expect(html).toContain("JSON fallback with server-side validation.");
+    expect(html).toContain('id="studio-inspection"');
+    expect(html).toContain('id="studio-timeline"');
+    expect(html).toContain('id="studio-timeline-tracks"');
+    expect(html).toContain('id="studio-chain"');
+    expect(html).toContain('id="meter-master"');
+    expect(html).toContain('id="studio-diagnostics"');
+    expect(html).toContain('id="composition-ir"');
+    expect(html).toContain('id="execution-plan"');
+    expect(html).toContain("renderInspection");
+    expect(html).toContain("message.type === 'meter'");
 
     const worklet = await fetch(`${server.url}/studio/audio-worklet.js`);
     expect(worklet.status).toBe(200);
@@ -250,6 +260,31 @@ describe("Studio local service", () => {
       { headers: apiHeaders(server) },
     );
     expect(unauthorizedResource.status).toBe(404);
+  }, 15_000);
+
+  it("exposes composition inspection data without project source code", async () => {
+    const server = await createServer();
+    const response = await fetch(`${server.url}/api/v1/variants`, {
+      method: "POST",
+      headers: apiHeaders(server, { "content-type": "application/json" }),
+      body: JSON.stringify({ compositionId: "InputFixture" }),
+    });
+    const document = (await response.json()) as {
+      payload: {
+        composition: { format: string; root: { type: string } };
+        plan: { format: string; processors: readonly unknown[] };
+        diagnostics: readonly unknown[];
+      };
+    };
+
+    expect(response.status).toBe(201);
+    expect(document.payload).toMatchObject({
+      composition: { format: "resona/composition-ir", root: { type: "sequence" } },
+      plan: { format: "resona/execution-plan", processors: expect.any(Array) },
+      diagnostics: expect.any(Array),
+    });
+    expect(JSON.stringify(document)).not.toContain("registerRoot");
+    expect(JSON.stringify(document)).not.toContain(exactProjectRoot);
   }, 15_000);
 
   it("creates distinct input variants with the same fingerprint as the Node render job", async () => {

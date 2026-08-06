@@ -85,6 +85,8 @@ describe("AudioEngine", () => {
     expect(first[2]).toBe(first[3]);
     expect(second[0]).toBeGreaterThan(0);
     expect(second[4]).toBe(0);
+    expect(engine.meters()[0]).toBeGreaterThan(0);
+    expect(engine.meters()[1]).toBeGreaterThan(0);
   });
 
   it("reconstructs state on seek and rejects non-finite transferred samples", () => {
