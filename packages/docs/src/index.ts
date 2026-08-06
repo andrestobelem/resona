@@ -543,7 +543,7 @@ const validateReferenceLabels = (source: string, relativePath: string): void => 
     const label = match[1];
     if (label !== undefined) definitions.add(normalizeReferenceLabel(label));
   }
-  const referenceSource = textSegments.join("\n");
+  const referenceSource = textSegments.join("\n").replace(/(^|\n)\[[ xX]\](?=\s)/gu, "$1");
   const referencePattern = /(?<!\\)(!?)\[([^\]]+)\]\[([^\]]*)\]/gu;
   for (const match of referenceSource.matchAll(referencePattern)) {
     const label = normalizeReferenceLabel(match[3] === "" ? (match[2] ?? "") : (match[3] ?? ""));
@@ -554,6 +554,7 @@ const validateReferenceLabels = (source: string, relativePath: string): void => 
   const shortcutPattern = /(?<![!\\[])\[([^\u005B\u005D\n]+)\](?![[(])/gu;
   for (const match of referenceSource.matchAll(shortcutPattern)) {
     const label = normalizeReferenceLabel(match[1] ?? "");
+    if (label === "") continue;
     if (!definitions.has(label)) {
       throw new Error(`Invalid reference label in ${relativePath}: ${label}`);
     }
