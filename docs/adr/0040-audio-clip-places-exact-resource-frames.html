@@ -10,37 +10,62 @@
     <main>
       <p class="source-path">docs/adr/0040-audio-clip-places-exact-resource-frames.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="audioclip-coloca-frames-exactos-de-un-recurso">
           AudioClip coloca frames exactos de un recurso
         </h1>
         <p>
-          `AudioClip` coloca un WAV mediante `from`, un `offset` absoluto con default cero y una
-          `duration` opcional. Cada frame del recurso corresponde a un frame del motor; el MVP no
-          remuestrea ni interpola audio.
+          <code>AudioClip</code> coloca un WAV mediante <code>from</code>, un
+          <code>offset</code> absoluto con default cero y una <code>duration</code> opcional. Cada
+          frame del recurso corresponde a un frame del motor; el MVP no remuestrea ni interpola
+          audio.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Ajustar automáticamente el recurso a la duración declarada. - Hacer loop implícito
-          cuando la ventana exceda el recurso. - Separar colocación, recorte y loop mediante reglas
-          explícitas.
-        </p>
+        <ul>
+          <li>Ajustar automáticamente el recurso a la duración declarada.</li>
+          <li>Hacer loop implícito cuando la ventana exceda el recurso.</li>
+          <li>Separar colocación, recorte y loop mediante reglas explícitas.</li>
+        </ul>
         <p>
           Se eligió la tercera opción para evitar que una duración cambie velocidad o repetición de
           manera implícita y para mantener una relación de frames verificable.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - Sin duración, el clip termina al acabarse el recurso desde su offset. - Una duración
-          menor recorta; una mayor produce silencio posterior y una advertencia. - `loop` exige una
-          duración positiva. - El loop repite desde `offset` hasta el final del WAV y no aplica
-          crossfade. - Un offset fuera del recurso o una región de loop vacía producen un error. -
-          Time-stretch, regiones de loop personalizadas, crossfade y resampling quedan fuera del
-          MVP. - La forma ejecutable de una colocación se fija en el [ADR
-          0071](0071-content-addressed-resources-and-audio-regions.md). - Estas invariantes se
-          validan antes de podar clips fuera de rango según el [ADR
-          0072](0072-validate-before-pruning-execution-plan.md).
-        </p>
+        <ul>
+          <li>Sin duración, el clip termina al acabarse el recurso desde su offset.</li>
+          <li>
+            Una duración menor recorta; una mayor produce silencio posterior y una advertencia.
+          </li>
+          <li><code>loop</code> exige una duración positiva.</li>
+          <li>
+            El loop repite desde <code>offset</code> hasta el final del WAV y no aplica crossfade.
+          </li>
+          <li>Un offset fuera del recurso o una región de loop vacía producen un error.</li>
+          <li>
+            Time-stretch, regiones de loop personalizadas, crossfade y resampling quedan fuera del
+            MVP.
+          </li>
+          <li>
+            La forma ejecutable de una colocación se fija en el
+            <a href="0071-content-addressed-resources-and-audio-regions.html">ADR 0071</a>.
+          </li>
+          <li>
+            Estas invariantes se validan antes de podar clips fuera de rango según el
+            <a href="0072-validate-before-pruning-execution-plan.html">ADR 0072</a>.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

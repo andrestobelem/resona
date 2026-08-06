@@ -10,43 +10,76 @@
     <main>
       <p class="source-path">docs/adr/0057-explicit-canonical-source-boundary.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="la-fuente-canonica-inicial-tiene-una-frontera-explicita">
           La fuente canónica inicial tiene una frontera explícita
         </h1>
         <p>
-          La fuente canónica inicial de Resona comprende módulos TypeScript/TSX, `resona.config.ts`,
-          archivos JSON importados explícitamente y validados mediante schema, y referencias
-          explícitas a recursos WAV del proyecto.
+          La fuente canónica inicial de Resona comprende módulos TypeScript/TSX,
+          <code>resona.config.ts</code>, archivos JSON importados explícitamente y validados
+          mediante schema, y referencias explícitas a recursos WAV del proyecto.
         </p>
         <p>
-          El bundle de autoría, `CompositionIR`, `ExecutionPlan`, `RenderSpec`, fingerprints,
-          cachés, previews y WAV renderizados son artefactos derivados. Sus formatos pueden estar
-          versionados, pero no constituyen una fuente editable ni una segunda verdad.
+          El bundle de autoría, <code>CompositionIR</code>, <code>ExecutionPlan</code>,
+          <code>RenderSpec</code>, fingerprints, cachés, previews y WAV renderizados son artefactos
+          derivados. Sus formatos pueden estar versionados, pero no constituyen una fuente editable
+          ni una segunda verdad.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Exigir que toda la composición esté escrita directamente en TSX. - Aceptar como fuente
-          cualquier archivo, consulta externa o sesión visual que el runtime pueda descubrir. -
-          Definir un conjunto inicial pequeño de fuentes explícitas y regenerar todos los artefactos
-          de ejecución a partir de ellas.
-        </p>
+        <ul>
+          <li>Exigir que toda la composición esté escrita directamente en TSX.</li>
+          <li>
+            Aceptar como fuente cualquier archivo, consulta externa o sesión visual que el runtime
+            pueda descubrir.
+          </li>
+          <li>
+            Definir un conjunto inicial pequeño de fuentes explícitas y regenerar todos los
+            artefactos de ejecución a partir de ellas.
+          </li>
+        </ul>
         <p>
           Se eligió la tercera opción porque permite separar datos de código sin introducir estado
           oculto, mantiene revisables las dependencias de una composición y da a personas y agentes
           una frontera inequívoca entre lo que se edita y lo que se regenera.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - Los datos JSON deben importarse explícitamente y atravesar un schema antes de contribuir
-          a `CompositionIR`. - Los WAV se referencian mediante valores etiquetados del proyecto y
-          sus bytes participan en la variante resuelta mediante un hash de contenido. - YAML, bases
-          de datos implícitas y formatos propietarios de sesión quedan fuera del alcance inicial. -
-          Serializar o versionar una IR, un plan o una spec sirve para compatibilidad e inspección;
-          no autoriza su edición como fuente. - Cachés, previews y renders pueden eliminarse y
-          reconstruirse sin perder la composición. - Studio, CLI, APIs y Agent Skills deben dirigir
-          toda modificación durable hacia la fuente canónica, nunca hacia artefactos derivados.
-        </p>
+        <ul>
+          <li>
+            Los datos JSON deben importarse explícitamente y atravesar un schema antes de contribuir
+            a <code>CompositionIR</code>.
+          </li>
+          <li>
+            Los WAV se referencian mediante valores etiquetados del proyecto y sus bytes participan
+            en la variante resuelta mediante un hash de contenido.
+          </li>
+          <li>
+            YAML, bases de datos implícitas y formatos propietarios de sesión quedan fuera del
+            alcance inicial.
+          </li>
+          <li>
+            Serializar o versionar una IR, un plan o una spec sirve para compatibilidad e
+            inspección; no autoriza su edición como fuente.
+          </li>
+          <li>
+            Cachés, previews y renders pueden eliminarse y reconstruirse sin perder la composición.
+          </li>
+          <li>
+            Studio, CLI, APIs y Agent Skills deben dirigir toda modificación durable hacia la fuente
+            canónica, nunca hacia artefactos derivados.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

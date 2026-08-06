@@ -10,33 +10,57 @@
     <main>
       <p class="source-path">docs/adr/0030-typed-twelve-tone-pitch.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="pitch-es-un-valor-tipado-de-doce-tonos">Pitch es un valor tipado de doce tonos</h1>
         <p>
           El MVP representa pitch mediante un valor discriminado cuya forma canónica es una cantidad
-          entera de semitonos respecto de `A4 = 440 Hz`. Usa afinación temperada de doce tonos.
+          entera de semitonos respecto de <code>A4 = 440 Hz</code>. Usa afinación temperada de doce
+          tonos.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Usar directamente números de nota MIDI. - Usar strings con nombres de notas como
-          representación interna. - Usar un valor propio de pitch y adaptar nombres científicos y
-          MIDI en el borde. - Diseñar desde el inicio un sistema general de afinaciones y
-          microtonalidad.
-        </p>
+        <ul>
+          <li>Usar directamente números de nota MIDI.</li>
+          <li>Usar strings con nombres de notas como representación interna.</li>
+          <li>Usar un valor propio de pitch y adaptar nombres científicos y MIDI en el borde.</li>
+          <li>Diseñar desde el inicio un sistema general de afinaciones y microtonalidad.</li>
+        </ul>
         <p>
           Se eligió la tercera opción para no acoplar el dominio a MIDI ni al parsing de strings,
           sin incorporar todavía la complejidad de afinaciones arbitrarias.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - `pitch.note(&quot;C4&quot;)` y `pitch.midi(60)` producen el mismo `Pitch`. - La notación
-          textual usa el convenio científico en el borde. - El motor convierte semitonos a
-          frecuencia bajo `A4 = 440 Hz`. - La representación rechaza fracciones de semitono en el
-          MVP. - Frecuencias arbitrarias, detune y afinaciones microtonales quedan fuera de alcance.
-          - Incorporar otra afinación exigirá un contrato explícito y no reinterpretará valores
-          existentes silenciosamente. - La validación de la frecuencia ejecutable se fija en el [ADR
-          0074](0074-pitch-frequency-must-be-below-nyquist.md).
-        </p>
+        <ul>
+          <li>
+            <code>pitch.note(&quot;C4&quot;)</code> y <code>pitch.midi(60)</code> producen el mismo
+            <code>Pitch</code>.
+          </li>
+          <li>La notación textual usa el convenio científico en el borde.</li>
+          <li>El motor convierte semitonos a frecuencia bajo <code>A4 = 440 Hz</code>.</li>
+          <li>La representación rechaza fracciones de semitono en el MVP.</li>
+          <li>
+            Frecuencias arbitrarias, detune y afinaciones microtonales quedan fuera de alcance.
+          </li>
+          <li>
+            Incorporar otra afinación exigirá un contrato explícito y no reinterpretará valores
+            existentes silenciosamente.
+          </li>
+          <li>
+            La validación de la frecuencia ejecutable se fija en el
+            <a href="0074-pitch-frequency-must-be-below-nyquist.html">ADR 0074</a>.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

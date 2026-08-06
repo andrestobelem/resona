@@ -12,43 +12,48 @@
       <article>
         <h1 id="ui-prototype">UI Prototype</h1>
         <p>
-          Generate **several radically different UI variations** on a single route, switchable from
-          a floating bottom bar. The user flips between variants in the browser, picks one (or
-          steals bits from each), then throws the rest away.
+          Generate <strong>several radically different UI variations</strong> on a single route,
+          switchable from a floating bottom bar. The user flips between variants in the browser,
+          picks one (or steals bits from each), then throws the rest away.
         </p>
         <p>
           If the question is about logic/state rather than what something looks like — wrong branch.
-          Use [LOGIC.md](LOGIC.md).
+          Use <a href="LOGIC.html">LOGIC.md</a>.
         </p>
         <h2 id="when-this-is-the-right-shape">When this is the right shape</h2>
-        <p>
-          - &quot;What should this page look like?&quot; - &quot;I want to see a few options for
-          this dashboard before committing.&quot; - &quot;Try a different layout for the settings
-          screen.&quot; - Any time the user would otherwise spend a day picking between three vague
-          mockups in their head.
-        </p>
+        <ul>
+          <li>&quot;What should this page look like?&quot;</li>
+          <li>&quot;I want to see a few options for this dashboard before committing.&quot;</li>
+          <li>&quot;Try a different layout for the settings screen.&quot;</li>
+          <li>
+            Any time the user would otherwise spend a day picking between three vague mockups in
+            their head.
+          </li>
+        </ul>
         <h2 id="two-sub-shapes-strongly-prefer-sub-shape-a">
           Two sub-shapes — strongly prefer sub-shape A
         </h2>
         <p>
-          A UI prototype is much easier to judge when it's **butting up against the rest of the
-          app** — real header, real sidebar, real data, real density. A throwaway route on its own
-          is a vacuum: every variant looks fine in isolation. Default to sub-shape A whenever
-          there's a plausible existing page to host the variants. Only reach for sub-shape B if the
-          prototype genuinely has no nearby home.
+          A UI prototype is much easier to judge when it's
+          <strong>butting up against the rest of the app</strong> — real header, real sidebar, real
+          data, real density. A throwaway route on its own is a vacuum: every variant looks fine in
+          isolation. Default to sub-shape A whenever there's a plausible existing page to host the
+          variants. Only reach for sub-shape B if the prototype genuinely has no nearby home.
         </p>
         <h3 id="sub-shape-a-adjustment-to-an-existing-page-preferred">
           Sub-shape A — adjustment to an existing page (preferred)
         </h3>
         <p>
-          The route already exists. Variants are rendered **on the same route**, gated by a
-          `?variant=` URL search param. The existing data fetching, params, and auth all stay — only
-          the rendering swaps. This is the default; pick it unless there's a specific reason not to.
+          The route already exists. Variants are rendered <strong>on the same route</strong>, gated
+          by a <code>?variant=</code> URL search param. The existing data fetching, params, and auth
+          all stay — only the rendering swaps. This is the default; pick it unless there's a
+          specific reason not to.
         </p>
         <p>
-          If the prototype is for something that doesn't yet have a page but *would naturally live
-          inside one* (a new section of the dashboard, a new card on the settings screen, a new step
-          in an existing flow) — that's still sub-shape A. Mount the variants inside the host page.
+          If the prototype is for something that doesn't yet have a page but
+          <em>would naturally live inside one</em> (a new section of the dashboard, a new card on
+          the settings screen, a new step in an existing flow) — that's still sub-shape A. Mount the
+          variants inside the host page.
         </p>
         <h3 id="sub-shape-b-a-new-page-last-resort">Sub-shape B — a new page (last resort)</h3>
         <p>
@@ -57,9 +62,10 @@
           sensible.
         </p>
         <p>
-          Create a **throwaway route** following whatever routing convention the project already
-          uses — don't invent a new top-level structure. Name it so it's obviously a prototype (e.g.
-          include the word `prototype` in the path or filename). Same `?variant=` pattern.
+          Create a <strong>throwaway route</strong> following whatever routing convention the
+          project already uses — don't invent a new top-level structure. Name it so it's obviously a
+          prototype (e.g. include the word <code>prototype</code> in the path or filename). Same
+          <code>?variant=</code> pattern.
         </p>
         <p>
           Before committing to sub-shape B, sanity-check: is there really no existing page this
@@ -70,110 +76,147 @@
         <h2 id="process">Process</h2>
         <h3 id="1-state-the-question-and-pick-n">1. State the question and pick N</h3>
         <p>
-          Default to **3 variants**. More than 5 stops being radically different and starts being
-          noise — cap there.
+          Default to <strong>3 variants</strong>. More than 5 stops being radically different and
+          starts being noise — cap there.
         </p>
         <p>
           Write down the plan in one line, in the prototype's location or a top-of-file comment:
         </p>
-        <p>
-          &gt; &quot;Three variants of the settings page, switchable via `?variant=`, on the
-          existing `/settings` route.&quot;
-        </p>
+        <blockquote>
+          <p>
+            &quot;Three variants of the settings page, switchable via <code>?variant=</code>, on the
+            existing <code>/settings</code> route.&quot;
+          </p>
+        </blockquote>
         <p>This works whether the user is here to push back or not.</p>
         <h3 id="2-generate-radically-different-variants">
           2. Generate radically different variants
         </h3>
         <p>Draft each variant. Hold each one to:</p>
+        <ul>
+          <li>The page's purpose and the data it has access to.</li>
+          <li>
+            The project's component library / styling system (TailwindCSS, shadcn, MUI, plain CSS,
+            whatever).
+          </li>
+          <li>
+            A clear exported component name, e.g. <code>VariantA</code>, <code>VariantB</code>,
+            <code>VariantC</code>.
+          </li>
+        </ul>
         <p>
-          - The page's purpose and the data it has access to. - The project's component library /
-          styling system (TailwindCSS, shadcn, MUI, plain CSS, whatever). - A clear exported
-          component name, e.g. `VariantA`, `VariantB`, `VariantC`.
-        </p>
-        <p>
-          Variants must be **structurally different** — different layout, different information
-          hierarchy, different primary affordance, not just different colours. Three
+          Variants must be <strong>structurally different</strong> — different layout, different
+          information hierarchy, different primary affordance, not just different colours. Three
           slightly-tweaked card grids isn't a UI prototype, it's wallpaper. If two drafts come out
           too similar, redo one with explicit &quot;do not use a card grid&quot; guidance.
         </p>
         <h3 id="3-wire-them-together">3. Wire them together</h3>
         <p>Create a single switcher component on the route:</p>
-        <pre><code class="language-tsx">
-// pseudo-code — adapt to the project's framework
-const variant = searchParams.get('variant') ?? 'A';
-return (
+        <pre><code class="language-tsx"><span class="token comment">// pseudo-code — adapt to the project's framework</span>
+<span class="token keyword">const</span> variant = searchParams.get(<span class="token string">'variant'</span>) ?? <span class="token string">'A'</span>;
+<span class="token keyword">return</span> (
   &lt;&gt;
-    {variant === 'A' &amp;&amp; &lt;VariantA {...data} /&gt;}
-    {variant === 'B' &amp;&amp; &lt;VariantB {...data} /&gt;}
-    {variant === 'C' &amp;&amp; &lt;VariantC {...data} /&gt;}
-    &lt;PrototypeSwitcher variants={['A','B','C']} current={variant} /&gt;
+    {variant === <span class="token string">'A'</span> &amp;&amp; &lt;VariantA {...data} /&gt;}
+    {variant === <span class="token string">'B'</span> &amp;&amp; &lt;VariantB {...data} /&gt;}
+    {variant === <span class="token string">'C'</span> &amp;&amp; &lt;VariantC {...data} /&gt;}
+    &lt;PrototypeSwitcher variants={[<span class="token string">'A'</span>,<span class="token string">'B'</span>,<span class="token string">'C'</span>]} current={variant} /&gt;
   &lt;/&gt;
 );
-        </code></pre>
+</code></pre>
         <p>
           For sub-shape A (existing page): keep all the existing data fetching above the switcher;
           only the rendered subtree changes per variant.
         </p>
         <p>
-          For sub-shape B (new page): the throwaway route under `/prototype/&lt;name&gt;` mounts the
-          same switcher.
+          For sub-shape B (new page): the throwaway route under
+          <code>/prototype/&lt;name&gt;</code> mounts the same switcher.
         </p>
         <h3 id="4-build-the-floating-switcher">4. Build the floating switcher</h3>
         <p>A small fixed-position bar at the bottom-centre of the screen with three pieces:</p>
-        <p>
-          - **Left arrow** — cycles to the previous variant (wraps around). - **Variant label** —
-          shows the current variant key and, if the variant exports a name, that name too. e.g. `B —
-          Sidebar layout`. - **Right arrow** — cycles forward (wraps around).
-        </p>
+        <ul>
+          <li><strong>Left arrow</strong> — cycles to the previous variant (wraps around).</li>
+          <li>
+            <strong>Variant label</strong> — shows the current variant key and, if the variant
+            exports a name, that name too. e.g. <code>B — Sidebar layout</code>.
+          </li>
+          <li><strong>Right arrow</strong> — cycles forward (wraps around).</li>
+        </ul>
         <p>Behaviour:</p>
-        <p>
-          - Clicking an arrow updates the URL search param (use the framework's router —
-          `router.replace` on Next, `navigate` on React Router, etc) so the variant is shareable and
-          reload-stable. - Keyboard: `←` and `→` arrow keys also cycle. Don't intercept arrow keys
-          when an `&lt;input&gt;`, `&lt;textarea&gt;`, or `[contenteditable]` is focused. - Visually
-          distinct from the page (e.g. high-contrast pill, subtle shadow) so it's obviously not part
-          of the design being evaluated. - Hidden in production builds — gate on
-          `process.env.NODE_ENV !== 'production'` or an equivalent check, so a stray prototype merge
-          can't ship the bar to users.
-        </p>
+        <ul>
+          <li>
+            Clicking an arrow updates the URL search param (use the framework's router —
+            <code>router.replace</code> on Next, <code>navigate</code> on React Router, etc) so the
+            variant is shareable and reload-stable.
+          </li>
+          <li>
+            Keyboard: <code>←</code> and <code>→</code> arrow keys also cycle. Don't intercept arrow
+            keys when an <code>&lt;input&gt;</code>, <code>&lt;textarea&gt;</code>, or
+            <code>[contenteditable]</code> is focused.
+          </li>
+          <li>
+            Visually distinct from the page (e.g. high-contrast pill, subtle shadow) so it's
+            obviously not part of the design being evaluated.
+          </li>
+          <li>
+            Hidden in production builds — gate on
+            <code>process.env.NODE_ENV !== 'production'</code> or an equivalent check, so a stray
+            prototype merge can't ship the bar to users.
+          </li>
+        </ul>
         <p>
           Put the switcher in a single shared component so both sub-shapes can reuse it. Locate it
           wherever shared UI lives in the project.
         </p>
         <h3 id="5-hand-it-over">5. Hand it over</h3>
         <p>
-          Surface the URL (and the `?variant=` keys). The user will flip through whenever they get
-          to it. The interesting feedback is usually **&quot;I want the header from B with the
-          sidebar from C&quot;** — that's the actual design they want.
+          Surface the URL (and the <code>?variant=</code> keys). The user will flip through whenever
+          they get to it. The interesting feedback is usually
+          <strong>&quot;I want the header from B with the sidebar from C&quot;</strong> — that's the
+          actual design they want.
         </p>
         <h3 id="6-capture-the-answer-and-clean-up">6. Capture the answer and clean up</h3>
         <p>
           Once a variant has won, capture the answer — which variant and why — then capture the
-          prototype the way the [SKILL](SKILL.md) describes. Fold the winner into the real code and
-          move the rest onto the throwaway branch, not into main:
+          prototype the way the <a href="SKILL.html">SKILL</a> describes. Fold the winner into the
+          real code and move the rest onto the throwaway branch, not into main:
         </p>
-        <p>
-          - **Sub-shape A** — fold the winner into the existing page; drop the losing variants and
-          the switcher from main. - **Sub-shape B** — promote the winning variant to a real route;
-          drop the throwaway route and the switcher from main.
-        </p>
+        <ul>
+          <li>
+            <strong>Sub-shape A</strong> — fold the winner into the existing page; drop the losing
+            variants and the switcher from main.
+          </li>
+          <li>
+            <strong>Sub-shape B</strong> — promote the winning variant to a real route; drop the
+            throwaway route and the switcher from main.
+          </li>
+        </ul>
         <p>
           The full set of variants is the primary source, so it lands on the throwaway branch, not
           the bin — variant components and the switcher left in the main branch rot fast and confuse
           the next reader.
         </p>
         <h2 id="anti-patterns">Anti-patterns</h2>
-        <p>
-          - **Variants that differ only in colour or copy.** That's a tweak, not a prototype. Real
-          variants disagree about structure. - **Sharing too much code between variants.** A shared
-          `&lt;Header&gt;` is fine; a shared `&lt;Layout&gt;` defeats the point. Each variant should
-          be free to throw out the layout. - **Wiring variants to real mutations.** Read-only
-          prototypes are fine. If a variant needs to mutate, point it at a stub — the question is
-          &quot;what should this look like&quot;, not &quot;does the backend work&quot;. -
-          **Promoting the prototype directly to production.** The variant code was written under
-          prototype constraints (no tests, minimal error handling). Rewrite it properly when you
-          fold it in.
-        </p>
+        <ul>
+          <li>
+            <strong>Variants that differ only in colour or copy.</strong> That's a tweak, not a
+            prototype. Real variants disagree about structure.
+          </li>
+          <li>
+            <strong>Sharing too much code between variants.</strong> A shared
+            <code>&lt;Header&gt;</code> is fine; a shared <code>&lt;Layout&gt;</code> defeats the
+            point. Each variant should be free to throw out the layout.
+          </li>
+          <li>
+            <strong>Wiring variants to real mutations.</strong> Read-only prototypes are fine. If a
+            variant needs to mutate, point it at a stub — the question is &quot;what should this
+            look like&quot;, not &quot;does the backend work&quot;.
+          </li>
+          <li>
+            <strong>Promoting the prototype directly to production.</strong> The variant code was
+            written under prototype constraints (no tests, minimal error handling). Rewrite it
+            properly when you fold it in.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

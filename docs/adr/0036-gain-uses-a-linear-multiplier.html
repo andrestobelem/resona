@@ -10,33 +10,53 @@
     <main>
       <p class="source-path">docs/adr/0036-gain-uses-a-linear-multiplier.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="gain-usa-un-multiplicador-lineal">Gain usa un multiplicador lineal</h1>
         <p>
-          El parámetro semántico de `Gain` es un multiplicador lineal finito y no negativo cuya
-          conversión a `Float32` también debe ser finita. Su default es `1`; cero silencia y los
-          valores mayores que uno amplifican.
+          El parámetro semántico de <code>Gain</code> es un multiplicador lineal finito y no
+          negativo cuya conversión a <code>Float32</code> también debe ser finita. Su default es
+          <code>1</code>; cero silencia y los valores mayores que uno amplifican.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Usar dB como dominio canónico del procesador y la automatización. - Admitir valores
-          lineales y dB sin fijar dónde se interpola. - Normalizar toda entrada a un multiplicador
-          lineal antes de planificar.
-        </p>
+        <ul>
+          <li>Usar dB como dominio canónico del procesador y la automatización.</li>
+          <li>Admitir valores lineales y dB sin fijar dónde se interpola.</li>
+          <li>Normalizar toda entrada a un multiplicador lineal antes de planificar.</li>
+        </ul>
         <p>
           Se eligió la tercera opción para que el DSP y la interpolación tengan una única semántica,
           manteniendo dB como una comodidad explícita de autoría.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - `gain.db()` convierte a un multiplicador durante la planificación. - La automatización
-          interpola en el dominio lineal aun cuando use helpers de dB. - Valores negativos, no
-          finitos o cuya conversión a `Float32` no sea finita fallan la validación de IR. - `Gain`
-          multiplica cada canal de forma independiente con el mismo valor. - El procesador no aplica
-          clipping ni limiting. - Clipping, saturación y limiting requieren procesadores separados.
-          - La canonización del multiplicador y el redondeo de la salida se fijan en el [ADR
-          0078](0078-explicit-float32-audio-boundaries.md).
-        </p>
+        <ul>
+          <li><code>gain.db()</code> convierte a un multiplicador durante la planificación.</li>
+          <li>La automatización interpola en el dominio lineal aun cuando use helpers de dB.</li>
+          <li>
+            Valores negativos, no finitos o cuya conversión a <code>Float32</code> no sea finita
+            fallan la validación de IR.
+          </li>
+          <li>
+            <code>Gain</code> multiplica cada canal de forma independiente con el mismo valor.
+          </li>
+          <li>El procesador no aplica clipping ni limiting.</li>
+          <li>Clipping, saturación y limiting requieren procesadores separados.</li>
+          <li>
+            La canonización del multiplicador y el redondeo de la salida se fijan en el
+            <a href="0078-explicit-float32-audio-boundaries.html">ADR 0078</a>.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

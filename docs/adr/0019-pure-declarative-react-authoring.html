@@ -10,7 +10,19 @@
     <main>
       <p class="source-path">docs/adr/0019-pure-declarative-react-authoring.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="la-autoria-react-es-declarativa-y-pura">La autoría React es declarativa y pura</h1>
         <p>
           Una variante de Resona evalúa una vez un árbol finito de componentes funcionales. La
@@ -18,23 +30,28 @@
           provistos por Resona; no usa React como runtime con estado para producir audio.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Admitir cualquier semántica de una aplicación React, incluidos estado y efectos. -
-          Definir una DSL TSX propia que no evalúe componentes React. - Usar un subconjunto React
-          puro y trasladar I/O a la fase de preparación.
-        </p>
+        <ul>
+          <li>Admitir cualquier semántica de una aplicación React, incluidos estado y efectos.</li>
+          <li>Definir una DSL TSX propia que no evalúe componentes React.</li>
+          <li>Usar un subconjunto React puro y trasladar I/O a la fase de preparación.</li>
+        </ul>
         <p>
           Se eligió la tercera opción para conservar composición idiomática sin introducir renders
-          dependientes del scheduler, side effects o estado oculto en la `CompositionIR`.
+          dependientes del scheduler, side effects o estado oculto en la <code>CompositionIR</code>.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - Se admiten componentes funcionales, fragments, condiciones y listas finitas. - Los hooks
-          públicos son de solo lectura y exponen inputs o contexto musical de Resona. - `useState`,
-          `useEffect`, DOM, refs y componentes async no forman parte del contrato. - Preparación
-          concentra I/O y trabajo asíncrono antes de evaluar TSX. - Lint y diagnósticos de runtime
-          explican las construcciones no admitidas.
-        </p>
+        <ul>
+          <li>Se admiten componentes funcionales, fragments, condiciones y listas finitas.</li>
+          <li>
+            Los hooks públicos son de solo lectura y exponen inputs o contexto musical de Resona.
+          </li>
+          <li>
+            <code>useState</code>, <code>useEffect</code>, DOM, refs y componentes async no forman
+            parte del contrato.
+          </li>
+          <li>Preparación concentra I/O y trabajo asíncrono antes de evaluar TSX.</li>
+          <li>Lint y diagnósticos de runtime explican las construcciones no admitidas.</li>
+        </ul>
       </article>
     </main>
   </body>

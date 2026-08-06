@@ -10,52 +10,82 @@
     <main>
       <p class="source-path">docs/adr/0079-versioned-json-schema-input-description.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-05 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-05</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-05
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="inputschemair-envuelve-json-schema-de-forma-versionada">
           InputSchemaIR envuelve JSON Schema de forma versionada
         </h1>
         <p>
-          `InputSchema&lt;TInputs&gt;` separa dos capacidades: validar un valor sin devolver un
-          reemplazo y describir su estructura como datos. `InputSchemaIR` usa un envelope propio de
-          Resona con un documento JSON Schema Draft 2020-12:
+          <code>InputSchema&lt;TInputs&gt;</code> separa dos capacidades: validar un valor sin
+          devolver un reemplazo y describir su estructura como datos. <code>InputSchemaIR</code> usa
+          un envelope propio de Resona con un documento JSON Schema Draft 2020-12:
         </p>
-        <pre><code class="language-ts">
-type InputSchemaIR = Readonly&lt;{
-  format: &quot;resona/input-schema&quot;;
-  schemaVersion: 1;
+        <pre><code class="language-ts"><span class="token keyword">type</span> InputSchemaIR = Readonly&lt;{
+  format: <span class="token string">&quot;resona/input-schema&quot;</span>;
+  schemaVersion: <span class="token number">1</span>;
   jsonSchema: JsonObject;
 }&gt;;
-        </code></pre>
+</code></pre>
         <p>
           El documento describe estructura, constraints y metadata editorial, pero no reemplaza al
           validador ejecutable. Studio interpreta el subconjunto acordado y usa edición JSON para
-          las formas que no representa. Las extensiones `x-resona-ui` y `x-resona-resource` agregan
-          hints de controles y recursos sin crear otro vocabulario estructural.
+          las formas que no representa. Las extensiones <code>x-resona-ui</code> y
+          <code>x-resona-resource</code> agregan hints de controles y recursos sin crear otro
+          vocabulario estructural.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Definir una unión discriminada propia para cada forma editable. - Transportar
-          directamente una instancia o representación interna de Zod. - Envolver JSON Schema con una
-          versión y extensiones propias de Resona.
-        </p>
+        <ul>
+          <li>Definir una unión discriminada propia para cada forma editable.</li>
+          <li>Transportar directamente una instancia o representación interna de Zod.</li>
+          <li>Envolver JSON Schema con una versión y extensiones propias de Resona.</li>
+        </ul>
         <p>
           Se eligió la tercera opción porque reutiliza un formato estándar, conserva un protocolo
           explícito de Resona y evita que Studio o el core dependan de internals de Zod.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - `InputSchema.validate()` solo acepta o rechaza; nunca devuelve un valor parseado. -
-          Resona clona defaults y overrides JSON, hace merge superficial, valida el objeto completo
-          y congela profundamente exactamente ese candidato. - Transformaciones, coerción, stripping
-          y defaults de un adaptador nunca se convierten en inputs canónicos. - JSON Schema sirve
-          para inspección y controles; la validación autoritativa sigue ocurriendo mediante el
-          `InputSchema` original dentro de Node. - El adaptador oficial vive aislado en
-          `@resona/zod`, con Zod 4 como peer dependency. El runtime de `@resona/engine` no depende
-          de Zod. - `fromZod()` usa la conversión oficial a JSON Schema y encapsula la detección de
-          features incompatibles y el mapeo de errores. - El envelope versiona las convenciones y
-          extensiones de Resona independientemente del dialecto estándar. - Referencias remotas y
-          dialectos alternativos quedan fuera del primer alcance.
-        </p>
+        <ul>
+          <li>
+            <code>InputSchema.validate()</code> solo acepta o rechaza; nunca devuelve un valor
+            parseado.
+          </li>
+          <li>
+            Resona clona defaults y overrides JSON, hace merge superficial, valida el objeto
+            completo y congela profundamente exactamente ese candidato.
+          </li>
+          <li>
+            Transformaciones, coerción, stripping y defaults de un adaptador nunca se convierten en
+            inputs canónicos.
+          </li>
+          <li>
+            JSON Schema sirve para inspección y controles; la validación autoritativa sigue
+            ocurriendo mediante el <code>InputSchema</code> original dentro de Node.
+          </li>
+          <li>
+            El adaptador oficial vive aislado en <code>@resona/zod</code>, con Zod 4 como peer
+            dependency. El runtime de <code>@resona/engine</code> no depende de Zod.
+          </li>
+          <li>
+            <code>fromZod()</code> usa la conversión oficial a JSON Schema y encapsula la detección
+            de features incompatibles y el mapeo de errores.
+          </li>
+          <li>
+            El envelope versiona las convenciones y extensiones de Resona independientemente del
+            dialecto estándar.
+          </li>
+          <li>Referencias remotas y dialectos alternativos quedan fuera del primer alcance.</li>
+        </ul>
       </article>
     </main>
   </body>

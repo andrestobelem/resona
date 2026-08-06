@@ -10,21 +10,36 @@
     <main>
       <p class="source-path">docs/adr/0072-validate-before-pruning-execution-plan.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="la-composicion-se-valida-antes-de-podar-el-plan">
           La composición se valida antes de podar el plan
         </h1>
         <p>
-          El planificador valida la `CompositionIR` completa y resuelve todas sus referencias antes
-          de recortar u omitir filas ejecutables. Un clip inválido no se vuelve válido por quedar
-          fuera de una secuencia o de la duración nominal.
+          El planificador valida la <code>CompositionIR</code> completa y resuelve todas sus
+          referencias antes de recortar u omitir filas ejecutables. Un clip inválido no se vuelve
+          válido por quedar fuera de una secuencia o de la duración nominal.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Validar y resolver únicamente el contenido que sobrevive al recorte. - Validar
-          invariantes estructurales de todo el árbol, pero resolver solo los recursos que
-          sobreviven. - Validar y resolver toda la composición antes de podar el plan.
-        </p>
+        <ul>
+          <li>Validar y resolver únicamente el contenido que sobrevive al recorte.</li>
+          <li>
+            Validar invariantes estructurales de todo el árbol, pero resolver solo los recursos que
+            sobreviven.
+          </li>
+          <li>Validar y resolver toda la composición antes de podar el plan.</li>
+        </ul>
         <p>
           Se eligió la tercera opción. Mantiene los diagnósticos independientes de límites
           temporales y evita que extender una secuencia o la duración nominal revele defectos
@@ -32,22 +47,47 @@
           y se amortiza mediante la caché de preparación.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - Primero se validan todos los nodos, referencias y valores de la `CompositionIR`. - Toda
-          referencia de audio debe existir, cumplir el perfil WAV y producir hash y metadata
-          válidos, aunque luego no aparezca en `ExecutionPlan.resources`. - Todo offset debe señalar
-          un frame existente del recurso antes de aplicar recortes. - Todo loop debe declarar una
-          duración positiva y una región de origen no vacía antes de aplicar recortes. - Toda nota
-          debe declarar una duración estrictamente positiva antes de aplicar recortes. - Todos los
-          targets y puntos de automatización se validan antes de aplicar recortes. - Los errores se
-          informan con la ruta y procedencia del nodo original. - Solo después de una validación
-          completa se intersectan clips con secuencias y duración nominal, se omiten regiones de
-          cero frames y se eliminan recursos no utilizados del plan. - Cambiar un límite temporal
-          puede cambiar las filas ejecutables, pero no la validez del código que describe la
-          composición. - La expansión y poda de notas se fijan en el [ADR
-          0073](0073-dense-instrument-attack-release-events.md). - La compilación y poda de
-          automatización se fija en el [ADR 0075](0075-frame-resolved-gain-automation-points.md).
-        </p>
+        <ul>
+          <li>
+            Primero se validan todos los nodos, referencias y valores de la
+            <code>CompositionIR</code>.
+          </li>
+          <li>
+            Toda referencia de audio debe existir, cumplir el perfil WAV y producir hash y metadata
+            válidos, aunque luego no aparezca en <code>ExecutionPlan.resources</code>.
+          </li>
+          <li>
+            Todo offset debe señalar un frame existente del recurso antes de aplicar recortes.
+          </li>
+          <li>
+            Todo loop debe declarar una duración positiva y una región de origen no vacía antes de
+            aplicar recortes.
+          </li>
+          <li>
+            Toda nota debe declarar una duración estrictamente positiva antes de aplicar recortes.
+          </li>
+          <li>
+            Todos los targets y puntos de automatización se validan antes de aplicar recortes.
+          </li>
+          <li>Los errores se informan con la ruta y procedencia del nodo original.</li>
+          <li>
+            Solo después de una validación completa se intersectan clips con secuencias y duración
+            nominal, se omiten regiones de cero frames y se eliminan recursos no utilizados del
+            plan.
+          </li>
+          <li>
+            Cambiar un límite temporal puede cambiar las filas ejecutables, pero no la validez del
+            código que describe la composición.
+          </li>
+          <li>
+            La expansión y poda de notas se fijan en el
+            <a href="0073-dense-instrument-attack-release-events.html">ADR 0073</a>.
+          </li>
+          <li>
+            La compilación y poda de automatización se fija en el
+            <a href="0075-frame-resolved-gain-automation-points.html">ADR 0075</a>.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

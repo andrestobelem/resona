@@ -12,86 +12,115 @@
       <article>
         <h1 id="trunk-based-development">Trunk-based development</h1>
         <h2 id="readiness">Readiness</h2>
-        <p>
-          - Status: `partial`. - Evidence captured: 2026-08-04T22:58:50-03:00. - Integration line:
-          `main`. - Baseline commit: `327e1b4c184efdf7b6fdfd0e8b0e6234d00d2fcf`. - Worktree
-          condition: dirty with T01 on `feat/engine-compile-note-plan`. - Local runtime: Node.js
-          `24.15.0` and pnpm `11.20.0`; pnpm reports the Node version is below the declared
-          `&gt;=24.18.0 &lt;25` range. - Reason: local fast and full gates pass with a non-vacuous
-          integration test. GitHub Actions also passed both gates for PR #22. Remote enforcement has
-          not been inspected.
-        </p>
+        <ul>
+          <li>Status: <code>partial</code>.</li>
+          <li>Evidence captured: 2026-08-04T22:58:50-03:00.</li>
+          <li>Integration line: <code>main</code>.</li>
+          <li>Baseline commit: <code>327e1b4c184efdf7b6fdfd0e8b0e6234d00d2fcf</code>.</li>
+          <li>Worktree condition: dirty with T01 on <code>feat/engine-compile-note-plan</code>.</li>
+          <li>
+            Local runtime: Node.js <code>24.15.0</code> and pnpm <code>11.20.0</code>; pnpm reports
+            the Node version is below the declared <code>&gt;=24.18.0 &lt;25</code> range.
+          </li>
+          <li>
+            Reason: local fast and full gates pass with a non-vacuous integration test. GitHub
+            Actions also passed both gates for PR #22. Remote enforcement has not been inspected.
+          </li>
+        </ul>
         <p>
           The current gates verify the repository scaffold, documentation, exact rational
           nearest-even rounding, and the first source-project-to-plan vertical slice. They do not
           yet verify DSP output, browser playback, or release artifacts.
         </p>
         <h2 id="integration-and-review-model">Integration and review model</h2>
-        <p>
-          - `main` is the only integration line across all workspaces. - Short-lived pull requests
-          are the default while readiness is not `ready`. - A direct commit is allowed only for
-          low-risk work after the verified fast gate passes. - Andrés Tobelem and future maintainers
-          explicitly authorized in GitHub may integrate changes. - Every author self-reviews the
-          complete diff and verifies the fast gate. - Changes to public APIs, DSP behavior, CI,
-          security, or dependencies also require an independent human or review-agent review. - The
-          author classifies risk and the integrator confirms it. Uncertainty means high risk. - Work
-          integrates the same day and may not remain on a branch or pull request for more than 24
-          hours. - `$trunk-based-development` is the single source of truth for selecting how
-          incomplete behavior remains hidden. This contract does not duplicate that strategy
-          hierarchy.
-        </p>
+        <ul>
+          <li><code>main</code> is the only integration line across all workspaces.</li>
+          <li>
+            Short-lived pull requests are the default while readiness is not <code>ready</code>.
+          </li>
+          <li>
+            A direct commit is allowed only for low-risk work after the verified fast gate passes.
+          </li>
+          <li>
+            Andrés Tobelem and future maintainers explicitly authorized in GitHub may integrate
+            changes.
+          </li>
+          <li>Every author self-reviews the complete diff and verifies the fast gate.</li>
+          <li>
+            Changes to public APIs, DSP behavior, CI, security, or dependencies also require an
+            independent human or review-agent review.
+          </li>
+          <li>
+            The author classifies risk and the integrator confirms it. Uncertainty means high risk.
+          </li>
+          <li>
+            Work integrates the same day and may not remain on a branch or pull request for more
+            than 24 hours.
+          </li>
+          <li>
+            <code>$trunk-based-development</code> is the single source of truth for selecting how
+            incomplete behavior remains hidden. This contract does not duplicate that strategy
+            hierarchy.
+          </li>
+        </ul>
         <h2 id="stop-the-line">Stop the line</h2>
-        <p>When `main` becomes newly red:</p>
-        <p>
-          1. Stop further integrations. 2. Identify the smallest responsible batch. 3. Repair it
-          immediately or revert that atomic batch. 4. Run the verified fast gate again. 5. Resume
-          integration only after the baseline is restored.
-        </p>
+        <p>When <code>main</code> becomes newly red:</p>
+        <ol>
+          <li>Stop further integrations.</li>
+          <li>Identify the smallest responsible batch.</li>
+          <li>Repair it immediately or revert that atomic batch.</li>
+          <li>Run the verified fast gate again.</li>
+          <li>Resume integration only after the baseline is restored.</li>
+        </ol>
         <p>The recovery-time target is p95 at or below ten minutes.</p>
         <h2 id="gate-contract">Gate contract</h2>
         <h3 id="verified-fast-gate">Verified fast gate</h3>
         <p>Command:</p>
-        <pre><code class="language-bash">
-pnpm check:fast
-        </code></pre>
+        <pre><code class="language-bash">pnpm check:fast
+</code></pre>
         <p>Expansion:</p>
-        <pre><code class="language-bash">
-pnpm format:check
+        <pre><code class="language-bash">pnpm format:check
 pnpm lint
 pnpm typecheck
 pnpm test:unit
-        </code></pre>
+</code></pre>
         <p>Recorded result:</p>
-        <p>
-          - Run date: 2026-08-04. - Exit code: `0`. - Observed wall duration: 5.29 seconds. -
-          Baseline commit: `327e1b4c184efdf7b6fdfd0e8b0e6234d00d2fcf`. - Worktree: dirty with T01 on
-          `feat/engine-compile-note-plan`. - Formatting, ESLint, and Markdown validation passed. -
-          Typecheck compiled the `@resona/engine` workspace without emitting files. - Vitest ran one
-          unit suite containing seven passing tests.
-        </p>
+        <ul>
+          <li>Run date: 2026-08-04.</li>
+          <li>Exit code: <code>0</code>.</li>
+          <li>Observed wall duration: 5.29 seconds.</li>
+          <li>Baseline commit: <code>327e1b4c184efdf7b6fdfd0e8b0e6234d00d2fcf</code>.</li>
+          <li>Worktree: dirty with T01 on <code>feat/engine-compile-note-plan</code>.</li>
+          <li>Formatting, ESLint, and Markdown validation passed.</li>
+          <li>
+            Typecheck compiled the <code>@resona/engine</code> workspace without emitting files.
+          </li>
+          <li>Vitest ran one unit suite containing seven passing tests.</li>
+        </ul>
         <p>
           The fast gate runs after every integration batch. Its duration target is p95 at or below
           five minutes.
         </p>
         <h3 id="verified-full-gate">Verified full gate</h3>
         <p>Command:</p>
-        <pre><code class="language-bash">
-pnpm check:full
-        </code></pre>
+        <pre><code class="language-bash">pnpm check:full
+</code></pre>
         <p>Expansion:</p>
-        <pre><code class="language-bash">
-pnpm check:fast
+        <pre><code class="language-bash">pnpm check:fast
 pnpm build
 pnpm test:integration
-        </code></pre>
+</code></pre>
         <p>Recorded result:</p>
-        <p>
-          - Run date: 2026-08-04. - Exit code: `0`. - Observed wall duration: 7.41 seconds. -
-          Baseline commit: `327e1b4c184efdf7b6fdfd0e8b0e6234d00d2fcf`. - Worktree: dirty with T01 on
-          `feat/engine-compile-note-plan`. - The embedded fast gate passed. - Build emitted the
-          private `@resona/engine` workspace successfully. - Vitest ran the source-project
-          integration suite with six passing tests.
-        </p>
+        <ul>
+          <li>Run date: 2026-08-04.</li>
+          <li>Exit code: <code>0</code>.</li>
+          <li>Observed wall duration: 7.41 seconds.</li>
+          <li>Baseline commit: <code>327e1b4c184efdf7b6fdfd0e8b0e6234d00d2fcf</code>.</li>
+          <li>Worktree: dirty with T01 on <code>feat/engine-compile-note-plan</code>.</li>
+          <li>The embedded fast gate passed.</li>
+          <li>Build emitted the private <code>@resona/engine</code> workspace successfully.</li>
+          <li>Vitest ran the source-project integration suite with six passing tests.</li>
+        </ul>
         <p>
           The full gate runs before handoff or release. There is currently no executable release
           workflow.
@@ -100,27 +129,34 @@ pnpm test:integration
         <p>None. Every currently executable project gate has a recorded local result.</p>
         <h3 id="setup-validations">Setup validations</h3>
         <p>The following setup validations passed:</p>
-        <pre><code class="language-bash">
-pnpm exec prettier --check . --ignore-unknown
+        <pre><code class="language-bash">pnpm exec prettier --check . --ignore-unknown
 pnpm exec eslint .
 pnpm exec markdownlint-cli2
 git diff --check
-        </code></pre>
+</code></pre>
         <p>Markdownlint checked 92 files and reported zero issues.</p>
         <p>
           The first Prettier run detected only missing trailing commas in
-          `.markdownlint-cli2.jsonc`. The setup-owned configuration was corrected and the complete
-          check passed on rerun.
+          <code>.markdownlint-cli2.jsonc</code>. The setup-owned configuration was corrected and the
+          complete check passed on rerun.
         </p>
         <h3 id="proposed-future-checks">Proposed future checks</h3>
         <p>The following checks remain proposed until the relevant implementation exists:</p>
-        <p>
-          - broader product-code typechecking, builds, and unit coverage beyond the first vertical
-          slice; - additional integration coverage for audio clips, effects, automation, and source
-          maps; - browser and Player tests; - deterministic render tests; - audio compatibility
-          fixtures; - package-export validation beyond package build scripts; - Agent Skill
-          validation; - release and rollback verification.
-        </p>
+        <ul>
+          <li>
+            broader product-code typechecking, builds, and unit coverage beyond the first vertical
+            slice;
+          </li>
+          <li>
+            additional integration coverage for audio clips, effects, automation, and source maps;
+          </li>
+          <li>browser and Player tests;</li>
+          <li>deterministic render tests;</li>
+          <li>audio compatibility fixtures;</li>
+          <li>package-export validation beyond package build scripts;</li>
+          <li>Agent Skill validation;</li>
+          <li>release and rollback verification.</li>
+        </ul>
         <h3 id="recorded-failures">Recorded failures</h3>
         <p>No current gate failure remains.</p>
         <p>
@@ -135,33 +171,43 @@ git diff --check
           The first engine workspace retires the empty-workspace allowances for build, typecheck,
           unit tests, and integration tests:
         </p>
+        <ul>
+          <li>
+            recursive <code>build</code> and <code>typecheck</code> fail when no workspace matches;
+          </li>
+          <li>unit tests fail when no test file exists;</li>
+          <li>integration tests fail when no test file exists.</li>
+        </ul>
         <p>
-          - recursive `build` and `typecheck` fail when no workspace matches; - unit tests fail when
-          no test file exists; - integration tests fail when no test file exists.
+          Every production workspace must expose <code>build</code> and
+          <code>typecheck</code> scripts.
         </p>
-        <p>Every production workspace must expose `build` and `typecheck` scripts.</p>
         <h2 id="missing-prerequisites">Missing prerequisites</h2>
         <p>
           The current batch satisfies the first local prerequisite: a real workspace exposes
-          non-vacuous `typecheck` and `build` scripts and runs a meaningful unit suite.
+          non-vacuous <code>typecheck</code> and <code>build</code> scripts and runs a meaningful
+          unit suite.
         </p>
-        <p>Readiness cannot move to `ready` until:</p>
-        <p>
-          - product coverage extends beyond the first vertical slice; - browser, Player, DSP, and
-          deterministic-render coverage exist; - remote protection is reconsidered against a stable
-          passing check.
-        </p>
+        <p>Readiness cannot move to <code>ready</code> until:</p>
+        <ul>
+          <li>product coverage extends beyond the first vertical slice;</li>
+          <li>browser, Player, DSP, and deterministic-render coverage exist;</li>
+          <li>remote protection is reconsidered against a stable passing check.</li>
+        </ul>
         <h2 id="ci-and-enforcement">CI and enforcement</h2>
-        <p>The local workflow exists at `.github/workflows/ci.yml`.</p>
+        <p>The local workflow exists at <code>.github/workflows/ci.yml</code>.</p>
         <p>Provider-verified check names:</p>
-        <p>- `CI / Fast gate`; - `CI / Full gate`.</p>
+        <ul>
+          <li><code>CI / Fast gate</code>;</li>
+          <li><code>CI / Full gate</code>.</li>
+        </ul>
         <p>
-          Both jobs are configured for pull requests targeting `main`, pushes to `main`, and manual
-          workflow dispatch. The full job depends on the fast job.
+          Both jobs are configured for pull requests targeting <code>main</code>, pushes to
+          <code>main</code>, and manual workflow dispatch. The full job depends on the fast job.
         </p>
         <p>
-          PR #22 passed both `CI / Fast gate` and `CI / Full gate` on 2026-08-05 UTC. Neither check
-          has yet been approved as required branch protection.
+          PR #22 passed both <code>CI / Fast gate</code> and <code>CI / Full gate</code> on
+          2026-08-05 UTC. Neither check has yet been approved as required branch protection.
         </p>
         <p>
           No Git hook is configured. Hooks remain deferred until repository behavior demonstrates a
@@ -184,35 +230,101 @@ git diff --check
           and restore the last valid build before readiness can cover releases.
         </p>
         <h2 id="metrics">Metrics</h2>
-        <p>
-          | Metric | Source and calculation | Window | Target | Initial evidence | | --- | --- | ---
-          | --- | --- | | Active development branches | GitHub branch refs and open PR heads; count
-          non-`main` branches carrying unintegrated work | Point-in-time at each review | At most 3
-          | Deferred until provider branch data is available | | Integration cadence | Timestamps of
-          commits or merges reaching `main`; measure gaps during active development | Rolling 30
-          days | Integrate at least daily | No usable history yet | | Branch or PR lifetime | GitHub
-          PR `createdAt` to `mergedAt`; this is the documented proxy because GitHub does not expose
-          reliable branch creation time | Rolling 30 days | p95 below 24 hours | Deferred until PR
-          history exists | | Fast-gate duration | GitHub Actions start and completion timestamps for
-          `CI / Fast gate` | Rolling 30 days | p95 at most 5 minutes | Deferred until the job runs |
-          | Red-main recovery | First failing fast-gate result on `main` to the first succeeding run
-          or revert restoring the baseline | Rolling 30 days | p95 at most 10 minutes | Deferred
-          until CI history exists | | Integration freezes | GitHub incidents or issues explicitly
-          recording an integration freeze; count qualifying events | Rolling 30 days | 0 | Deferred
-          until an incident-recording mechanism exists | | Feature-flag ownership | Active flags
-          with both an owner and removal condition divided by all active flags | Current repository
-          snapshot | 100% | Deferred until a flag registry exists |
-        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Source and calculation</th>
+              <th>Window</th>
+              <th>Target</th>
+              <th>Initial evidence</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Active development branches</td>
+              <td>
+                GitHub branch refs and open PR heads; count non-<code>main</code> branches carrying
+                unintegrated work
+              </td>
+              <td>Point-in-time at each review</td>
+              <td>At most 3</td>
+              <td>Deferred until provider branch data is available</td>
+            </tr>
+            <tr>
+              <td>Integration cadence</td>
+              <td>
+                Timestamps of commits or merges reaching <code>main</code>; measure gaps during
+                active development
+              </td>
+              <td>Rolling 30 days</td>
+              <td>Integrate at least daily</td>
+              <td>No usable history yet</td>
+            </tr>
+            <tr>
+              <td>Branch or PR lifetime</td>
+              <td>
+                GitHub PR <code>createdAt</code> to <code>mergedAt</code>; this is the documented
+                proxy because GitHub does not expose reliable branch creation time
+              </td>
+              <td>Rolling 30 days</td>
+              <td>p95 below 24 hours</td>
+              <td>Deferred until PR history exists</td>
+            </tr>
+            <tr>
+              <td>Fast-gate duration</td>
+              <td>
+                GitHub Actions start and completion timestamps for <code>CI / Fast gate</code>
+              </td>
+              <td>Rolling 30 days</td>
+              <td>p95 at most 5 minutes</td>
+              <td>Deferred until the job runs</td>
+            </tr>
+            <tr>
+              <td>Red-main recovery</td>
+              <td>
+                First failing fast-gate result on <code>main</code> to the first succeeding run or
+                revert restoring the baseline
+              </td>
+              <td>Rolling 30 days</td>
+              <td>p95 at most 10 minutes</td>
+              <td>Deferred until CI history exists</td>
+            </tr>
+            <tr>
+              <td>Integration freezes</td>
+              <td>
+                GitHub incidents or issues explicitly recording an integration freeze; count
+                qualifying events
+              </td>
+              <td>Rolling 30 days</td>
+              <td>0</td>
+              <td>Deferred until an incident-recording mechanism exists</td>
+            </tr>
+            <tr>
+              <td>Feature-flag ownership</td>
+              <td>
+                Active flags with both an owner and removal condition divided by all active flags
+              </td>
+              <td>Current repository snapshot</td>
+              <td>100%</td>
+              <td>Deferred until a flag registry exists</td>
+            </tr>
+          </tbody>
+        </table>
         <p>No metric is currently reported as passing. The required data does not exist yet.</p>
         <h2 id="review-cadence">Review cadence</h2>
         <p>Review this contract:</p>
+        <ul>
+          <li>30 days after the first successful GitHub CI run;</li>
+          <li>monthly after that;</li>
+          <li>
+            whenever the integration model, gate commands, provider, CI, or protection policy
+            changes.
+          </li>
+        </ul>
         <p>
-          - 30 days after the first successful GitHub CI run; - monthly after that; - whenever the
-          integration model, gate commands, provider, CI, or protection policy changes.
-        </p>
-        <p>
-          `$trunk-based-development` reads this file during daily delivery. Rerun
-          `$setup-trunk-based-development` when the contract itself must change.
+          <code>$trunk-based-development</code> reads this file during daily delivery. Rerun
+          <code>$setup-trunk-based-development</code> when the contract itself must change.
         </p>
       </article>
     </main>

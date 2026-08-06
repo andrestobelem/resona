@@ -10,7 +10,19 @@
     <main>
       <p class="source-path">docs/adr/0011-serializable-validated-composition-inputs.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="los-inputs-de-composicion-son-serializables-y-validados">
           Los inputs de composición son serializables y validados
         </h1>
@@ -20,30 +32,42 @@
           un schema de runtime que valida defaults y valores provistos para cada ejecución.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Permitir cualquier valor de JavaScript y conservarlo dentro del mismo proceso. - Aceptar
-          valores serializables sin un contrato de validación de runtime. - Exigir valores
-          serializables y un schema para composiciones parametrizadas.
-        </p>
+        <ul>
+          <li>Permitir cualquier valor de JavaScript y conservarlo dentro del mismo proceso.</li>
+          <li>Aceptar valores serializables sin un contrato de validación de runtime.</li>
+          <li>Exigir valores serializables y un schema para composiciones parametrizadas.</li>
+        </ul>
         <p>
           Se eligió la tercera opción para que una variante pueda viajar entre procesos,
           reproducirse desde CLI y representarse en Studio sin depender de objetos ocultos del
           proceso de autoría.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - Funciones, instancias de clases y estado global no forman parte de los inputs. - Los
-          defaults deben satisfacer el mismo schema que los valores de una ejecución. - Los valores
-          provistos reemplazan defaults mediante merge superficial por clave; objetos y arrays no se
-          combinan recursivamente y el resultado completo se valida otra vez. - Una clave ausente
-          conserva su default, `null` es explícito si el schema lo permite y `undefined` no cruza la
-          frontera. - Studio puede derivar controles y mensajes de validación del mismo contrato. -
-          Las referencias a audio usan la representación serializable explícita del [ADR
-          0047](0047-versioned-static-audio-input-reference.md). - La frontera y el primer adaptador
-          se definen en el [ADR 0045](0045-resona-owned-input-schema-boundary.md). - La validación
-          no transformadora se define en el [ADR
-          0046](0046-input-schemas-validate-without-transforming.md).
-        </p>
+        <ul>
+          <li>Funciones, instancias de clases y estado global no forman parte de los inputs.</li>
+          <li>Los defaults deben satisfacer el mismo schema que los valores de una ejecución.</li>
+          <li>
+            Los valores provistos reemplazan defaults mediante merge superficial por clave; objetos
+            y arrays no se combinan recursivamente y el resultado completo se valida otra vez.
+          </li>
+          <li>
+            Una clave ausente conserva su default, <code>null</code> es explícito si el schema lo
+            permite y <code>undefined</code> no cruza la frontera.
+          </li>
+          <li>Studio puede derivar controles y mensajes de validación del mismo contrato.</li>
+          <li>
+            Las referencias a audio usan la representación serializable explícita del
+            <a href="0047-versioned-static-audio-input-reference.html">ADR 0047</a>.
+          </li>
+          <li>
+            La frontera y el primer adaptador se definen en el
+            <a href="0045-resona-owned-input-schema-boundary.html">ADR 0045</a>.
+          </li>
+          <li>
+            La validación no transformadora se define en el
+            <a href="0046-input-schemas-validate-without-transforming.html">ADR 0046</a>.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

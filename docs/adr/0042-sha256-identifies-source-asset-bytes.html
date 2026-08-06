@@ -10,37 +10,59 @@
     <main>
       <p class="source-path">docs/adr/0042-sha256-identifies-source-asset-bytes.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="sha-256-identifica-los-bytes-fuente-de-un-asset">
           SHA-256 identifica los bytes fuente de un asset
         </h1>
         <p>
           Un recurso resuelto usa SHA-256 sobre los bytes exactos del WAV y expresa su identidad
-          como `sha256:&lt;hex minúsculo&gt;`. Un trabajo conserva los buffers decodificados que
-          verificó durante su preparación.
+          como <code>sha256:&lt;hex minúsculo&gt;</code>. Un trabajo conserva los buffers
+          decodificados que verificó durante su preparación.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Identificar por path, tamaño y fecha de modificación. - Hashear el PCM decodificado para
-          identificar equivalencia audible. - Hashear los bytes fuente y versionar por separado la
-          decodificación.
-        </p>
+        <ul>
+          <li>Identificar por path, tamaño y fecha de modificación.</li>
+          <li>Hashear el PCM decodificado para identificar equivalencia audible.</li>
+          <li>Hashear los bytes fuente y versionar por separado la decodificación.</li>
+        </ul>
         <p>
           Se eligió la tercera opción porque detecta toda mutación del archivo con una
           implementación estándar y permite que cambios del decoder se expresen sin redefinir el
           contenido fuente.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - Dos WAV byte a byte distintos tienen hashes distintos aunque decodifiquen al mismo PCM.
-          - Tamaño y `mtime` son optimizaciones de invalidación, no identidad. - El caché
-          decodificado usa hash, versión del decoder y formato interno. - `RenderJob` retiene
-          buffers ya verificados y no vuelve a leer el path durante ejecución. - Modificar un
-          archivo no cambia un trabajo existente; una nueva preparación obtiene otro hash. - El
-          fingerprint de render incluye estos hashes mediante `RenderSpec`. - El descriptor
-          direccionado por contenido del plan se fija en el [ADR
-          0071](0071-content-addressed-resources-and-audio-regions.md).
-        </p>
+        <ul>
+          <li>
+            Dos WAV byte a byte distintos tienen hashes distintos aunque decodifiquen al mismo PCM.
+          </li>
+          <li>Tamaño y <code>mtime</code> son optimizaciones de invalidación, no identidad.</li>
+          <li>El caché decodificado usa hash, versión del decoder y formato interno.</li>
+          <li>
+            <code>RenderJob</code> retiene buffers ya verificados y no vuelve a leer el path durante
+            ejecución.
+          </li>
+          <li>
+            Modificar un archivo no cambia un trabajo existente; una nueva preparación obtiene otro
+            hash.
+          </li>
+          <li>El fingerprint de render incluye estos hashes mediante <code>RenderSpec</code>.</li>
+          <li>
+            El descriptor direccionado por contenido del plan se fija en el
+            <a href="0071-content-addressed-resources-and-audio-regions.html">ADR 0071</a>.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

@@ -10,7 +10,19 @@
     <main>
       <p class="source-path">docs/adr/0048-explicit-minimal-input-controls.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="studio-deriva-un-conjunto-minimo-de-controles-explicitos">
           Studio deriva un conjunto mínimo de controles explícitos
         </h1>
@@ -20,23 +32,25 @@
           validada.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Generar controles heurísticamente para toda forma y nombre de campo. - Ofrecer
-          únicamente un editor JSON. - Renderizar un subconjunto explícito y usar JSON como fallback
-          completo.
-        </p>
+        <ul>
+          <li>Generar controles heurísticamente para toda forma y nombre de campo.</li>
+          <li>Ofrecer únicamente un editor JSON.</li>
+          <li>Renderizar un subconjunto explícito y usar JSON como fallback completo.</li>
+        </ul>
         <p>
           Se eligió la tercera opción para que los inputs comunes sean cómodos sin convertir Studio
           en un intérprete incompleto y sorpresivo de cualquier schema.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - Boolean usa checkbox y enum usa selector. - Number respeta min, max y step cuando están
-          declarados. - String usa texto o textarea solo mediante un hint explícito. -
-          Audio-resource usa un selector limitado a `staticDir`. - Objetos agrupan recursivamente
-          controles soportados. - Arrays, unions y formas desconocidas usan el editor JSON. - Los
-          nombres de campos no tienen semántica visual implícita.
-        </p>
+        <ul>
+          <li>Boolean usa checkbox y enum usa selector.</li>
+          <li>Number respeta min, max y step cuando están declarados.</li>
+          <li>String usa texto o textarea solo mediante un hint explícito.</li>
+          <li>Audio-resource usa un selector limitado a <code>staticDir</code>.</li>
+          <li>Objetos agrupan recursivamente controles soportados.</li>
+          <li>Arrays, unions y formas desconocidas usan el editor JSON.</li>
+          <li>Los nombres de campos no tienen semántica visual implícita.</li>
+        </ul>
       </article>
     </main>
   </body>

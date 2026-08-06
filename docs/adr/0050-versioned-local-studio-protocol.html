@@ -10,7 +10,19 @@
     <main>
       <p class="source-path">docs/adr/0050-versioned-local-studio-protocol.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="studio-usa-un-protocolo-local-versionado">
           Studio usa un protocolo local versionado
         </h1>
@@ -20,30 +32,50 @@
           de protocolo, sesión, solicitud y variante.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Exponer un RPC genérico bidireccional sobre WebSocket. - Resolver todo mediante polling
-          HTTP. - Separar request-response, streams de estado y transferencia al worklet.
-        </p>
+        <ul>
+          <li>Exponer un RPC genérico bidireccional sobre WebSocket.</li>
+          <li>Resolver todo mediante polling HTTP.</li>
+          <li>Separar request-response, streams de estado y transferencia al worklet.</li>
+        </ul>
         <p>
           Se eligió la tercera opción para mantener explícitas las operaciones, aprovechar semántica
           HTTP para contenido inmutable y controlar carreras durante rebuilds y cambios de inputs.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - HTTP enumera composiciones, crea variantes y entrega planes y assets por hash. -
-          WebSocket queda reservado para invalidaciones, progreso y diagnósticos; el primer corte de
-          T13 implementa las operaciones finitas mediante HTTP y deja ese stream para una story de
-          transporte posterior. - Los envelopes incluyen protocolo, `sessionId`, `requestId` y
-          `variantId`. - Una solicitud nueva cancela la anterior y las respuestas obsoletas se
-          descartan. - Paths físicos no forman parte de URLs de assets. - Plan y buffers llegan al
-          `AudioWorklet` mediante structured clone y transferables. - El callback del worklet no
-          realiza red ni I/O. - La protección de la sesión se define en el [ADR
-          0051](0051-loopback-token-protected-studio.md). - El primer corte usa
-          `resona/studio-envelope` v1 en `/api/v1/session`, `/api/v1/compositions`,
-          `/api/v1/static-resources`, `/api/v1/variants`, `/api/v1/variants/:variantId/plan` y
-          `/api/v1/variants/:variantId/resources/:sha256-hash`. - Los payloads de variante omiten
-          paths físicos y el acceso a recursos exige hashes ya resueltos para esa variante.
-        </p>
+        <ul>
+          <li>HTTP enumera composiciones, crea variantes y entrega planes y assets por hash.</li>
+          <li>
+            WebSocket queda reservado para invalidaciones, progreso y diagnósticos; el primer corte
+            de T13 implementa las operaciones finitas mediante HTTP y deja ese stream para una story
+            de transporte posterior.
+          </li>
+          <li>
+            Los envelopes incluyen protocolo, <code>sessionId</code>, <code>requestId</code> y
+            <code>variantId</code>.
+          </li>
+          <li>Una solicitud nueva cancela la anterior y las respuestas obsoletas se descartan.</li>
+          <li>Paths físicos no forman parte de URLs de assets.</li>
+          <li>
+            Plan y buffers llegan al <code>AudioWorklet</code> mediante structured clone y
+            transferables.
+          </li>
+          <li>El callback del worklet no realiza red ni I/O.</li>
+          <li>
+            La protección de la sesión se define en el
+            <a href="0051-loopback-token-protected-studio.html">ADR 0051</a>.
+          </li>
+          <li>
+            El primer corte usa <code>resona/studio-envelope</code> v1 en
+            <code>/api/v1/session</code>, <code>/api/v1/compositions</code>,
+            <code>/api/v1/static-resources</code>, <code>/api/v1/variants</code>,
+            <code>/api/v1/variants/:variantId/plan</code> y
+            <code>/api/v1/variants/:variantId/resources/:sha256-hash</code>.
+          </li>
+          <li>
+            Los payloads de variante omiten paths físicos y el acceso a recursos exige hashes ya
+            resueltos para esa variante.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

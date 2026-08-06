@@ -10,36 +10,57 @@
     <main>
       <p class="source-path">docs/adr/0045-resona-owned-input-schema-boundary.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="resona-posee-la-frontera-de-schemas-de-inputs">
           Resona posee la frontera de schemas de inputs
         </h1>
         <p>
-          El core acepta un `InputSchema&lt;T&gt;` propio que valida valores y produce una
-          `InputSchemaIR` serializable. El primer adaptador oficial es `fromZod()` para Zod 4;
-          Studio consume la IR y no inspecciona la representación interna de Zod.
+          El core acepta un <code>InputSchema&lt;T&gt;</code> propio que valida valores y produce
+          una <code>InputSchemaIR</code> serializable. El primer adaptador oficial es
+          <code>fromZod()</code> para Zod 4; Studio consume la IR y no inspecciona la representación
+          interna de Zod.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Aceptar directamente schemas Zod, como Remotion. - Aceptar cualquier validador pero
-          mantener metadata visual separada manualmente. - Definir una seam propia y derivar
-          validación y descripción desde adaptadores.
-        </p>
+        <ul>
+          <li>Aceptar directamente schemas Zod, como Remotion.</li>
+          <li>Aceptar cualquier validador pero mantener metadata visual separada manualmente.</li>
+          <li>Definir una seam propia y derivar validación y descripción desde adaptadores.</li>
+        </ul>
         <p>
           Se eligió la tercera opción para conservar validación, inferencia y controles derivados
           sin acoplar el core y Studio a versiones o campos privados de una librería.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - `InputSchema&lt;T&gt;` es la interfaz que conoce `Composition`. - `InputSchemaIR` cruza
-          hacia Studio como datos serializables. - `fromZod()` soporta Zod 4 inicialmente y
-          encapsula su introspección. - El core no depende de Zod en runtime. - Campos válidos sin
-          editor especializado usan un editor JSON y el mismo validador. - Otros adaptadores no
-          requieren cambiar el modelo de composición ni Studio. - La política de validación y
-          transforms se define en el [ADR
-          0046](0046-input-schemas-validate-without-transforming.md). - El subconjunto visual
-          inicial se define en el [ADR 0048](0048-explicit-minimal-input-controls.md).
-        </p>
+        <ul>
+          <li>
+            <code>InputSchema&lt;T&gt;</code> es la interfaz que conoce <code>Composition</code>.
+          </li>
+          <li><code>InputSchemaIR</code> cruza hacia Studio como datos serializables.</li>
+          <li><code>fromZod()</code> soporta Zod 4 inicialmente y encapsula su introspección.</li>
+          <li>El core no depende de Zod en runtime.</li>
+          <li>Campos válidos sin editor especializado usan un editor JSON y el mismo validador.</li>
+          <li>Otros adaptadores no requieren cambiar el modelo de composición ni Studio.</li>
+          <li>
+            La política de validación y transforms se define en el
+            <a href="0046-input-schemas-validate-without-transforming.html">ADR 0046</a>.
+          </li>
+          <li>
+            El subconjunto visual inicial se define en el
+            <a href="0048-explicit-minimal-input-controls.html">ADR 0048</a>.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

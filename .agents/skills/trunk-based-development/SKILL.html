@@ -10,46 +10,54 @@
     <main>
       <p class="source-path">.agents/skills/trunk-based-development/SKILL.md</p>
       <article>
-        <p>
-          --- name: trunk-based-development description: Deliver software with Trunk-Based
-          Development. Use when implementing or planning a change in small integration-safe batches
-          while keeping the repository's integration line green. ---
-        </p>
+        <aside class="frontmatter">
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+name: trunk-based-development
+description: Deliver software with Trunk-Based Development. Use when implementing or planning a change in small integration-safe batches while keeping the repository's integration line green.
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="trunk-based-development">Trunk-Based Development</h1>
         <p>
-          Use a **tight loop**: one small, integration-safe batch at a time. Treat trunk-based
-          development as a Continuous Integration discipline whose Git topology serves continuous
-          integration.
+          Use a <strong>tight loop</strong>: one small, integration-safe batch at a time. Treat
+          trunk-based development as a Continuous Integration discipline whose Git topology serves
+          continuous integration.
         </p>
         <p>
-          Read `docs/research/dave-farley-trunk-based-development.md` only when the user asks for
-          rationale or evidence.
+          Read <code>docs/research/dave-farley-trunk-based-development.md</code> only when the user
+          asks for rationale or evidence.
         </p>
         <h2 id="1-load-the-integration-contract">1. Load the integration contract</h2>
         <p>
           Read the repository instructions, relevant context and ADRs, current Git status, and
-          `docs/agents/trunk-based-development.md`. If the contract does not exist, stop and
-          recommend that the user invoke `$setup-trunk-based-development`. Do not discover gates or
-          create a shadow contract in this skill.
+          <code>docs/agents/trunk-based-development.md</code>. If the contract does not exist, stop
+          and recommend that the user invoke <code>$setup-trunk-based-development</code>. Do not
+          discover gates or create a shadow contract in this skill.
         </p>
         <p>From the contract, identify:</p>
-        <p>
-          - readiness status: ready, partial, or policy-only; - integration line and review model; -
-          verified fast- and full-gate commands; - proposed gates and missing prerequisites; -
-          recorded failures and stop-the-line expectations.
-        </p>
+        <ul>
+          <li>readiness status: ready, partial, or policy-only;</li>
+          <li>integration line and review model;</li>
+          <li>verified fast- and full-gate commands;</li>
+          <li>proposed gates and missing prerequisites;</li>
+          <li>recorded failures and stop-the-line expectations.</li>
+        </ul>
         <p>
           Use the current checkout as the working line. Change branches only with user
           authorization. Use only verified gate commands from the contract. For a partial contract,
           mark every missing gate unavailable. For a policy-only contract, keep proposed checks
           visibly proposed:
         </p>
-        <p>
-          - a planning request may use them as future acceptance criteria; - before implementation,
-          ask the user to establish an executable gate through setup or to authorize explicitly
-          unintegrated work; - never describe policy-only or unintegrated work as integrated or
-          green.
-        </p>
+        <ul>
+          <li>a planning request may use them as future acceptance criteria;</li>
+          <li>
+            before implementation, ask the user to establish an executable gate through setup or to
+            authorize explicitly unintegrated work;
+          </li>
+          <li>never describe policy-only or unintegrated work as integrated or green.</li>
+        </ul>
         <p>
           Choose the least complex strategy that keeps incomplete behavior safe: prefer a direct
           safe change; otherwise choose dark release or branch by abstraction according to the
@@ -57,59 +65,66 @@
           and removal condition.
         </p>
         <p>
-          **Complete when:** the contract status, working baseline, available gates, missing gates,
-          and exposure strategy are explicit without inventing repository policy.
+          <strong>Complete when:</strong> the contract status, working baseline, available gates,
+          missing gates, and exposure strategy are explicit without inventing repository policy.
         </p>
         <h2 id="2-slice-trunk-sized-batches">2. Slice trunk-sized batches</h2>
         <p>Split the requested behavior into the smallest coherent sequence where every batch:</p>
-        <p>
-          - leaves existing behavior safe; - has one observable outcome and one matching
-          verification; - can be reviewed and integrated the same day when executable gates exist; -
-          uses the selected exposure strategy to hide incomplete behavior; - can be fixed or
-          reverted independently.
-        </p>
+        <ul>
+          <li>leaves existing behavior safe;</li>
+          <li>has one observable outcome and one matching verification;</li>
+          <li>can be reviewed and integrated the same day when executable gates exist;</li>
+          <li>uses the selected exposure strategy to hide incomplete behavior;</li>
+          <li>can be fixed or reverted independently.</li>
+        </ul>
         <p>
           Keep incomplete public APIs private until their contract is coherent. Use one development
           line across all monorepo workspaces, and let a coherent vertical batch cross workspace
           boundaries.
         </p>
         <p>
-          **Complete when:** every requested behavior belongs to one independently reviewable batch
-          and each batch names the evidence that will verify it.
+          <strong>Complete when:</strong> every requested behavior belongs to one independently
+          reviewable batch and each batch names the evidence that will verify it.
         </p>
         <h2 id="3-choose-the-request-path">3. Choose the request path</h2>
         <p>
-          For a **planning request**, report the ordered batches, observable outcomes, checks,
-          exposure strategy, and gate availability, then stop. Do not edit files, run commands that
-          may create caches or artifacts, change branches, stage, or commit.
+          For a <strong>planning request</strong>, report the ordered batches, observable outcomes,
+          checks, exposure strategy, and gate availability, then stop. Do not edit files, run
+          commands that may create caches or artifacts, change branches, stage, or commit.
         </p>
         <p>
-          For an **implementation request**, continue only after resolving the policy-only choice
-          from step 1. Run the verified fast gate before the first batch when one exists, and record
-          any pre-existing failures as the baseline.
+          For an <strong>implementation request</strong>, continue only after resolving the
+          policy-only choice from step 1. Run the verified fast gate before the first batch when one
+          exists, and record any pre-existing failures as the baseline.
         </p>
         <p>
-          **Complete for planning when:** the user has an integration-safe batch plan and the
-          repository is unchanged. **Complete for implementation when:** the executable baseline is
-          recorded, or the lack of one and the user's authorization for unintegrated work are
-          explicit.
+          <strong>Complete for planning when:</strong> the user has an integration-safe batch plan
+          and the repository is unchanged. <strong>Complete for implementation when:</strong> the
+          executable baseline is recorded, or the lack of one and the user's authorization for
+          unintegrated work are explicit.
         </p>
         <h2 id="4-implement-each-batch">4. Implement each batch</h2>
         <p>For each batch, in order:</p>
-        <p>
-          1. Add or identify the smallest check that can reject an incorrect implementation. 2.
-          Implement only that batch. 3. Run the focused check and the verified fast gate when
-          available. 4. Treat a newly broken verified gate as **stop the line**: repair it
-          immediately or revert only this batch while preserving pre-existing work. 5. Inspect the
-          diff for one coherent change and accidental exposure. 6. When commits are authorized,
-          review the staged diff and commit the batch. Otherwise, preserve and report the batch
-          boundary in the handoff.
-        </p>
+        <ol>
+          <li>Add or identify the smallest check that can reject an incorrect implementation.</li>
+          <li>Implement only that batch.</li>
+          <li>Run the focused check and the verified fast gate when available.</li>
+          <li>
+            Treat a newly broken verified gate as <strong>stop the line</strong>: repair it
+            immediately or revert only this batch while preserving pre-existing work.
+          </li>
+          <li>Inspect the diff for one coherent change and accidental exposure.</li>
+          <li>
+            When commits are authorized, review the staged diff and commit the batch. Otherwise,
+            preserve and report the batch boundary in the handoff.
+          </li>
+        </ol>
         <p>Apply repository commit conventions instead of restating them here.</p>
         <p>
-          **Complete each batch when:** its focused check passes and its diff is independently
-          reviewable. When a verified fast gate exists, it must also match or improve the recorded
-          baseline. Otherwise, label the batch unintegrated instead of claiming a green result.
+          <strong>Complete each batch when:</strong> its focused check passes and its diff is
+          independently reviewable. When a verified fast gate exists, it must also match or improve
+          the recorded baseline. Otherwise, label the batch unintegrated instead of claiming a green
+          result.
         </p>
         <h2 id="5-prove-the-resulting-state">5. Prove the resulting state</h2>
         <p>
@@ -125,9 +140,9 @@
           or proposed gates, remaining exposure mechanisms, and work that could not be integrated.
         </p>
         <p>
-          **Complete when:** every batch and requested behavior is accounted for, all focused checks
-          pass, every executed gate matches or improves its baseline, unavailable verification is
-          explicit, and the repository state is unambiguous.
+          <strong>Complete when:</strong> every batch and requested behavior is accounted for, all
+          focused checks pass, every executed gate matches or improves its baseline, unavailable
+          verification is explicit, and the repository state is unambiguous.
         </p>
       </article>
     </main>

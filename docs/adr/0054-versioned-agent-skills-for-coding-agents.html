@@ -10,7 +10,19 @@
     <main>
       <p class="source-path">docs/adr/0054-versioned-agent-skills-for-coding-agents.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="resona-publica-agent-skills-para-agentes-de-codigo">
           Resona publica Agent Skills para agentes de código
         </h1>
@@ -20,32 +32,59 @@
           con el producto, para enseñar esos workflows sin incorporar IA al runtime musical.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Confiar en que los agentes deduzcan el producto solo desde el código y documentación
-          web. - Crear una API o un agente de IA embebido específicamente para Resona. - Publicar
-          instrucciones versionadas para que agentes externos usen las superficies normales.
-        </p>
+        <ul>
+          <li>
+            Confiar en que los agentes deduzcan el producto solo desde el código y documentación
+            web.
+          </li>
+          <li>Crear una API o un agente de IA embebido específicamente para Resona.</li>
+          <li>
+            Publicar instrucciones versionadas para que agentes externos usen las superficies
+            normales.
+          </li>
+        </ul>
         <p>
           Se eligió la tercera opción porque convierte buenas prácticas y comandos en contexto
           instalable, preserva el código como fuente de verdad y no acopla el producto a un
           proveedor o modelo de IA.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - Las skills viven junto al código fuente y usan exactamente la versión del release de
-          Resona que documentan; no tienen un ciclo de versiones independiente. - Una skill router
-          puede dirigir a instrucciones especializadas de autoría, Studio y render. - La
-          distribución usa el estándar Agent Skills y prioriza `.agents/skills` por proyecto. -
-          Compatibilidad con herramientas concretas se resuelve mediante plugins, adaptadores o
-          symlinks, no duplicando el contenido canónico. - Los agentes consumen las mismas APIs que
-          otras herramientas; no existe una fuente paralela. - Modelos, prompts y generación musical
-          automática no forman parte del runtime. - Las primeras skills se publican con la primera
-          versión utilizable, después de comprobar sus workflows de punta a punta; no bloquean el
-          primer corte vertical del motor. - El conjunto inicial es `resona-best-practices` como
-          router, `resona-compositions`, `resona-audio-midi`, `resona-studio` y `resona-rendering`.
-          - Su instalación y actualización siguen el contrato definido en el [ADR
-          0055](0055-standard-agent-skills-distribution.md).
-        </p>
+        <ul>
+          <li>
+            Las skills viven junto al código fuente y usan exactamente la versión del release de
+            Resona que documentan; no tienen un ciclo de versiones independiente.
+          </li>
+          <li>
+            Una skill router puede dirigir a instrucciones especializadas de autoría, Studio y
+            render.
+          </li>
+          <li>
+            La distribución usa el estándar Agent Skills y prioriza <code>.agents/skills</code> por
+            proyecto.
+          </li>
+          <li>
+            Compatibilidad con herramientas concretas se resuelve mediante plugins, adaptadores o
+            symlinks, no duplicando el contenido canónico.
+          </li>
+          <li>
+            Los agentes consumen las mismas APIs que otras herramientas; no existe una fuente
+            paralela.
+          </li>
+          <li>Modelos, prompts y generación musical automática no forman parte del runtime.</li>
+          <li>
+            Las primeras skills se publican con la primera versión utilizable, después de comprobar
+            sus workflows de punta a punta; no bloquean el primer corte vertical del motor.
+          </li>
+          <li>
+            El conjunto inicial es <code>resona-best-practices</code> como router,
+            <code>resona-compositions</code>, <code>resona-audio-midi</code>,
+            <code>resona-studio</code> y <code>resona-rendering</code>.
+          </li>
+          <li>
+            Su instalación y actualización siguen el contrato definido en el
+            <a href="0055-standard-agent-skills-distribution.html">ADR 0055</a>.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

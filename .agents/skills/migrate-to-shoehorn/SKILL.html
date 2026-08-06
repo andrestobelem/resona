@@ -10,104 +10,135 @@
     <main>
       <p class="source-path">.agents/skills/migrate-to-shoehorn/SKILL.md</p>
       <article>
-        <p>
-          --- name: migrate-to-shoehorn description: Migrate test files from `as` type assertions to
-          @total-typescript/shoehorn. Use when user mentions shoehorn, wants to replace `as` in
-          tests, or needs partial test data. ---
-        </p>
+        <aside class="frontmatter">
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+name: migrate-to-shoehorn
+description: Migrate test files from `as` type assertions to @total-typescript/shoehorn. Use when user mentions shoehorn, wants to replace `as` in tests, or needs partial test data.
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="migrate-to-shoehorn">Migrate to Shoehorn</h1>
         <h2 id="why-shoehorn">Why shoehorn?</h2>
         <p>
-          `shoehorn` lets you pass partial data in tests while keeping TypeScript happy. It replaces
-          `as` assertions with type-safe alternatives.
+          <code>shoehorn</code> lets you pass partial data in tests while keeping TypeScript happy.
+          It replaces <code>as</code> assertions with type-safe alternatives.
         </p>
-        <p>**Test code only.** Never use shoehorn in production code.</p>
-        <p>Problems with `as` in tests:</p>
-        <p>
-          - Trained not to use it - Must manually specify target type - Double-as (`as unknown as
-          Type`) for intentionally wrong data
-        </p>
+        <p><strong>Test code only.</strong> Never use shoehorn in production code.</p>
+        <p>Problems with <code>as</code> in tests:</p>
+        <ul>
+          <li>Trained not to use it</li>
+          <li>Must manually specify target type</li>
+          <li>Double-as (<code>as unknown as Type</code>) for intentionally wrong data</li>
+        </ul>
         <h2 id="install">Install</h2>
-        <pre><code class="language-bash">
-npm i @total-typescript/shoehorn
-        </code></pre>
+        <pre><code class="language-bash">npm i @total-typescript/shoehorn
+</code></pre>
         <h2 id="migration-patterns">Migration patterns</h2>
         <h3 id="large-objects-with-few-needed-properties">
           Large objects with few needed properties
         </h3>
         <p>Before:</p>
-        <pre><code class="language-ts">
-type Request = {
+        <pre><code class="language-ts"><span class="token keyword">type</span> Request = {
   body: { id: string };
   headers: Record&lt;string, string&gt;;
   cookies: Record&lt;string, string&gt;;
-  // ...20 more properties
+  <span class="token comment">// ...20 more properties</span>
 };
 
-it(&quot;gets user by id&quot;, () =&gt; {
-  // Only care about body.id but must fake entire Request
+it(<span class="token string">&quot;gets user by id&quot;</span>, () =&gt; {
+  <span class="token comment">// Only care about body.id but must fake entire Request</span>
   getUser({
-    body: { id: &quot;123&quot; },
+    body: { id: <span class="token string">&quot;123&quot;</span> },
     headers: {},
     cookies: {},
-    // ...fake all 20 properties
+    <span class="token comment">// ...fake all 20 properties</span>
   });
 });
-        </code></pre>
+</code></pre>
         <p>After:</p>
-        <pre><code class="language-ts">
-import { fromPartial } from &quot;@total-typescript/shoehorn&quot;;
+        <pre><code class="language-ts"><span class="token keyword">import</span> { fromPartial } <span class="token keyword">from</span> <span class="token string">&quot;@total-typescript/shoehorn&quot;</span>;
 
-it(&quot;gets user by id&quot;, () =&gt; {
+it(<span class="token string">&quot;gets user by id&quot;</span>, () =&gt; {
   getUser(
     fromPartial({
-      body: { id: &quot;123&quot; },
+      body: { id: <span class="token string">&quot;123&quot;</span> },
     }),
   );
 });
-        </code></pre>
-        <h3 id="as-type-frompartial">`as Type` → `fromPartial()`</h3>
+</code></pre>
+        <h3 id="as-type-frompartial"><code>as Type</code> → <code>fromPartial()</code></h3>
         <p>Before:</p>
-        <pre><code class="language-ts">
-getUser({ body: { id: &quot;123&quot; } } as Request);
-        </code></pre>
+        <pre><code class="language-ts">getUser({ body: { id: <span class="token string">&quot;123&quot;</span> } } as Request);
+</code></pre>
         <p>After:</p>
-        <pre><code class="language-ts">
-import { fromPartial } from &quot;@total-typescript/shoehorn&quot;;
+        <pre><code class="language-ts"><span class="token keyword">import</span> { fromPartial } <span class="token keyword">from</span> <span class="token string">&quot;@total-typescript/shoehorn&quot;</span>;
 
-getUser(fromPartial({ body: { id: &quot;123&quot; } }));
-        </code></pre>
-        <h3 id="as-unknown-as-type-fromany">`as unknown as Type` → `fromAny()`</h3>
+getUser(fromPartial({ body: { id: <span class="token string">&quot;123&quot;</span> } }));
+</code></pre>
+        <h3 id="as-unknown-as-type-fromany">
+          <code>as unknown as Type</code> → <code>fromAny()</code>
+        </h3>
         <p>Before:</p>
-        <pre><code class="language-ts">
-getUser({ body: { id: 123 } } as unknown as Request); // wrong type on purpose
-        </code></pre>
+        <pre><code class="language-ts">getUser({ body: { id: <span class="token number">123</span> } } as unknown as Request); <span class="token comment">// wrong type on purpose</span>
+</code></pre>
         <p>After:</p>
-        <pre><code class="language-ts">
-import { fromAny } from &quot;@total-typescript/shoehorn&quot;;
+        <pre><code class="language-ts"><span class="token keyword">import</span> { fromAny } <span class="token keyword">from</span> <span class="token string">&quot;@total-typescript/shoehorn&quot;</span>;
 
-getUser(fromAny({ body: { id: 123 } }));
-        </code></pre>
+getUser(fromAny({ body: { id: <span class="token number">123</span> } }));
+</code></pre>
         <h2 id="when-to-use-each">When to use each</h2>
-        <p>
-          | Function | Use case | | --------------- |
-          -------------------------------------------------- | | `fromPartial()` | Pass partial data
-          that still type-checks | | `fromAny()` | Pass intentionally wrong data (keeps
-          autocomplete) | | `fromExact()` | Force full object (swap with fromPartial later) |
-        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Function</th>
+              <th>Use case</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>fromPartial()</code></td>
+              <td>Pass partial data that still type-checks</td>
+            </tr>
+            <tr>
+              <td><code>fromAny()</code></td>
+              <td>Pass intentionally wrong data (keeps autocomplete)</td>
+            </tr>
+            <tr>
+              <td><code>fromExact()</code></td>
+              <td>Force full object (swap with fromPartial later)</td>
+            </tr>
+          </tbody>
+        </table>
         <h2 id="workflow">Workflow</h2>
-        <p>
-          1. **Gather requirements** - ask user: - What test files have `as` assertions causing
-          problems? - Are they dealing with large objects where only some properties matter? - Do
-          they need to pass intentionally wrong data for error testing?
-        </p>
-        <p>
-          2. **Install and migrate**: - [ ] Install: `npm i @total-typescript/shoehorn` - [ ] Find
-          test files with `as` assertions: `grep -r &quot; as [A-Z]&quot;
-          --include=&quot;*.test.ts&quot; --include=&quot;*.spec.ts&quot;` - [ ] Replace `as Type`
-          with `fromPartial()` - [ ] Replace `as unknown as Type` with `fromAny()` - [ ] Add imports
-          from `@total-typescript/shoehorn` - [ ] Run type check to verify
-        </p>
+        <ol>
+          <li>
+            <p><strong>Gather requirements</strong> - ask user:</p>
+            <ul>
+              <li>What test files have <code>as</code> assertions causing problems?</li>
+              <li>Are they dealing with large objects where only some properties matter?</li>
+              <li>Do they need to pass intentionally wrong data for error testing?</li>
+            </ul>
+          </li>
+          <li>
+            <p><strong>Install and migrate</strong>:</p>
+            <ul>
+              <li>[ ] Install: <code>npm i @total-typescript/shoehorn</code></li>
+              <li>
+                [ ] Find test files with <code>as</code> assertions:
+                <code
+                  >grep -r &quot; as [A-Z]&quot; --include=&quot;*.test.ts&quot;
+                  --include=&quot;*.spec.ts&quot;</code
+                >
+              </li>
+              <li>[ ] Replace <code>as Type</code> with <code>fromPartial()</code></li>
+              <li>[ ] Replace <code>as unknown as Type</code> with <code>fromAny()</code></li>
+              <li>[ ] Add imports from <code>@total-typescript/shoehorn</code></li>
+              <li>[ ] Run type check to verify</li>
+            </ul>
+          </li>
+        </ol>
       </article>
     </main>
   </body>

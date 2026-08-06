@@ -10,39 +10,64 @@
     <main>
       <p class="source-path">docs/adr/0041-static-audio-project-resource-references.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="staticaudio-referencia-el-directorio-estatico-del-proyecto">
           staticAudio referencia el directorio estático del proyecto
         </h1>
         <p>
-          `staticAudio()` crea una referencia serializable a un WAV dentro del directorio estático
-          del proyecto, cuyo default es `public/`. La ruta lógica no depende del directorio de
-          trabajo y no constituye la identidad de los bytes.
+          <code>staticAudio()</code> crea una referencia serializable a un WAV dentro del directorio
+          estático del proyecto, cuyo default es <code>public/</code>. La ruta lógica no depende del
+          directorio de trabajo y no constituye la identidad de los bytes.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Aceptar cualquier path del filesystem y resolverlo contra el `cwd`. - Resolver paths
-          relativos al archivo TypeScript que invoca el helper. - Usar una raíz estática explícita
-          al estilo de Remotion. - Incorporar desde el inicio imports de assets y resolvers
-          extensibles.
-        </p>
+        <ul>
+          <li>Aceptar cualquier path del filesystem y resolverlo contra el <code>cwd</code>.</li>
+          <li>Resolver paths relativos al archivo TypeScript que invoca el helper.</li>
+          <li>Usar una raíz estática explícita al estilo de Remotion.</li>
+          <li>Incorporar desde el inicio imports de assets y resolvers extensibles.</li>
+        </ul>
         <p>
           Se eligió la tercera opción por su portabilidad entre Studio y Node, su representación
           serializable y su frontera de seguridad simple para el primer proyecto local.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - `staticAudio(&quot;drums/loop.wav&quot;)` no carga ni decodifica bytes. - La raíz
-          estática tiene default `public/` y se resuelve desde el proyecto, nunca desde `cwd`. -
-          Paths absolutos, vacíos o que escapen mediante `..` fallan la validación. - Studio y
-          renderer resuelven la misma referencia mediante adaptadores locales. - La variante
-          resuelta reemplaza identidad por path por un hash de contenido verificado. - Assets de
-          paquetes y resolvers personalizados quedan fuera del MVP. - La forma versionada usada
-          también en inputs se define en el [ADR
-          0047](0047-versioned-static-audio-input-reference.md). - Toda referencia se resuelve antes
-          de podar contenido fuera de rango según el [ADR
-          0072](0072-validate-before-pruning-execution-plan.md).
-        </p>
+        <ul>
+          <li>
+            <code>staticAudio(&quot;drums/loop.wav&quot;)</code> no carga ni decodifica bytes.
+          </li>
+          <li>
+            La raíz estática tiene default <code>public/</code> y se resuelve desde el proyecto,
+            nunca desde <code>cwd</code>.
+          </li>
+          <li>
+            Paths absolutos, vacíos o que escapen mediante <code>..</code> fallan la validación.
+          </li>
+          <li>Studio y renderer resuelven la misma referencia mediante adaptadores locales.</li>
+          <li>
+            La variante resuelta reemplaza identidad por path por un hash de contenido verificado.
+          </li>
+          <li>Assets de paquetes y resolvers personalizados quedan fuera del MVP.</li>
+          <li>
+            La forma versionada usada también en inputs se define en el
+            <a href="0047-versioned-static-audio-input-reference.html">ADR 0047</a>.
+          </li>
+          <li>
+            Toda referencia se resuelve antes de podar contenido fuera de rango según el
+            <a href="0072-validate-before-pruning-execution-plan.html">ADR 0072</a>.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

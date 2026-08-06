@@ -10,56 +10,101 @@
     <main>
       <p class="source-path">docs/adr/0077-canonical-node-paths-and-source-locations.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="nodepath-es-jerarquico-y-sourcelocation-es-solo-diagnostica">
           NodePath es jerárquico y SourceLocation es solo diagnóstica
         </h1>
         <p>
-          Los nodos de `CompositionIR` se identifican mediante arrays de segmentos canónicos. La
-          ubicación de código se conserva por separado y puede cambiar sin modificar identidad ni
-          resultado musical.
+          Los nodos de <code>CompositionIR</code> se identifican mediante arrays de segmentos
+          canónicos. La ubicación de código se conserva por separado y puede cambiar sin modificar
+          identidad ni resultado musical.
         </p>
-        <pre><code class="language-ts">
-type NodePath = readonly [
+        <pre><code class="language-ts"><span class="token keyword">type</span> NodePath = readonly [
   compositionId: string,
   rootNodeId: string,
   ...descendantNodeIds: string[],
 ];
 
-type SourceLocation = Readonly&lt;{
+<span class="token keyword">type</span> SourceLocation = Readonly&lt;{
   file: string;
   line: number;
   column: number;
 }&gt;;
-        </code></pre>
+</code></pre>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Serializar paths como strings unidos por `/` y escapar separadores cuando sea necesario.
-          - Usar UUIDs globales sin conservar jerarquía en la identidad. - Usar arrays JSON de IDs
-          validados y mantener la ubicación fuente como metadata separada.
-        </p>
+        <ul>
+          <li>
+            Serializar paths como strings unidos por <code>/</code> y escapar separadores cuando sea
+            necesario.
+          </li>
+          <li>Usar UUIDs globales sin conservar jerarquía en la identidad.</li>
+          <li>
+            Usar arrays JSON de IDs validados y mantener la ubicación fuente como metadata separada.
+          </li>
+        </ul>
         <p>
           Se eligió la tercera opción. Evita reglas de escaping, conserva la estructura que Studio y
           diagnósticos necesitan y permite comparar paths sin depender de presentación o filesystem.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - Los IDs públicos distinguen mayúsculas y cumplen `^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$`. -
-          El primer segmento de todo path es `compositionId` y el segundo es el ID de la secuencia
-          raíz. - El `id` de un nodo coincide con el último segmento de su path. - El path de un
-          hijo es el path de su padre seguido por su propio ID. - La forma canónica es el array
-          JSON; una representación unida por `/` es solo presentación. - La comparación es
-          lexicográfica por segmentos según orden ASCII. Un prefijo más corto se ordena antes que su
-          extensión. - Los segmentos internos cumplen `^~[a-z][a-z0-9-]*:(0|[1-9][0-9]*)$`; la API
-          pública rechaza `~` y el compilador asigna ordinales deterministas. -
-          `SourceLocation.file` es un path lógico no vacío, relativo a la raíz estable del proyecto
-          y escrito con `/`. - El archivo no comienza con `./` ni contiene backslashes, segmentos
-          vacíos, `.` o `..`. - `line` y `column` son enteros seguros positivos basados en uno y
-          señalan el comienzo del nodo. - Si algún dato de ubicación no está disponible, se omite
-          `source` completo. - Instancias diferentes pueden compartir ubicación fuente y conservar
-          paths distintos. - `NodePath` participa en identidad y orden canónico. `SourceLocation`
-          queda fuera de música, hashes y fingerprints.
-        </p>
+        <ul>
+          <li>
+            Los IDs públicos distinguen mayúsculas y cumplen
+            <code>^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$</code>.
+          </li>
+          <li>
+            El primer segmento de todo path es <code>compositionId</code> y el segundo es el ID de
+            la secuencia raíz.
+          </li>
+          <li>El <code>id</code> de un nodo coincide con el último segmento de su path.</li>
+          <li>El path de un hijo es el path de su padre seguido por su propio ID.</li>
+          <li>
+            La forma canónica es el array JSON; una representación unida por <code>/</code> es solo
+            presentación.
+          </li>
+          <li>
+            La comparación es lexicográfica por segmentos según orden ASCII. Un prefijo más corto se
+            ordena antes que su extensión.
+          </li>
+          <li>
+            Los segmentos internos cumplen <code>^~[a-z][a-z0-9-]*:(0|[1-9][0-9]*)$</code>; la API
+            pública rechaza <code>~</code> y el compilador asigna ordinales deterministas.
+          </li>
+          <li>
+            <code>SourceLocation.file</code> es un path lógico no vacío, relativo a la raíz estable
+            del proyecto y escrito con <code>/</code>.
+          </li>
+          <li>
+            El archivo no comienza con <code>./</code> ni contiene backslashes, segmentos vacíos,
+            <code>.</code> o <code>..</code>.
+          </li>
+          <li>
+            <code>line</code> y <code>column</code> son enteros seguros positivos basados en uno y
+            señalan el comienzo del nodo.
+          </li>
+          <li>
+            Si algún dato de ubicación no está disponible, se omite <code>source</code> completo.
+          </li>
+          <li>
+            Instancias diferentes pueden compartir ubicación fuente y conservar paths distintos.
+          </li>
+          <li>
+            <code>NodePath</code> participa en identidad y orden canónico.
+            <code>SourceLocation</code> queda fuera de música, hashes y fingerprints.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

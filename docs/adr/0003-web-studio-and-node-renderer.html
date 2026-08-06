@@ -10,7 +10,19 @@
     <main>
       <p class="source-path">docs/adr/0003-web-studio-and-node-renderer.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="studio-vive-en-web-y-el-renderer-en-node">
           Studio vive en web y el renderer en Node
         </h1>
@@ -21,23 +33,28 @@
           que una aplicación desktop o un servicio cloud se conviertan en prerrequisitos del núcleo.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Studio web local y renderer en Node. - Una aplicación desktop que aloje tanto Studio
-          como el motor. - Un servicio web con preview y render en la nube.
-        </p>
+        <ul>
+          <li>Studio web local y renderer en Node.</li>
+          <li>Una aplicación desktop que aloje tanto Studio como el motor.</li>
+          <li>Un servicio web con preview y render en la nube.</li>
+        </ul>
         <p>
           Se eligió la primera opción porque permite validar autoría, preview y automatización con
           menos infraestructura y sin decidir todavía el empaquetado desktop ni la operación cloud.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - Studio y renderer pueden usar adaptadores de ejecución diferentes, pero deben consumir
-          el mismo modelo musical resuelto y respetar un contrato explícito de equivalencia. - El
-          backend concreto del motor de audio sigue siendo una decisión separada. - Una aplicación
-          desktop podrá alojar Studio más adelante sin convertirse en la fuente de verdad de la
-          composición. - El render distribuido y los servicios cloud quedan fuera del primer
-          alcance.
-        </p>
+        <ul>
+          <li>
+            Studio y renderer pueden usar adaptadores de ejecución diferentes, pero deben consumir
+            el mismo modelo musical resuelto y respetar un contrato explícito de equivalencia.
+          </li>
+          <li>El backend concreto del motor de audio sigue siendo una decisión separada.</li>
+          <li>
+            Una aplicación desktop podrá alojar Studio más adelante sin convertirse en la fuente de
+            verdad de la composición.
+          </li>
+          <li>El render distribuido y los servicios cloud quedan fuera del primer alcance.</li>
+        </ul>
       </article>
     </main>
   </body>

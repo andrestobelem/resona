@@ -10,7 +10,19 @@
     <main>
       <p class="source-path">docs/adr/0017-content-addressed-resolved-assets.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="los-recursos-resueltos-se-fijan-por-hash-de-contenido">
           Los recursos resueltos se fijan por hash de contenido
         </h1>
@@ -20,25 +32,33 @@
           cambiar silenciosamente el audio de una ejecución ya preparada.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Tratar la ruta como identidad y leer su contenido cada vez que se necesite. - Invalidar
-          solamente mediante fecha de modificación y tamaño. - Resolver una referencia a hash y
-          metadata y fijarlos en la variante.
-        </p>
+        <ul>
+          <li>Tratar la ruta como identidad y leer su contenido cada vez que se necesite.</li>
+          <li>Invalidar solamente mediante fecha de modificación y tamaño.</li>
+          <li>Resolver una referencia a hash y metadata y fijarlos en la variante.</li>
+        </ul>
         <p>
           Se eligió la tercera opción para que cache, Studio y renderer compartan una identidad de
           contenido verificable y para detectar cambios entre preparación y ejecución.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - El resolver valida contenedor, sample rate y canales antes de compilar el plan. - La
-          variante resuelta conserva referencia, hash y metadata del recurso. - El cache se
-          direcciona por hash de contenido, no solamente por ruta. - Si el contenido cambia antes de
-          ejecutar, la variante se invalida y se informa un diagnóstico; no se mezclan bytes nuevos
-          con metadata anterior. - La referencia local inicial se define en el [ADR
-          0041](0041-static-audio-project-resource-references.md). - El hash y el caché se definen
-          en el [ADR 0042](0042-sha256-identifies-source-asset-bytes.md).
-        </p>
+        <ul>
+          <li>El resolver valida contenedor, sample rate y canales antes de compilar el plan.</li>
+          <li>La variante resuelta conserva referencia, hash y metadata del recurso.</li>
+          <li>El cache se direcciona por hash de contenido, no solamente por ruta.</li>
+          <li>
+            Si el contenido cambia antes de ejecutar, la variante se invalida y se informa un
+            diagnóstico; no se mezclan bytes nuevos con metadata anterior.
+          </li>
+          <li>
+            La referencia local inicial se define en el
+            <a href="0041-static-audio-project-resource-references.html">ADR 0041</a>.
+          </li>
+          <li>
+            El hash y el caché se definen en el
+            <a href="0042-sha256-identifies-source-asset-bytes.html">ADR 0042</a>.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

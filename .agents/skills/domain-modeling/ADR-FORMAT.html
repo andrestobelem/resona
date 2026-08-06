@@ -12,61 +12,97 @@
       <article>
         <h1 id="adr-format">ADR Format</h1>
         <p>
-          ADRs live in `docs/adr/` and use sequential numbering: `0001-slug.md`, `0002-slug.md`,
-          etc.
+          ADRs live in <code>docs/adr/</code> and use sequential numbering:
+          <code>0001-slug.md</code>, <code>0002-slug.md</code>, etc.
         </p>
-        <p>Create the `docs/adr/` directory lazily — only when the first ADR is needed.</p>
+        <p>
+          Create the <code>docs/adr/</code> directory lazily — only when the first ADR is needed.
+        </p>
         <h2 id="template">Template</h2>
-        <pre><code class="language-md">
-# {Short title of the decision}
+        <pre><code class="language-md"># {Short title of the decision}
 
 {1-3 sentences: what's the context, what did we decide, and why.}
-        </code></pre>
+</code></pre>
         <p>
-          That's it. An ADR can be a single paragraph. The value is in recording *that* a decision
-          was made and *why* — not in filling out sections.
+          That's it. An ADR can be a single paragraph. The value is in recording <em>that</em> a
+          decision was made and <em>why</em> — not in filling out sections.
         </p>
         <h2 id="optional-sections">Optional sections</h2>
         <p>Only include these when they add genuine value. Most ADRs won't need them.</p>
-        <p>
-          - **Status** frontmatter (`proposed | accepted | deprecated | superseded by ADR-NNNN`) —
-          useful when decisions are revisited - **Considered Options** — only when the rejected
-          alternatives are worth remembering - **Consequences** — only when non-obvious downstream
-          effects need to be called out
-        </p>
+        <ul>
+          <li>
+            <strong>Status</strong> frontmatter (<code
+              >proposed | accepted | deprecated | superseded by ADR-NNNN</code
+            >) — useful when decisions are revisited
+          </li>
+          <li>
+            <strong>Considered Options</strong> — only when the rejected alternatives are worth
+            remembering
+          </li>
+          <li>
+            <strong>Consequences</strong> — only when non-obvious downstream effects need to be
+            called out
+          </li>
+        </ul>
         <h2 id="numbering">Numbering</h2>
-        <p>Scan `docs/adr/` for the highest existing number and increment by one.</p>
+        <p>Scan <code>docs/adr/</code> for the highest existing number and increment by one.</p>
         <h2 id="when-to-offer-an-adr">When to offer an ADR</h2>
         <p>All three of these must be true:</p>
-        <p>
-          1. **Hard to reverse** — the cost of changing your mind later is meaningful 2.
-          **Surprising without context** — a future reader will look at the code and wonder
-          &quot;why on earth did they do it this way?&quot; 3. **The result of a real trade-off** —
-          there were genuine alternatives and you picked one for specific reasons
-        </p>
+        <ol>
+          <li>
+            <strong>Hard to reverse</strong> — the cost of changing your mind later is meaningful
+          </li>
+          <li>
+            <strong>Surprising without context</strong> — a future reader will look at the code and
+            wonder &quot;why on earth did they do it this way?&quot;
+          </li>
+          <li>
+            <strong>The result of a real trade-off</strong> — there were genuine alternatives and
+            you picked one for specific reasons
+          </li>
+        </ol>
         <p>
           If a decision is easy to reverse, skip it — you'll just reverse it. If it's not
           surprising, nobody will wonder why. If there was no real alternative, there's nothing to
           record beyond &quot;we did the obvious thing.&quot;
         </p>
         <h3 id="what-qualifies">What qualifies</h3>
-        <p>
-          - **Architectural shape.** &quot;We're using a monorepo.&quot; &quot;The write model is
-          event-sourced, the read model is projected into Postgres.&quot; - **Integration patterns
-          between contexts.** &quot;Ordering and Billing communicate via domain events, not
-          synchronous HTTP.&quot; - **Technology choices that carry lock-in.** Database, message
-          bus, auth provider, deployment target. Not every library — just the ones that would take a
-          quarter to swap out. - **Boundary and scope decisions.** &quot;Customer data is owned by
-          the Customer context; other contexts reference it by ID only.&quot; The explicit no-s are
-          as valuable as the yes-s. - **Deliberate deviations from the obvious path.** &quot;We're
-          using manual SQL instead of an ORM because X.&quot; Anything where a reasonable reader
-          would assume the opposite. These stop the next engineer from &quot;fixing&quot; something
-          that was deliberate. - **Constraints not visible in the code.** &quot;We can't use AWS
-          because of compliance requirements.&quot; &quot;Response times must be under 200ms because
-          of the partner API contract.&quot; - **Rejected alternatives when the rejection is
-          non-obvious.** If you considered GraphQL and picked REST for subtle reasons, record it —
-          otherwise someone will suggest GraphQL again in six months.
-        </p>
+        <ul>
+          <li>
+            <strong>Architectural shape.</strong> &quot;We're using a monorepo.&quot; &quot;The
+            write model is event-sourced, the read model is projected into Postgres.&quot;
+          </li>
+          <li>
+            <strong>Integration patterns between contexts.</strong> &quot;Ordering and Billing
+            communicate via domain events, not synchronous HTTP.&quot;
+          </li>
+          <li>
+            <strong>Technology choices that carry lock-in.</strong> Database, message bus, auth
+            provider, deployment target. Not every library — just the ones that would take a quarter
+            to swap out.
+          </li>
+          <li>
+            <strong>Boundary and scope decisions.</strong> &quot;Customer data is owned by the
+            Customer context; other contexts reference it by ID only.&quot; The explicit no-s are as
+            valuable as the yes-s.
+          </li>
+          <li>
+            <strong>Deliberate deviations from the obvious path.</strong> &quot;We're using manual
+            SQL instead of an ORM because X.&quot; Anything where a reasonable reader would assume
+            the opposite. These stop the next engineer from &quot;fixing&quot; something that was
+            deliberate.
+          </li>
+          <li>
+            <strong>Constraints not visible in the code.</strong> &quot;We can't use AWS because of
+            compliance requirements.&quot; &quot;Response times must be under 200ms because of the
+            partner API contract.&quot;
+          </li>
+          <li>
+            <strong>Rejected alternatives when the rejection is non-obvious.</strong> If you
+            considered GraphQL and picked REST for subtle reasons, record it — otherwise someone
+            will suggest GraphQL again in six months.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

@@ -10,108 +10,148 @@
     <main>
       <p class="source-path">.agents/skills/improve-codebase-architecture/SKILL.md</p>
       <article>
-        <p>
-          --- name: improve-codebase-architecture description: Scan a codebase for deepening
-          opportunities, present them as a visual HTML report, then grill through whichever one you
-          pick. disable-model-invocation: true ---
-        </p>
+        <aside class="frontmatter">
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+name: improve-codebase-architecture
+description: Scan a codebase for deepening opportunities, present them as a visual HTML report, then grill through whichever one you pick.
+disable-model-invocation: true
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="improve-codebase-architecture">Improve Codebase Architecture</h1>
         <p>
-          Surface architectural friction and propose **deepening opportunities** — refactors that
-          turn shallow modules into deep ones. The aim is testability and AI-navigability.
+          Surface architectural friction and propose <strong>deepening opportunities</strong> —
+          refactors that turn shallow modules into deep ones. The aim is testability and
+          AI-navigability.
         </p>
         <p>
-          This command is _informed_ by the project's domain model and built on a shared design
-          vocabulary:
+          This command is <em>informed</em> by the project's domain model and built on a shared
+          design vocabulary:
         </p>
-        <p>
-          - Run the `/codebase-design` skill for the architecture vocabulary (**module**,
-          **interface**, **depth**, **seam**, **adapter**, **leverage**, **locality**) and its
-          principles (the deletion test, &quot;the interface is the test surface&quot;, &quot;one
-          adapter = hypothetical seam, two = real&quot;). Use these terms exactly in every
-          suggestion — don't drift into &quot;component,&quot; &quot;service,&quot; &quot;API,&quot;
-          or &quot;boundary.&quot; - The domain language in `CONTEXT.md` gives names to good seams;
-          ADRs in `docs/adr/` record decisions this command should not re-litigate.
-        </p>
+        <ul>
+          <li>
+            Run the <code>/codebase-design</code> skill for the architecture vocabulary
+            (<strong>module</strong>, <strong>interface</strong>, <strong>depth</strong>,
+            <strong>seam</strong>, <strong>adapter</strong>, <strong>leverage</strong>,
+            <strong>locality</strong>) and its principles (the deletion test, &quot;the interface is
+            the test surface&quot;, &quot;one adapter = hypothetical seam, two = real&quot;). Use
+            these terms exactly in every suggestion — don't drift into &quot;component,&quot;
+            &quot;service,&quot; &quot;API,&quot; or &quot;boundary.&quot;
+          </li>
+          <li>
+            The domain language in <code>CONTEXT.md</code> gives names to good seams; ADRs in
+            <code>docs/adr/</code> record decisions this command should not re-litigate.
+          </li>
+        </ul>
         <h2 id="process">Process</h2>
         <h3 id="1-explore">1. Explore</h3>
         <p>
-          **Scope before you scan — YAGNI.** Deepening a module pays off by making future changes to
-          it easier, so put extra weight on the parts of the codebase that have recently changed.
-          Decide *where* to look before you look:
+          <strong>Scope before you scan — YAGNI.</strong> Deepening a module pays off by making
+          future changes to it easier, so put extra weight on the parts of the codebase that have
+          recently changed. Decide <em>where</em> to look before you look:
+        </p>
+        <ul>
+          <li>
+            If the user named a direction — a module, a subsystem, a pain point — take it, and skip
+            the inference below.
+          </li>
+          <li>
+            Otherwise, walk back a good stretch of the commit history (<code>git log --oneline</code
+            >) to find the codebase's hot spots — the files and areas that keep coming up — and let
+            those paths pull your attention first. If the changes are scattered with no clear hot
+            spot, widen the net.
+          </li>
+        </ul>
+        <p>
+          Read the project's domain glossary (<code>CONTEXT.md</code>) and any ADRs in the area
+          you're touching first.
         </p>
         <p>
-          - If the user named a direction — a module, a subsystem, a pain point — take it, and skip
-          the inference below. - Otherwise, walk back a good stretch of the commit history (`git log
-          --oneline`) to find the codebase's hot spots — the files and areas that keep coming up —
-          and let those paths pull your attention first. If the changes are scattered with no clear
-          hot spot, widen the net.
+          Then use the Agent tool with <code>subagent_type=Explore</code> to walk the codebase.
+          Don't follow rigid heuristics — explore organically and note where you experience
+          friction:
         </p>
+        <ul>
+          <li>Where does understanding one concept require bouncing between many small modules?</li>
+          <li>
+            Where are modules <strong>shallow</strong> — interface nearly as complex as the
+            implementation?
+          </li>
+          <li>
+            Where have pure functions been extracted just for testability, but the real bugs hide in
+            how they're called (no <strong>locality</strong>)?
+          </li>
+          <li>Where do tightly-coupled modules leak across their seams?</li>
+          <li>
+            Which parts of the codebase are untested, or hard to test through their current
+            interface?
+          </li>
+        </ul>
         <p>
-          Read the project's domain glossary (`CONTEXT.md`) and any ADRs in the area you're touching
-          first.
-        </p>
-        <p>
-          Then use the Agent tool with `subagent_type=Explore` to walk the codebase. Don't follow
-          rigid heuristics — explore organically and note where you experience friction:
-        </p>
-        <p>
-          - Where does understanding one concept require bouncing between many small modules? -
-          Where are modules **shallow** — interface nearly as complex as the implementation? - Where
-          have pure functions been extracted just for testability, but the real bugs hide in how
-          they're called (no **locality**)? - Where do tightly-coupled modules leak across their
-          seams? - Which parts of the codebase are untested, or hard to test through their current
-          interface?
-        </p>
-        <p>
-          Apply the **deletion test** to anything you suspect is shallow: would deleting it
-          concentrate complexity, or just move it? A &quot;yes, concentrates&quot; is the signal you
-          want.
+          Apply the <strong>deletion test</strong> to anything you suspect is shallow: would
+          deleting it concentrate complexity, or just move it? A &quot;yes, concentrates&quot; is
+          the signal you want.
         </p>
         <h3 id="2-present-candidates-as-an-html-report">2. Present candidates as an HTML report</h3>
         <p>
           Write a self-contained HTML file to the OS temp directory so nothing lands in the repo.
-          Resolve the temp dir from `$TMPDIR`, falling back to `/tmp` (or `%TEMP%` on Windows), and
-          write to `&lt;tmpdir&gt;/architecture-review-&lt;timestamp&gt;.html` so each run gets a
-          fresh file. Open it for the user — `xdg-open &lt;path&gt;` on Linux, `open &lt;path&gt;`
-          on macOS, `start &lt;path&gt;` on Windows — and tell them the absolute path.
+          Resolve the temp dir from <code>$TMPDIR</code>, falling back to <code>/tmp</code> (or
+          <code>%TEMP%</code> on Windows), and write to
+          <code>&lt;tmpdir&gt;/architecture-review-&lt;timestamp&gt;.html</code> so each run gets a
+          fresh file. Open it for the user — <code>xdg-open &lt;path&gt;</code> on Linux,
+          <code>open &lt;path&gt;</code> on macOS, <code>start &lt;path&gt;</code> on Windows — and
+          tell them the absolute path.
         </p>
         <p>
-          The report uses **Tailwind via CDN** for layout and styling, and **Mermaid via CDN** for
-          diagrams where a graph/flow/sequence reliably communicates the structure. Mix Mermaid with
-          hand-crafted CSS/SVG visuals — use Mermaid when relationships are graph-shaped (call
-          graphs, dependencies, sequences), and hand-built divs/SVG when you want something more
-          editorial (mass diagrams, cross-sections, collapse animations). Each candidate gets a
-          **before/after visualisation**. Be visual.
+          The report uses <strong>Tailwind via CDN</strong> for layout and styling, and
+          <strong>Mermaid via CDN</strong> for diagrams where a graph/flow/sequence reliably
+          communicates the structure. Mix Mermaid with hand-crafted CSS/SVG visuals — use Mermaid
+          when relationships are graph-shaped (call graphs, dependencies, sequences), and hand-built
+          divs/SVG when you want something more editorial (mass diagrams, cross-sections, collapse
+          animations). Each candidate gets a <strong>before/after visualisation</strong>. Be visual.
         </p>
         <p>For each candidate, render a card with:</p>
+        <ul>
+          <li><strong>Files</strong> — which files/modules are involved</li>
+          <li><strong>Problem</strong> — why the current architecture is causing friction</li>
+          <li><strong>Solution</strong> — plain English description of what would change</li>
+          <li>
+            <strong>Benefits</strong> — explained in terms of locality and leverage, and how tests
+            would improve
+          </li>
+          <li>
+            <strong>Before / After diagram</strong> — side-by-side, custom-drawn, illustrating the
+            shallowness and the deepening
+          </li>
+          <li>
+            <strong>Recommendation strength</strong> — one of <code>Strong</code>,
+            <code>Worth exploring</code>, <code>Speculative</code>, rendered as a badge
+          </li>
+        </ul>
         <p>
-          - **Files** — which files/modules are involved - **Problem** — why the current
-          architecture is causing friction - **Solution** — plain English description of what would
-          change - **Benefits** — explained in terms of locality and leverage, and how tests would
-          improve - **Before / After diagram** — side-by-side, custom-drawn, illustrating the
-          shallowness and the deepening - **Recommendation strength** — one of `Strong`, `Worth
-          exploring`, `Speculative`, rendered as a badge
+          End the report with a <strong>Top recommendation</strong> section: which candidate you'd
+          tackle first and why.
         </p>
         <p>
-          End the report with a **Top recommendation** section: which candidate you'd tackle first
-          and why.
+          <strong
+            >Use CONTEXT.md vocabulary for the domain, and the
+            <code>/codebase-design</code> vocabulary for the architecture.</strong
+          >
+          If <code>CONTEXT.md</code> defines &quot;Order,&quot; talk about &quot;the Order intake
+          module&quot; — not &quot;the FooBarHandler,&quot; and not &quot;the Order service.&quot;
         </p>
         <p>
-          **Use CONTEXT.md vocabulary for the domain, and the `/codebase-design` vocabulary for the
-          architecture.** If `CONTEXT.md` defines &quot;Order,&quot; talk about &quot;the Order
-          intake module&quot; — not &quot;the FooBarHandler,&quot; and not &quot;the Order
-          service.&quot;
+          <strong>ADR conflicts</strong>: if a candidate contradicts an existing ADR, only surface
+          it when the friction is real enough to warrant revisiting the ADR. Mark it clearly in the
+          card (e.g. a warning callout:
+          <em>&quot;contradicts ADR-0007 — but worth reopening because…&quot;</em>). Don't list
+          every theoretical refactor an ADR forbids.
         </p>
         <p>
-          **ADR conflicts**: if a candidate contradicts an existing ADR, only surface it when the
-          friction is real enough to warrant revisiting the ADR. Mark it clearly in the card (e.g. a
-          warning callout: _&quot;contradicts ADR-0007 — but worth reopening because…&quot;_). Don't
-          list every theoretical refactor an ADR forbids.
-        </p>
-        <p>
-          See [HTML-REPORT.md](HTML-REPORT.md) for the full HTML scaffold, diagram patterns, and
-          styling guidance.
+          See <a href="HTML-REPORT.html">HTML-REPORT.md</a> for the full HTML scaffold, diagram
+          patterns, and styling guidance.
         </p>
         <p>
           Do NOT propose interfaces yet. After the file is written, ask the user: &quot;Which of
@@ -119,25 +159,42 @@
         </p>
         <h3 id="3-grilling-loop">3. Grilling loop</h3>
         <p>
-          Once the user picks a candidate, run the `/grilling` skill to walk the decision tree with
-          them — constraints, dependencies, the shape of the deepened module, what sits behind the
-          seam, what tests survive.
+          Once the user picks a candidate, run the <code>/grilling</code> skill to walk the decision
+          tree with them — constraints, dependencies, the shape of the deepened module, what sits
+          behind the seam, what tests survive.
         </p>
         <p>
-          Side effects happen inline as decisions crystallize — run the `/domain-modeling` skill to
-          keep the domain model current as you go:
+          Side effects happen inline as decisions crystallize — run the
+          <code>/domain-modeling</code> skill to keep the domain model current as you go:
         </p>
-        <p>
-          - **Naming a deepened module after a concept not in `CONTEXT.md`?** Add the term to
-          `CONTEXT.md`. Create the file lazily if it doesn't exist. - **Sharpening a fuzzy term
-          during the conversation?** Update `CONTEXT.md` right there. - **User rejects the candidate
-          with a load-bearing reason?** Offer an ADR, framed as: _&quot;Want me to record this as an
-          ADR so future architecture reviews don't re-suggest it?&quot;_ Only offer when the reason
-          would actually be needed by a future explorer to avoid re-suggesting the same thing — skip
-          ephemeral reasons (&quot;not worth it right now&quot;) and self-evident ones. - **Want to
-          explore alternative interfaces for the deepened module?** Run the `/codebase-design` skill
-          and use its design-it-twice parallel sub-agent pattern.
-        </p>
+        <ul>
+          <li>
+            <strong
+              >Naming a deepened module after a concept not in <code>CONTEXT.md</code>?</strong
+            >
+            Add the term to <code>CONTEXT.md</code>. Create the file lazily if it doesn't exist.
+          </li>
+          <li>
+            <strong>Sharpening a fuzzy term during the conversation?</strong> Update
+            <code>CONTEXT.md</code> right there.
+          </li>
+          <li>
+            <strong>User rejects the candidate with a load-bearing reason?</strong> Offer an ADR,
+            framed as:
+            <em
+              >&quot;Want me to record this as an ADR so future architecture reviews don't
+              re-suggest it?&quot;</em
+            >
+            Only offer when the reason would actually be needed by a future explorer to avoid
+            re-suggesting the same thing — skip ephemeral reasons (&quot;not worth it right
+            now&quot;) and self-evident ones.
+          </li>
+          <li>
+            <strong>Want to explore alternative interfaces for the deepened module?</strong> Run the
+            <code>/codebase-design</code> skill and use its design-it-twice parallel sub-agent
+            pattern.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

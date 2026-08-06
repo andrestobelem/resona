@@ -10,37 +10,64 @@
     <main>
       <p class="source-path">docs/adr/0038-sample-accurate-gain-automation.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="la-automatizacion-de-gain-tiene-semantica-por-frame">
           La automatización de Gain tiene semántica por frame
         </h1>
         <p>
-          Cada punto de automatización declara posición, valor e interpolación `hold` o `linear`
-          hacia el siguiente punto. La curva se evalúa por frame absoluto y no depende de la
-          partición en bloques.
+          Cada punto de automatización declara posición, valor e interpolación <code>hold</code> o
+          <code>linear</code> hacia el siguiente punto. La curva se evalúa por frame absoluto y no
+          depende de la partición en bloques.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Evaluar y suavizar cambios una vez por bloque. - Dejar implícitos los valores fuera del
-          rango de puntos y resolver empates por orden. - Definir la curva completa y rechazar
-          posiciones que colisionen al convertirlas a frames.
-        </p>
+        <ul>
+          <li>Evaluar y suavizar cambios una vez por bloque.</li>
+          <li>
+            Dejar implícitos los valores fuera del rango de puntos y resolver empates por orden.
+          </li>
+          <li>
+            Definir la curva completa y rechazar posiciones que colisionen al convertirlas a frames.
+          </li>
+        </ul>
         <p>
           Se eligió la tercera opción para que Studio y render compartan exactamente los mismos
           límites y para que cambiar el tamaño de bloque no modifique una rampa.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - Antes del primer punto se usa el valor base de `Gain`. - El valor de un punto comienza
-          en su frame exacto. - `hold` conserva el valor izquierdo y `linear` interpola hasta el
-          siguiente. - Después del último punto se conserva su valor. - Los puntos se ordenan por
-          tiempo durante la planificación. - Dos posiciones que redondean al mismo frame producen un
-          diagnóstico de error. - El valor evaluado se calcula desde el frame absoluto, no
-          acumulando pasos por bloque. - La forma ejecutable de lanes y puntos se fija en el [ADR
-          0075](0075-frame-resolved-gain-automation-points.md). - La interpolación y su conversión
-          antes de aplicar `Gain` se fijan en el [ADR
-          0078](0078-explicit-float32-audio-boundaries.md).
-        </p>
+        <ul>
+          <li>Antes del primer punto se usa el valor base de <code>Gain</code>.</li>
+          <li>El valor de un punto comienza en su frame exacto.</li>
+          <li>
+            <code>hold</code> conserva el valor izquierdo y <code>linear</code> interpola hasta el
+            siguiente.
+          </li>
+          <li>Después del último punto se conserva su valor.</li>
+          <li>Los puntos se ordenan por tiempo durante la planificación.</li>
+          <li>Dos posiciones que redondean al mismo frame producen un diagnóstico de error.</li>
+          <li>
+            El valor evaluado se calcula desde el frame absoluto, no acumulando pasos por bloque.
+          </li>
+          <li>
+            La forma ejecutable de lanes y puntos se fija en el
+            <a href="0075-frame-resolved-gain-automation-points.html">ADR 0075</a>.
+          </li>
+          <li>
+            La interpolación y su conversión antes de aplicar <code>Gain</code> se fijan en el
+            <a href="0078-explicit-float32-audio-boundaries.html">ADR 0078</a>.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

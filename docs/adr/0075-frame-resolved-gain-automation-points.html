@@ -10,70 +10,151 @@
     <main>
       <p class="source-path">docs/adr/0075-frame-resolved-gain-automation-points.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="executionplan-v1-conserva-puntos-de-gain-resueltos-por-frame">
           ExecutionPlan v1 conserva puntos de gain resueltos por frame
         </h1>
         <p>
-          La automatización ejecutable referencia `Gain` por índice y conserva puntos ya convertidos
-          a frames. Los segmentos que un motor use para optimizar su recorrido son estado derivado y
-          no forman parte del plan serializado.
+          La automatización ejecutable referencia <code>Gain</code> por índice y conserva puntos ya
+          convertidos a frames. Los segmentos que un motor use para optimizar su recorrido son
+          estado derivado y no forman parte del plan serializado.
         </p>
-        <pre><code class="language-ts">
-type AutomationPointPlan = Readonly&lt;{
+        <pre><code class="language-ts"><span class="token keyword">type</span> AutomationPointPlan = Readonly&lt;{
   frame: number;
   value: number;
-  interpolation: &quot;hold&quot; | &quot;linear&quot;;
+  interpolation: <span class="token string">&quot;hold&quot;</span> | <span class="token string">&quot;linear&quot;</span>;
 }&gt;;
 
-type AutomationLanePlan = Readonly&lt;{
-  type: &quot;gain&quot;;
+<span class="token keyword">type</span> AutomationLanePlan = Readonly&lt;{
+  <span class="token keyword">type</span>: <span class="token string">&quot;gain&quot;</span>;
   target: ProcessorIndex;
   points: readonly AutomationPointPlan[];
 }&gt;;
-        </code></pre>
+</code></pre>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Conservar paths y tiempos racionales de `AutomationLaneIR` para que el motor los
-          resuelva. - Compilar cada curva a una tabla serializada de segmentos completos. -
-          Conservar target y puntos ya resueltos, y permitir que cada motor derive segmentos al
-          cargar el mismo plan.
-        </p>
+        <ul>
+          <li>
+            Conservar paths y tiempos racionales de <code>AutomationLaneIR</code> para que el motor
+            los resuelva.
+          </li>
+          <li>Compilar cada curva a una tabla serializada de segmentos completos.</li>
+          <li>
+            Conservar target y puntos ya resueltos, y permitir que cada motor derive segmentos al
+            cargar el mismo plan.
+          </li>
+        </ul>
         <p>
           Se eligió la tercera opción. Evita que el callback interprete semántica musical sin
           duplicar valores, rangos y reglas de cobertura en una representación de segmentos más
           verbosa.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - `target` referencia exclusivamente un procesador `gain` y es único dentro de
-          `automation`. - El valor anterior al primer punto proviene de `ProcessorPlan.gain`; no se
-          duplica en la lane. - Cada lane serializada contiene al menos un punto. Una lane sin
-          cambios ejecutables se omite. - `automation` se ordena por `target` ascendente. - Los
-          frames de una lane son enteros seguros estrictamente crecientes dentro de `[0,
-          nominalDurationFrames]`. - Los valores son `Float32` canónicos, finitos y no negativos;
-          `-0` no es canónico. - Los puntos originales se validan antes del recorte. Tiempos exactos
-          duplicados o tiempos distintos que redondean al mismo frame producen un diagnóstico aunque
-          luego queden fuera del rango activo. - `hold` conserva el valor izquierdo hasta el
-          siguiente punto. - Para dos puntos consecutivos, `linear` evalúa desde el frame absoluto:
-        </p>
-        <pre><code class="language-text">
-  left.value + (right.value - left.value)
-    * (frame - left.frame) / (right.frame - left.frame)
-        </code></pre>
-        <p>
-          - El resultado no depende del comienzo ni del tamaño del bloque DSP. - La fórmula se
-          evalúa en `Float64` y su resultado se canoniza antes de aplicar `Gain`, como fija el [ADR
-          0078](0078-explicit-float32-audio-boundaries.md). - La curva se compila contra el
-          intervalo semiabierto efectivo de todos sus ancestros y la duración nominal. - En el
-          cierre se materializa un punto sintético `hold` con el límite izquierdo de la curva
-          completa: el valor interpolado para `linear` o el valor anterior para `hold`. - Un cambio
-          declarado exactamente en el límite semiabierto no comienza; si comparte frame con el punto
-          sintético, solo se conserva el valor límite canónico. - Los cambios posteriores al cierre
-          no se ejecutan. El valor sintético permanece durante releases y colas, incluso después de
-          `nominalDurationFrames`. - El último punto serializado siempre tiene interpolación `hold`.
-          - Los segmentos o cursores optimizados se derivan al cargar el plan y no se serializan.
-        </p>
+        <ul>
+          <li>
+            <p>
+              <code>target</code> referencia exclusivamente un procesador <code>gain</code> y es
+              único dentro de <code>automation</code>.
+            </p>
+          </li>
+          <li>
+            <p>
+              El valor anterior al primer punto proviene de <code>ProcessorPlan.gain</code>; no se
+              duplica en la lane.
+            </p>
+          </li>
+          <li>
+            <p>
+              Cada lane serializada contiene al menos un punto. Una lane sin cambios ejecutables se
+              omite.
+            </p>
+          </li>
+          <li>
+            <p><code>automation</code> se ordena por <code>target</code> ascendente.</p>
+          </li>
+          <li>
+            <p>
+              Los frames de una lane son enteros seguros estrictamente crecientes dentro de
+              <code>[0, nominalDurationFrames]</code>.
+            </p>
+          </li>
+          <li>
+            <p>
+              Los valores son <code>Float32</code> canónicos, finitos y no negativos;
+              <code>-0</code> no es canónico.
+            </p>
+          </li>
+          <li>
+            <p>
+              Los puntos originales se validan antes del recorte. Tiempos exactos duplicados o
+              tiempos distintos que redondean al mismo frame producen un diagnóstico aunque luego
+              queden fuera del rango activo.
+            </p>
+          </li>
+          <li>
+            <p><code>hold</code> conserva el valor izquierdo hasta el siguiente punto.</p>
+          </li>
+          <li>
+            <p>Para dos puntos consecutivos, <code>linear</code> evalúa desde el frame absoluto:</p>
+            <pre><code class="language-text">left.value + (right.value - left.value)
+  * (frame - left.frame) / (right.frame - left.frame)
+</code></pre>
+          </li>
+          <li>
+            <p>El resultado no depende del comienzo ni del tamaño del bloque DSP.</p>
+          </li>
+          <li>
+            <p>
+              La fórmula se evalúa en <code>Float64</code> y su resultado se canoniza antes de
+              aplicar <code>Gain</code>, como fija el
+              <a href="0078-explicit-float32-audio-boundaries.html">ADR 0078</a>.
+            </p>
+          </li>
+          <li>
+            <p>
+              La curva se compila contra el intervalo semiabierto efectivo de todos sus ancestros y
+              la duración nominal.
+            </p>
+          </li>
+          <li>
+            <p>
+              En el cierre se materializa un punto sintético <code>hold</code> con el límite
+              izquierdo de la curva completa: el valor interpolado para <code>linear</code> o el
+              valor anterior para <code>hold</code>.
+            </p>
+          </li>
+          <li>
+            <p>
+              Un cambio declarado exactamente en el límite semiabierto no comienza; si comparte
+              frame con el punto sintético, solo se conserva el valor límite canónico.
+            </p>
+          </li>
+          <li>
+            <p>
+              Los cambios posteriores al cierre no se ejecutan. El valor sintético permanece durante
+              releases y colas, incluso después de <code>nominalDurationFrames</code>.
+            </p>
+          </li>
+          <li>
+            <p>El último punto serializado siempre tiene interpolación <code>hold</code>.</p>
+          </li>
+          <li>
+            <p>
+              Los segmentos o cursores optimizados se derivan al cargar el plan y no se serializan.
+            </p>
+          </li>
+        </ul>
       </article>
     </main>
   </body>

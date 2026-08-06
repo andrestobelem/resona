@@ -13,48 +13,83 @@
         <h1 id="issue-tracker-gitlab">Issue tracker: GitLab</h1>
         <p>
           Issues and PRDs for this repo live as GitLab issues. Use the
-          [`glab`](https://gitlab.com/gitlab-org/cli) CLI for all operations.
+          <a href="https://gitlab.com/gitlab-org/cli"><code>glab</code></a> CLI for all operations.
         </p>
         <h2 id="conventions">Conventions</h2>
+        <ul>
+          <li>
+            <strong>Create an issue</strong>:
+            <code>glab issue create --title &quot;...&quot; --description &quot;...&quot;</code>.
+            Use a heredoc for multi-line descriptions. Pass <code>--description -</code> to open an
+            editor.
+          </li>
+          <li>
+            <strong>Read an issue</strong>: <code>glab issue view &lt;number&gt; --comments</code>.
+            Use <code>-F json</code> for machine-readable output.
+          </li>
+          <li>
+            <strong>List issues</strong>: <code>glab issue list -F json</code> with appropriate
+            <code>--label</code> filters.
+          </li>
+          <li>
+            <strong>Comment on an issue</strong>:
+            <code>glab issue note &lt;number&gt; --message &quot;...&quot;</code>. GitLab calls
+            comments &quot;notes&quot;.
+          </li>
+          <li>
+            <strong>Apply / remove labels</strong>:
+            <code>glab issue update &lt;number&gt; --label &quot;...&quot;</code> /
+            <code>--unlabel &quot;...&quot;</code>. Multiple labels can be comma-separated or by
+            repeating the flag.
+          </li>
+          <li>
+            <strong>Close</strong>: <code>glab issue close &lt;number&gt;</code>.
+            <code>glab issue close</code> does not accept a closing comment, so post the explanation
+            first with <code>glab issue note &lt;number&gt; --message &quot;...&quot;</code>, then
+            close.
+          </li>
+          <li>
+            <strong>Merge requests</strong>: GitLab calls PRs &quot;merge requests&quot;. Use
+            <code>glab mr create</code>, <code>glab mr view</code>, <code>glab mr note</code>, etc.
+            — the same shape as <code>gh pr ...</code> with <code>mr</code> in place of
+            <code>pr</code> and <code>note</code>/<code>--message</code> in place of
+            <code>comment</code>/<code>--body</code>.
+          </li>
+        </ul>
         <p>
-          - **Create an issue**: `glab issue create --title &quot;...&quot; --description
-          &quot;...&quot;`. Use a heredoc for multi-line descriptions. Pass `--description -` to
-          open an editor. - **Read an issue**: `glab issue view &lt;number&gt; --comments`. Use `-F
-          json` for machine-readable output. - **List issues**: `glab issue list -F json` with
-          appropriate `--label` filters. - **Comment on an issue**: `glab issue note &lt;number&gt;
-          --message &quot;...&quot;`. GitLab calls comments &quot;notes&quot;. - **Apply / remove
-          labels**: `glab issue update &lt;number&gt; --label &quot;...&quot;` / `--unlabel
-          &quot;...&quot;`. Multiple labels can be comma-separated or by repeating the flag. -
-          **Close**: `glab issue close &lt;number&gt;`. `glab issue close` does not accept a closing
-          comment, so post the explanation first with `glab issue note &lt;number&gt; --message
-          &quot;...&quot;`, then close. - **Merge requests**: GitLab calls PRs &quot;merge
-          requests&quot;. Use `glab mr create`, `glab mr view`, `glab mr note`, etc. — the same
-          shape as `gh pr ...` with `mr` in place of `pr` and `note`/`--message` in place of
-          `comment`/`--body`.
-        </p>
-        <p>
-          Infer the repo from `git remote -v` — `glab` does this automatically when run inside a
-          clone.
+          Infer the repo from <code>git remote -v</code> — <code>glab</code> does this automatically
+          when run inside a clone.
         </p>
         <h2 id="merge-requests-as-a-triage-surface">Merge requests as a triage surface</h2>
         <p>
-          **MRs as a request surface: no.** _(Set to `yes` if this repo treats external merge
-          requests as feature requests; `/triage` reads this flag.)_
+          <strong>MRs as a request surface: no.</strong>
+          <em
+            >(Set to <code>yes</code> if this repo treats external merge requests as feature
+            requests; <code>/triage</code> reads this flag.)</em
+          >
         </p>
         <p>
-          When set to `yes`, MRs run through the same labels and states as issues, using the `glab
-          mr` equivalents:
+          When set to <code>yes</code>, MRs run through the same labels and states as issues, using
+          the <code>glab mr</code> equivalents:
         </p>
+        <ul>
+          <li>
+            <strong>Read an MR</strong>: <code>glab mr view &lt;number&gt; --comments</code> and
+            <code>glab mr diff &lt;number&gt;</code> for the diff.
+          </li>
+          <li>
+            <strong>List external MRs for triage</strong>: <code>glab mr list -F json</code>, then
+            keep only MRs whose author is not a project member/owner (a contributor's MR, not a
+            maintainer's in-flight work).
+          </li>
+          <li>
+            <strong>Comment / label / close</strong>: <code>glab mr note</code>,
+            <code>glab mr update --label</code>/<code>--unlabel</code>, <code>glab mr close</code>.
+          </li>
+        </ul>
         <p>
-          - **Read an MR**: `glab mr view &lt;number&gt; --comments` and `glab mr diff
-          &lt;number&gt;` for the diff. - **List external MRs for triage**: `glab mr list -F json`,
-          then keep only MRs whose author is not a project member/owner (a contributor's MR, not a
-          maintainer's in-flight work). - **Comment / label / close**: `glab mr note`, `glab mr
-          update --label`/`--unlabel`, `glab mr close`.
-        </p>
-        <p>
-          Unlike GitHub, GitLab numbers issues and MRs separately, so `#42` is unambiguous once you
-          know which surface the maintainer means.
+          Unlike GitHub, GitLab numbers issues and MRs separately, so <code>#42</code> is
+          unambiguous once you know which surface the maintainer means.
         </p>
         <h2 id="when-a-skill-says-publish-to-the-issue-tracker">
           When a skill says &quot;publish to the issue tracker&quot;
@@ -63,29 +98,53 @@
         <h2 id="when-a-skill-says-fetch-the-relevant-ticket">
           When a skill says &quot;fetch the relevant ticket&quot;
         </h2>
-        <p>Run `glab issue view &lt;number&gt; --comments`.</p>
+        <p>Run <code>glab issue view &lt;number&gt; --comments</code>.</p>
         <h2 id="wayfinding-operations">Wayfinding operations</h2>
-        <p>Used by `/wayfinder`. The **map** is a single issue with **child** issues as tickets.</p>
         <p>
-          - **Map**: a single issue labelled `wayfinder:map`, holding the Notes / Decisions-so-far /
-          Fog body. `glab issue create --label wayfinder:map`. (On GitLab tiers with native epics,
-          an epic may hold the map instead; a labelled issue works everywhere.) - **Child ticket**:
-          an issue carrying `Part of #&lt;map&gt;` at the top of its description and labels
-          `wayfinder:&lt;type&gt;` (`research`/`prototype`/`grilling`/`task`). Once claimed, the
-          ticket is assigned to the driving dev. - **Blocking**: GitLab's **native blocking link** —
-          the canonical, UI-visible representation. Add it with the `/blocked_by #&lt;n&gt;` quick
-          action, posted as a note (`glab issue note &lt;child&gt; --message &quot;/blocked_by
-          #&lt;blocker&gt;&quot;`). Native blocking links are a Premium/Ultimate feature; on the
-          free tier (or where unavailable) fall back to a `Blocked by: #&lt;n&gt;, #&lt;n&gt;` line
-          at the top of the description. A ticket is unblocked when every blocker is closed. -
-          **Frontier query**: `glab issue list -F json` scoped to the map's children, drop any with
-          an open blocker — a native `blocked_by` link to an open issue (`glab api
-          projects/:id/issues/:iid/links`), or an open issue in the `Blocked by` line — or an
-          assignee; first in map order wins. - **Claim**: `glab issue update &lt;n&gt; --assignee
-          @me` — the session's first write. - **Resolve**: `glab issue note &lt;n&gt; --message
-          &quot;&lt;answer&gt;&quot;`, then `glab issue close &lt;n&gt;`, then append a context
-          pointer (gist + link) to the map's Decisions-so-far.
+          Used by <code>/wayfinder</code>. The <strong>map</strong> is a single issue with
+          <strong>child</strong> issues as tickets.
         </p>
+        <ul>
+          <li>
+            <strong>Map</strong>: a single issue labelled <code>wayfinder:map</code>, holding the
+            Notes / Decisions-so-far / Fog body.
+            <code>glab issue create --label wayfinder:map</code>. (On GitLab tiers with native
+            epics, an epic may hold the map instead; a labelled issue works everywhere.)
+          </li>
+          <li>
+            <strong>Child ticket</strong>: an issue carrying <code>Part of #&lt;map&gt;</code> at
+            the top of its description and labels
+            <code>wayfinder:&lt;type&gt;</code>
+            (<code>research</code>/<code>prototype</code>/<code>grilling</code>/<code>task</code>).
+            Once claimed, the ticket is assigned to the driving dev.
+          </li>
+          <li>
+            <strong>Blocking</strong>: GitLab's <strong>native blocking link</strong> — the
+            canonical, UI-visible representation. Add it with the
+            <code>/blocked_by #&lt;n&gt;</code> quick action, posted as a note (<code
+              >glab issue note &lt;child&gt; --message &quot;/blocked_by
+              #&lt;blocker&gt;&quot;</code
+            >). Native blocking links are a Premium/Ultimate feature; on the free tier (or where
+            unavailable) fall back to a <code>Blocked by: #&lt;n&gt;, #&lt;n&gt;</code> line at the
+            top of the description. A ticket is unblocked when every blocker is closed.
+          </li>
+          <li>
+            <strong>Frontier query</strong>: <code>glab issue list -F json</code> scoped to the
+            map's children, drop any with an open blocker — a native <code>blocked_by</code> link to
+            an open issue (<code>glab api projects/:id/issues/:iid/links</code>), or an open issue
+            in the <code>Blocked by</code> line — or an assignee; first in map order wins.
+          </li>
+          <li>
+            <strong>Claim</strong>: <code>glab issue update &lt;n&gt; --assignee @me</code> — the
+            session's first write.
+          </li>
+          <li>
+            <strong>Resolve</strong>:
+            <code>glab issue note &lt;n&gt; --message &quot;&lt;answer&gt;&quot;</code>, then
+            <code>glab issue close &lt;n&gt;</code>, then append a context pointer (gist + link) to
+            the map's Decisions-so-far.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

@@ -10,7 +10,19 @@
     <main>
       <p class="source-path">docs/adr/0005-explicit-temporal-coordinate-units.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="las-coordenadas-temporales-publicas-tienen-unidad-explicita">
           Las coordenadas temporales públicas tienen unidad explícita
         </h1>
@@ -20,26 +32,34 @@
           con unidad explícita. Antes de ejecutar, todas se resuelven a frames de muestras enteros.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Expresar todo únicamente en posiciones musicales. - Expresar todo únicamente en segundos
-          o frames de muestras. - Admitir ambas familias mediante tipos explícitos y normalizarlas
-          antes de ejecutar.
-        </p>
+        <ul>
+          <li>Expresar todo únicamente en posiciones musicales.</li>
+          <li>Expresar todo únicamente en segundos o frames de muestras.</li>
+          <li>
+            Admitir ambas familias mediante tipos explícitos y normalizarlas antes de ejecutar.
+          </li>
+        </ul>
         <p>
           Se eligió la tercera opción porque la estructura musical necesita seguir el mapa de tempo,
           mientras que offsets y operaciones sobre audio necesitan coordenadas absolutas precisas.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - Un número sin unidad no representa una posición ni una duración temporal pública. -
-          Cambiar el mapa de tempo desplaza posiciones musicales, pero no posiciones absolutas. - El
-          plan de ejecución usa frames de muestras enteros como coordenada canónica. - Las
-          posiciones musicales comienzan en `1:1:0`: barras y pulsos se indexan desde 1 y
-          subdivisiones desde 0; los frames de muestras absolutos comienzan en 0. - La
-          representación pública se define en el [ADR
-          0027](0027-typed-temporal-values-at-the-public-api.md); el redondeo está definido en el
-          [ADR 0009](0009-rational-musical-time.md).
-        </p>
+        <ul>
+          <li>Un número sin unidad no representa una posición ni una duración temporal pública.</li>
+          <li>
+            Cambiar el mapa de tempo desplaza posiciones musicales, pero no posiciones absolutas.
+          </li>
+          <li>El plan de ejecución usa frames de muestras enteros como coordenada canónica.</li>
+          <li>
+            Las posiciones musicales comienzan en <code>1:1:0</code>: barras y pulsos se indexan
+            desde 1 y subdivisiones desde 0; los frames de muestras absolutos comienzan en 0.
+          </li>
+          <li>
+            La representación pública se define en el
+            <a href="0027-typed-temporal-values-at-the-public-api.html">ADR 0027</a>; el redondeo
+            está definido en el <a href="0009-rational-musical-time.html">ADR 0009</a>.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

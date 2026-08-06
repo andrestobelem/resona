@@ -10,69 +10,117 @@
     <main>
       <p class="source-path">docs/adr/0073-dense-instrument-attack-release-events.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="executionplan-v1-expande-notas-a-attacks-y-releases-densos">
           ExecutionPlan v1 expande notas a attacks y releases densos
         </h1>
         <p>
-          Cada `NoteIR` válida se convierte en un par de eventos internos dirigido a `PolySynth`.
-          Los nombres attack y release distinguen este stream ejecutable de los mensajes MIDI de
-          borde.
+          Cada <code>NoteIR</code> válida se convierte en un par de eventos internos dirigido a
+          <code>PolySynth</code>. Los nombres attack y release distinguen este stream ejecutable de
+          los mensajes MIDI de borde.
         </p>
-        <pre><code class="language-ts">
-type NoteOccurrenceIndex = number;
+        <pre><code class="language-ts"><span class="token keyword">type</span> NoteOccurrenceIndex = number;
 
-type InstrumentEventPlan =
+<span class="token keyword">type</span> InstrumentEventPlan =
   | Readonly&lt;{
-      type: &quot;note-release&quot;;
+      <span class="token keyword">type</span>: <span class="token string">&quot;note-release&quot;</span>;
       frame: number;
       instrument: ProcessorIndex;
       occurrence: NoteOccurrenceIndex;
     }&gt;
   | Readonly&lt;{
-      type: &quot;note-attack&quot;;
+      <span class="token keyword">type</span>: <span class="token string">&quot;note-attack&quot;</span>;
       frame: number;
       instrument: ProcessorIndex;
       occurrence: NoteOccurrenceIndex;
       semitonesFromA4: number;
       velocity: number;
     }&gt;;
-        </code></pre>
+</code></pre>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Conservar notas como intervalos y hacer que cada motor las expanda durante la ejecución.
-          - Publicar mensajes MIDI `note-on` y `note-off` como eventos internos. - Compilar un
-          stream propio y totalmente ordenado de attacks y releases.
-        </p>
+        <ul>
+          <li>
+            Conservar notas como intervalos y hacer que cada motor las expanda durante la ejecución.
+          </li>
+          <li>
+            Publicar mensajes MIDI <code>note-on</code> y <code>note-off</code> como eventos
+            internos.
+          </li>
+          <li>Compilar un stream propio y totalmente ordenado de attacks y releases.</li>
+        </ul>
         <p>
           Se eligió la tercera opción. El planificador resuelve una sola vez clipping, redondeo,
           identidad y orden, mientras que todos los motores consumen exactamente el mismo stream sin
           incorporar semántica MIDI.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - Toda `NoteIR` tiene duración exacta estrictamente positiva y se valida antes de podarla.
-          - Cada evento referencia un `instrument` válido cuyo procesador es `poly-synth`. - Frame,
-          instrumento y ocurrencia son enteros seguros no negativos. - Cada ocurrencia conservada
-          tiene exactamente un attack y un release dirigidos al mismo instrumento, con `attack.frame
-          &lt; release.frame`. - Los índices de ocurrencia son densos desde cero, locales al plan y
-          se asignan según ruta canónica de `EventClipIR` y ordinal original entre notas
-          sobrevivientes. - `semitonesFromA4` es un entero seguro con signo. `velocity` es finita y
-          pertenece a `[0, 1]`; en el plan también es `Float32` canónico. Cero representa un attack
-          musical silencioso, no un mensaje MIDI especial. - Cada pitch debe producir una frecuencia
-          ejecutable válida según el [ADR 0074](0074-pitch-frequency-must-be-below-nyquist.md). - El
-          final efectivo de una nota es el menor entre su final natural, sus secuencias activas y
-          `nominalDurationFrames`. - Un attack siempre ocurre antes de `nominalDurationFrames`; un
-          release puede ocurrir exactamente allí para iniciar una cola audible. - Una nota cuyo
-          inicio exacto queda fuera del intervalo activo se omite. - Si un intervalo exacto positivo
-          sobrevive pero sus extremos redondean al mismo frame, se omite el par y se emite una
-          advertencia agregada por clip. - `events` se ordena por frame, release antes de attack y
-          ocurrencia ascendente. Los motores no reordenan la tabla. - Todos los eventos de un frame
-          se aplican antes de generar su muestra. - Al robar una voz, el sintetizador elimina la
-          asociación anterior. El release posterior de esa ocurrencia no afecta la voz reutilizada.
-          - El rango particular de render no poda `events`; seek y rangos parciales reconstruyen el
-          estado mediante preroll.
-        </p>
+        <ul>
+          <li>
+            Toda <code>NoteIR</code> tiene duración exacta estrictamente positiva y se valida antes
+            de podarla.
+          </li>
+          <li>
+            Cada evento referencia un <code>instrument</code> válido cuyo procesador es
+            <code>poly-synth</code>.
+          </li>
+          <li>Frame, instrumento y ocurrencia son enteros seguros no negativos.</li>
+          <li>
+            Cada ocurrencia conservada tiene exactamente un attack y un release dirigidos al mismo
+            instrumento, con <code>attack.frame &lt; release.frame</code>.
+          </li>
+          <li>
+            Los índices de ocurrencia son densos desde cero, locales al plan y se asignan según ruta
+            canónica de <code>EventClipIR</code> y ordinal original entre notas sobrevivientes.
+          </li>
+          <li>
+            <code>semitonesFromA4</code> es un entero seguro con signo. <code>velocity</code> es
+            finita y pertenece a <code>[0, 1]</code>; en el plan también es
+            <code>Float32</code> canónico. Cero representa un attack musical silencioso, no un
+            mensaje MIDI especial.
+          </li>
+          <li>
+            Cada pitch debe producir una frecuencia ejecutable válida según el
+            <a href="0074-pitch-frequency-must-be-below-nyquist.html">ADR 0074</a>.
+          </li>
+          <li>
+            El final efectivo de una nota es el menor entre su final natural, sus secuencias activas
+            y <code>nominalDurationFrames</code>.
+          </li>
+          <li>
+            Un attack siempre ocurre antes de <code>nominalDurationFrames</code>; un release puede
+            ocurrir exactamente allí para iniciar una cola audible.
+          </li>
+          <li>Una nota cuyo inicio exacto queda fuera del intervalo activo se omite.</li>
+          <li>
+            Si un intervalo exacto positivo sobrevive pero sus extremos redondean al mismo frame, se
+            omite el par y se emite una advertencia agregada por clip.
+          </li>
+          <li>
+            <code>events</code> se ordena por frame, release antes de attack y ocurrencia
+            ascendente. Los motores no reordenan la tabla.
+          </li>
+          <li>Todos los eventos de un frame se aplican antes de generar su muestra.</li>
+          <li>
+            Al robar una voz, el sintetizador elimina la asociación anterior. El release posterior
+            de esa ocurrencia no afecta la voz reutilizada.
+          </li>
+          <li>
+            El rango particular de render no poda <code>events</code>; seek y rangos parciales
+            reconstruyen el estado mediante preroll.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

@@ -10,34 +10,92 @@
     <main>
       <p class="source-path">docs/research/remotion-agent-skills.md</p>
       <article>
-        <h1 id="remotion-v4-0-506-agent-skills">Remotion v4.0.506: Agent Skills</h1>
+        <h1 id="remotion-v40506-agent-skills">Remotion v4.0.506: Agent Skills</h1>
         <h2 id="resumen">Resumen</h2>
         <p>
-          En Remotion v4.0.506, los *Agent Skills* son documentación operativa versionada para
-          agentes de programación externos. No incorporan un modelo de IA dentro de Remotion ni
+          En Remotion v4.0.506, los <em>Agent Skills</em> son documentación operativa versionada
+          para agentes de programación externos. No incorporan un modelo de IA dentro de Remotion ni
           forman parte de la ejecución de un video: orientan a herramientas como Codex y Claude para
           que usen correctamente los archivos, la CLI, Studio y las API normales del producto.
         </p>
         <h2 id="evidencia-en-la-fuente-primaria">Evidencia en la fuente primaria</h2>
-        <p>
-          - [`packages/skills/skills`][skills-tree] contiene 12 archivos `SKILL.md` especializados y
-          versionados mediante *frontmatter*. El skill de [buenas prácticas][best-practices]
-          funciona como punto de entrada: deriva el trabajo a instrucciones especializadas y las
-          incorpora según el tema, en vez de concentrar todo en un único prompt. - La [documentación
-          de Agent Skills][agent-skills-doc] indica instalarlos con `npx skills add
-          remotion-dev/skills`. La implementación de la [CLI de skills][skills-cli-source] delega
-          las operaciones `add` y `update` en la CLI `skills`. - La [referencia del
-          comando][skills-cli-doc] especifica instalación en `.agents/skills` y compatibilidad con
-          Claude mediante un enlace `.claude/skills`. El flujo de
-          [`create-video`][create-video-skills] ofrece instalar las skills al crear un proyecto. -
-          El [`studio-server`][outdated-skills] lee las versiones del *frontmatter* y las compara
-          con la versión actual de Remotion para detectar skills desactualizadas. A su vez, el
-          [flujo de upgrade][update-skills] actualiza las skills locales del proyecto. - Remotion
-          ofrece distribuciones separadas para [Codex][codex-plugin] y [Claude Code][claude-plugin]
-          que incluyen estas skills; no son carpetas internas de `packages/skills` en este snapshot.
-          Además, [`@remotion/skills` está marcado como privado][skills-package], por lo que no es
-          una dependencia de ejecución que una aplicación deba integrar.
-        </p>
+        <ul>
+          <li>
+            <a
+              href="https://github.com/remotion-dev/remotion/tree/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/skills/skills"
+              ><code>packages/skills/skills</code></a
+            >
+            contiene 12 archivos <code>SKILL.md</code> especializados y versionados mediante
+            <em>frontmatter</em>. El skill de
+            <a
+              href="https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/skills/skills/remotion-best-practices/SKILL.md"
+              >buenas prácticas</a
+            >
+            funciona como punto de entrada: deriva el trabajo a instrucciones especializadas y las
+            incorpora según el tema, en vez de concentrar todo en un único prompt.
+          </li>
+          <li>
+            La
+            <a
+              href="https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/docs/docs/ai/skills.mdx"
+              >documentación de Agent Skills</a
+            >
+            indica instalarlos con <code>npx skills add remotion-dev/skills</code>. La
+            implementación de la
+            <a
+              href="https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/cli/src/skills.ts"
+              >CLI de skills</a
+            >
+            delega las operaciones <code>add</code> y <code>update</code> en la CLI
+            <code>skills</code>.
+          </li>
+          <li>
+            La
+            <a
+              href="https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/docs/docs/cli/skills.mdx"
+              >referencia del comando</a
+            >
+            especifica instalación en <code>.agents/skills</code> y compatibilidad con Claude
+            mediante un enlace <code>.claude/skills</code>. El flujo de
+            <a
+              href="https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/create-video/src/install-skills.ts"
+              ><code>create-video</code></a
+            >
+            ofrece instalar las skills al crear un proyecto.
+          </li>
+          <li>
+            El
+            <a
+              href="https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/studio-server/src/detect-outdated-remotion-skills.ts"
+              ><code>studio-server</code></a
+            >
+            lee las versiones del <em>frontmatter</em> y las compara con la versión actual de
+            Remotion para detectar skills desactualizadas. A su vez, el
+            <a
+              href="https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/cli/src/update-remotion-skills.ts"
+              >flujo de upgrade</a
+            >
+            actualiza las skills locales del proyecto.
+          </li>
+          <li>
+            Remotion ofrece distribuciones separadas para
+            <a
+              href="https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/docs/docs/ai/codex-plugin.mdx"
+              >Codex</a
+            >
+            y
+            <a
+              href="https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/docs/docs/ai/claude-code-plugin.mdx"
+              >Claude Code</a
+            >
+            que incluyen estas skills; no son carpetas internas de <code>packages/skills</code> en
+            este snapshot. Además,
+            <a
+              href="https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/skills/package.json"
+              ><code>@remotion/skills</code> está marcado como privado</a
+            >, por lo que no es una dependencia de ejecución que una aplicación deba integrar.
+          </li>
+        </ul>
         <h2 id="aplicacion-a-resona">Aplicación a Resona</h2>
         <p>
           Para Resona, el patrón útil es separar producto y asistencia: el producto sigue exponiendo
@@ -46,30 +104,6 @@
           tanto, adoptar estas skills puede mejorar la calidad del código generado y advertir
           desalineaciones de versión, pero no equivale a añadir «IA embebida» a Resona ni cambia su
           arquitectura de ejecución.
-        </p>
-        <p>
-          [skills-tree]:
-          https://github.com/remotion-dev/remotion/tree/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/skills/skills
-          [best-practices]:
-          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/skills/skills/remotion-best-practices/SKILL.md
-          [agent-skills-doc]:
-          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/docs/docs/ai/skills.mdx
-          [skills-cli-source]:
-          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/cli/src/skills.ts
-          [skills-cli-doc]:
-          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/docs/docs/cli/skills.mdx
-          [create-video-skills]:
-          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/create-video/src/install-skills.ts
-          [outdated-skills]:
-          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/studio-server/src/detect-outdated-remotion-skills.ts
-          [update-skills]:
-          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/cli/src/update-remotion-skills.ts
-          [codex-plugin]:
-          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/docs/docs/ai/codex-plugin.mdx
-          [claude-plugin]:
-          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/docs/docs/ai/claude-code-plugin.mdx
-          [skills-package]:
-          https://github.com/remotion-dev/remotion/blob/5e5586f9e9dc5624a74cfe2a4e9c969957a6f3ec/packages/skills/package.json
         </p>
       </article>
     </main>

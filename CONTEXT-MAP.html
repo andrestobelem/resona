@@ -15,19 +15,46 @@
           Read the shared Resona glossary first, followed by the context documentation relevant to
           the workspace being changed.
         </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Context</th>
+              <th>Domain documentation</th>
+              <th>Scope</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Shared Resona domain</td>
+              <td><code>CONTEXT.md</code></td>
+              <td>System-wide musical domain vocabulary</td>
+            </tr>
+            <tr>
+              <td>Engine</td>
+              <td><code>CONTEXT.md</code></td>
+              <td>IR, execution planning, and DSP terms</td>
+            </tr>
+            <tr>
+              <td>CLI</td>
+              <td><code>packages/cli/CONTEXT.md</code></td>
+              <td>Discovery, validation, protocol output</td>
+            </tr>
+            <tr>
+              <td>Renderer</td>
+              <td><code>packages/renderer/CONTEXT.md</code></td>
+              <td>Offline DSP execution and WAV encoding</td>
+            </tr>
+            <tr>
+              <td>Zod input adapter</td>
+              <td><code>packages/zod/CONTEXT.md</code></td>
+              <td>Zod validation and schema description</td>
+            </tr>
+          </tbody>
+        </table>
         <p>
-          | Context | Domain documentation | Scope | | -------------------- |
-          --------------------------------- | -------------------------------------- | | Shared
-          Resona domain | `CONTEXT.md` | System-wide musical domain vocabulary | | Engine |
-          `CONTEXT.md` | IR, execution planning, and DSP terms | | CLI | `packages/cli/CONTEXT.md` |
-          Discovery, validation, protocol output | | Renderer | `packages/renderer/CONTEXT.md` |
-          Offline DSP execution and WAV encoding | | Zod input adapter | `packages/zod/CONTEXT.md` |
-          Zod validation and schema description |
-        </p>
-        <p>
-          As workspaces are introduced, add each context and its `CONTEXT.md` to this map.
-          Context-specific ADRs live alongside that context; system-wide decisions remain in
-          `docs/adr/`.
+          As workspaces are introduced, add each context and its <code>CONTEXT.md</code> to this
+          map. Context-specific ADRs live alongside that context; system-wide decisions remain in
+          <code>docs/adr/</code>.
         </p>
       </article>
     </main>

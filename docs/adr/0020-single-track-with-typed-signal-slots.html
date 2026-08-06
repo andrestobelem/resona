@@ -10,37 +10,63 @@
     <main>
       <p class="source-path">docs/adr/0020-single-track-with-typed-signal-slots.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="una-sola-track-expone-slots-de-senal-tipados">
           Una sola Track expone slots de señal tipados
         </h1>
         <p>
-          La interfaz TSX de Resona usa una sola `Track` con una fuente, un instrumento opcional
-          según el tipo de fuente y una cadena ordenada de efectos. Sus props forman una unión
-          discriminada que representa las dos rutas de señal del MVP.
+          La interfaz TSX de Resona usa una sola <code>Track</code> con una fuente, un instrumento
+          opcional según el tipo de fuente y una cadena ordenada de efectos. Sus props forman una
+          unión discriminada que representa las dos rutas de señal del MVP.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Interpretar todos los hijos de `Track` como un pipeline posicional. - Publicar
-          componentes separados `AudioTrack` e `InstrumentTrack`. - Mantener una sola `Track` con
-          slots tipados y una cadena explícita.
-        </p>
+        <ul>
+          <li>Interpretar todos los hijos de <code>Track</code> como un pipeline posicional.</li>
+          <li>
+            Publicar componentes separados <code>AudioTrack</code> e <code>InstrumentTrack</code>.
+          </li>
+          <li>Mantener una sola <code>Track</code> con slots tipados y una cadena explícita.</li>
+        </ul>
         <p>
           Se eligió la tercera opción porque conserva el concepto profundo de pista, hace visible el
           routing y permite rechazar estáticamente las combinaciones inválidas más importantes.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - Una fuente de audio prohíbe el slot `instrument`. - Una fuente de eventos exige un
-          instrumento que produzca señal de audio. - El slot de fuente contiene uno o más clips de
-          un único dominio. - Los clips de audio superpuestos se mezclan y los eventos superpuestos
-          se ordenan de forma determinista antes de continuar la cadena. - Mezclar directamente
-          fuentes de audio y eventos en una misma pista queda fuera del MVP. - `chain()` construye
-          la cadena de efectos y conserva su orden declarado. - La automatización referencia el ID
-          de un parámetro perteneciente a un nodo identificado. - La compilación valida nuevamente
-          los árboles dinámicos y produce diagnósticos con ruta y ubicación fuente. - La sintaxis
-          concreta para agrupar múltiples clips todavía debe definirse.
-        </p>
+        <ul>
+          <li>Una fuente de audio prohíbe el slot <code>instrument</code>.</li>
+          <li>Una fuente de eventos exige un instrumento que produzca señal de audio.</li>
+          <li>El slot de fuente contiene uno o más clips de un único dominio.</li>
+          <li>
+            Los clips de audio superpuestos se mezclan y los eventos superpuestos se ordenan de
+            forma determinista antes de continuar la cadena.
+          </li>
+          <li>
+            Mezclar directamente fuentes de audio y eventos en una misma pista queda fuera del MVP.
+          </li>
+          <li>
+            <code>chain()</code> construye la cadena de efectos y conserva su orden declarado.
+          </li>
+          <li>
+            La automatización referencia el ID de un parámetro perteneciente a un nodo identificado.
+          </li>
+          <li>
+            La compilación valida nuevamente los árboles dinámicos y produce diagnósticos con ruta y
+            ubicación fuente.
+          </li>
+          <li>La sintaxis concreta para agrupar múltiples clips todavía debe definirse.</li>
+        </ul>
       </article>
     </main>
   </body>

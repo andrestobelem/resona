@@ -11,51 +11,58 @@
       <p class="source-path">.agents/skills/tdd/mocking.md</p>
       <article>
         <h1 id="when-to-mock">When to Mock</h1>
-        <p>Mock at **system boundaries** only:</p>
-        <p>
-          - External APIs (payment, email, etc.) - Databases (sometimes - prefer test DB) -
-          Time/randomness - File system (sometimes)
-        </p>
+        <p>Mock at <strong>system boundaries</strong> only:</p>
+        <ul>
+          <li>External APIs (payment, email, etc.)</li>
+          <li>Databases (sometimes - prefer test DB)</li>
+          <li>Time/randomness</li>
+          <li>File system (sometimes)</li>
+        </ul>
         <p>Don't mock:</p>
-        <p>- Your own classes/modules - Internal collaborators - Anything you control</p>
+        <ul>
+          <li>Your own classes/modules</li>
+          <li>Internal collaborators</li>
+          <li>Anything you control</li>
+        </ul>
         <h2 id="designing-for-mockability">Designing for Mockability</h2>
         <p>At system boundaries, design interfaces that are easy to mock:</p>
-        <p>**1. Use dependency injection**</p>
+        <p><strong>1. Use dependency injection</strong></p>
         <p>Pass external dependencies in rather than creating them internally:</p>
-        <pre><code class="language-typescript">
-// Easy to mock
-function processPayment(order, paymentClient) {
-  return paymentClient.charge(order.total);
+        <pre><code class="language-typescript"><span class="token comment">// Easy to mock</span>
+<span class="token keyword">function</span> processPayment(order, paymentClient) {
+  <span class="token keyword">return</span> paymentClient.charge(order.total);
 }
 
-// Hard to mock
-function processPayment(order) {
-  const client = new StripeClient(process.env.STRIPE_KEY);
-  return client.charge(order.total);
+<span class="token comment">// Hard to mock</span>
+<span class="token keyword">function</span> processPayment(order) {
+  <span class="token keyword">const</span> client = <span class="token keyword">new</span> StripeClient(process.env.STRIPE_KEY);
+  <span class="token keyword">return</span> client.charge(order.total);
 }
-        </code></pre>
-        <p>**2. Prefer SDK-style interfaces over generic fetchers**</p>
+</code></pre>
+        <p><strong>2. Prefer SDK-style interfaces over generic fetchers</strong></p>
         <p>
           Create specific functions for each external operation instead of one generic function with
           conditional logic:
         </p>
-        <pre><code class="language-typescript">
-// GOOD: Each function is independently mockable
-const api = {
-  getUser: (id) =&gt; fetch(`/users/${id}`),
-  getOrders: (userId) =&gt; fetch(`/users/${userId}/orders`),
-  createOrder: (data) =&gt; fetch('/orders', { method: 'POST', body: data }),
+        <pre><code class="language-typescript"><span class="token comment">// GOOD: Each function is independently mockable</span>
+<span class="token keyword">const</span> api = {
+  getUser: (id) =&gt; fetch(<span class="token string">`/users/${id}`</span>),
+  getOrders: (userId) =&gt; fetch(<span class="token string">`/users/${userId}/orders`</span>),
+  createOrder: (data) =&gt; fetch(<span class="token string">'/orders'</span>, { method: <span class="token string">'POST'</span>, body: data }),
 };
 
-// BAD: Mocking requires conditional logic inside the mock
-const api = {
+<span class="token comment">// BAD: Mocking requires conditional logic inside the mock</span>
+<span class="token keyword">const</span> api = {
   fetch: (endpoint, options) =&gt; fetch(endpoint, options),
 };
-        </code></pre>
-        <p>
-          The SDK approach means: - Each mock returns one specific shape - No conditional logic in
-          test setup - Easier to see which endpoints a test exercises - Type safety per endpoint
-        </p>
+</code></pre>
+        <p>The SDK approach means:</p>
+        <ul>
+          <li>Each mock returns one specific shape</li>
+          <li>No conditional logic in test setup</li>
+          <li>Easier to see which endpoints a test exercises</li>
+          <li>Type safety per endpoint</li>
+        </ul>
       </article>
     </main>
   </body>

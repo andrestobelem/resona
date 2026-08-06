@@ -13,20 +13,24 @@
         <h1 id="logic-prototype">Logic Prototype</h1>
         <p>
           A tiny interactive terminal app that lets the user drive a state model by hand. Use this
-          when the question is about **business logic, state transitions, or data shape** — the kind
-          of thing that looks reasonable on paper but only feels wrong once you push it through real
-          cases.
+          when the question is about
+          <strong>business logic, state transitions, or data shape</strong> — the kind of thing that
+          looks reasonable on paper but only feels wrong once you push it through real cases.
         </p>
         <h2 id="when-this-is-the-right-shape">When this is the right shape</h2>
-        <p>
-          - &quot;I'm not sure if this state machine handles the edge case where X then Y.&quot; -
-          &quot;Does this data model actually let me represent the case where...&quot; - &quot;I
-          want to feel out what the API should look like before writing it.&quot; - Anything where
-          the user wants to **press buttons and watch state change**.
-        </p>
+        <ul>
+          <li>
+            &quot;I'm not sure if this state machine handles the edge case where X then Y.&quot;
+          </li>
+          <li>&quot;Does this data model actually let me represent the case where...&quot;</li>
+          <li>&quot;I want to feel out what the API should look like before writing it.&quot;</li>
+          <li>
+            Anything where the user wants to <strong>press buttons and watch state change</strong>.
+          </li>
+        </ul>
         <p>
           If the question is &quot;what should this look like&quot; — wrong branch. Use
-          [UI.md](UI.md).
+          <a href="UI.html">UI.md</a>.
         </p>
         <h2 id="process">Process</h2>
         <h3 id="1-state-the-question">1. State the question</h3>
@@ -54,18 +58,28 @@
           around it is throwaway; the logic module shouldn't be.
         </p>
         <p>The right shape depends on the question:</p>
+        <ul>
+          <li>
+            <strong>A pure reducer</strong> — <code>(state, action) =&gt; state</code>. Good when
+            actions are discrete events and state is a single value.
+          </li>
+          <li>
+            <strong>A state machine</strong> — explicit states and transitions. Good when
+            &quot;which actions are even legal right now&quot; is part of the question.
+          </li>
+          <li>
+            <strong>A small set of pure functions</strong> over a plain data type. Good when there's
+            no implicit current state — just transformations.
+          </li>
+          <li>
+            <strong>A class or module with a clear method surface</strong> when the logic genuinely
+            owns ongoing internal state.
+          </li>
+        </ul>
         <p>
-          - **A pure reducer** — `(state, action) =&gt; state`. Good when actions are discrete
-          events and state is a single value. - **A state machine** — explicit states and
-          transitions. Good when &quot;which actions are even legal right now&quot; is part of the
-          question. - **A small set of pure functions** over a plain data type. Good when there's no
-          implicit current state — just transformations. - **A class or module with a clear method
-          surface** when the logic genuinely owns ongoing internal state.
-        </p>
-        <p>
-          Pick whichever shape best fits the question being asked, *not* whichever is easiest to
-          wire to a TUI. Keep it pure: no I/O, no terminal code, no `console.log` for control flow.
-          The TUI imports it and calls into it; nothing flows the other direction.
+          Pick whichever shape best fits the question being asked, <em>not</em> whichever is easiest
+          to wire to a TUI. Keep it pure: no I/O, no terminal code, no <code>console.log</code> for
+          control flow. The TUI imports it and calls into it; nothing flows the other direction.
         </p>
         <p>
           This is what makes the prototype useful past its own lifetime: when the question's been
@@ -76,33 +90,50 @@
           4. Build the smallest TUI that exposes the state
         </h3>
         <p>
-          Build it as a **lightweight TUI** — on every tick, clear the screen (`console.clear()` /
-          `print(&quot;\033[2J\033[H&quot;)` / equivalent) and re-render the whole frame. The user
-          should always see one stable view, not an ever-growing scrollback.
+          Build it as a <strong>lightweight TUI</strong> — on every tick, clear the screen (<code
+            >console.clear()</code
+          >
+          / <code>print(&quot;\033[2J\033[H&quot;)</code> / equivalent) and re-render the whole
+          frame. The user should always see one stable view, not an ever-growing scrollback.
         </p>
         <p>Each frame has two parts, in this order:</p>
-        <p>
-          1. **Current state**, pretty-printed and diff-friendly (one field per line, or formatted
-          JSON). Use **bold** for field names or section headers and **dim** for less important
-          context (timestamps, IDs, derived values). Native ANSI escape codes are fine — `\x1b[1m`
-          bold, `\x1b[2m` dim, `\x1b[0m` reset. No need to pull in a styling library unless one is
-          already in the project. 2. **Keyboard shortcuts**, listed at the bottom: `[a] add user [d]
-          delete user [t] tick clock [q] quit`. Bold the key, dim the description, or vice-versa —
-          whatever reads cleanly.
-        </p>
+        <ol>
+          <li>
+            <strong>Current state</strong>, pretty-printed and diff-friendly (one field per line, or
+            formatted JSON). Use <strong>bold</strong> for field names or section headers and
+            <strong>dim</strong> for less important context (timestamps, IDs, derived values).
+            Native ANSI escape codes are fine — <code>\x1b[1m</code> bold, <code>\x1b[2m</code> dim,
+            <code>\x1b[0m</code> reset. No need to pull in a styling library unless one is already
+            in the project.
+          </li>
+          <li>
+            <strong>Keyboard shortcuts</strong>, listed at the bottom:
+            <code>[a] add user [d] delete user [t] tick clock [q] quit</code>. Bold the key, dim the
+            description, or vice-versa — whatever reads cleanly.
+          </li>
+        </ol>
         <p>Behaviour:</p>
-        <p>
-          1. **Initialise state** — a single in-memory object/struct. Render the first frame on
-          start. 2. **Read one keystroke (or one line)** at a time, dispatch to a handler that
-          mutates state. 3. **Re-render** the full frame after every action — don't append, replace.
-          4. **Loop until quit.**
-        </p>
+        <ol>
+          <li>
+            <strong>Initialise state</strong> — a single in-memory object/struct. Render the first
+            frame on start.
+          </li>
+          <li>
+            <strong>Read one keystroke (or one line)</strong> at a time, dispatch to a handler that
+            mutates state.
+          </li>
+          <li>
+            <strong>Re-render</strong> the full frame after every action — don't append, replace.
+          </li>
+          <li><strong>Loop until quit.</strong></li>
+        </ol>
         <p>The whole frame should fit on one screen.</p>
         <h3 id="5-make-it-runnable-in-one-command">5. Make it runnable in one command</h3>
         <p>
-          Add a script to the project's existing task runner (`package.json` scripts, `Makefile`,
-          `justfile`, `pyproject.toml`). The user should run `pnpm run &lt;prototype-name&gt;` or
-          equivalent — never need to remember a path.
+          Add a script to the project's existing task runner (<code>package.json</code> scripts,
+          <code>Makefile</code>, <code>justfile</code>, <code>pyproject.toml</code>). The user
+          should run <code>pnpm run &lt;prototype-name&gt;</code> or equivalent — never need to
+          remember a path.
         </p>
         <p>
           If the host project has no task runner, just put the command at the top of the prototype's
@@ -112,28 +143,41 @@
         <p>
           Give the user the run command. They'll drive it themselves; the interesting moments are
           when they say &quot;wait, that shouldn't be possible&quot; or &quot;huh, I assumed X would
-          be different&quot; — those are the bugs in the _idea_, which is the whole point. If they
-          want new actions added, add them. Prototypes evolve.
+          be different&quot; — those are the bugs in the <em>idea</em>, which is the whole point. If
+          they want new actions added, add them. Prototypes evolve.
         </p>
         <h3 id="7-capture-the-answer-and-the-prototype">7. Capture the answer and the prototype</h3>
         <p>
           Once the prototype has answered its question, capture the answer, then capture the
-          prototype the way the [SKILL](SKILL.md) describes. The logic-specific mapping: the
-          validated reducer / machine / function set lifts into the real module (the decision,
-          absorbed); the TUI shell rides along to the throwaway branch that keeps the prototype as a
-          primary source.
+          prototype the way the <a href="SKILL.html">SKILL</a> describes. The logic-specific
+          mapping: the validated reducer / machine / function set lifts into the real module (the
+          decision, absorbed); the TUI shell rides along to the throwaway branch that keeps the
+          prototype as a primary source.
         </p>
         <h2 id="anti-patterns">Anti-patterns</h2>
-        <p>
-          - **Don't add tests.** A prototype that needs tests is no longer a prototype. - **Don't
-          wire it to the real database.** Use an in-memory store unless the question is specifically
-          about persistence. - **Don't generalise.** No &quot;what if we wanted to support X
-          later.&quot; The prototype answers one question. - **Don't blur the logic and the TUI
-          together.** If the reducer / state machine references `console.log`, prompts, or terminal
-          escape codes, it's no longer portable. Keep the TUI as a thin shell over a pure module. -
-          **Don't ship the TUI shell into production.** The shell is optimised for being driven by
-          hand from a terminal. The logic module behind it is the bit worth keeping.
-        </p>
+        <ul>
+          <li>
+            <strong>Don't add tests.</strong> A prototype that needs tests is no longer a prototype.
+          </li>
+          <li>
+            <strong>Don't wire it to the real database.</strong> Use an in-memory store unless the
+            question is specifically about persistence.
+          </li>
+          <li>
+            <strong>Don't generalise.</strong> No &quot;what if we wanted to support X later.&quot;
+            The prototype answers one question.
+          </li>
+          <li>
+            <strong>Don't blur the logic and the TUI together.</strong> If the reducer / state
+            machine references <code>console.log</code>, prompts, or terminal escape codes, it's no
+            longer portable. Keep the TUI as a thin shell over a pure module.
+          </li>
+          <li>
+            <strong>Don't ship the TUI shell into production.</strong> The shell is optimised for
+            being driven by hand from a terminal. The logic module behind it is the bit worth
+            keeping.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

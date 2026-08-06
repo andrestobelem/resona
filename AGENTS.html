@@ -12,51 +12,80 @@
       <article>
         <h1 id="repository-instructions">Repository instructions</h1>
         <h2 id="commits">Commits</h2>
-        <p>
-          - Use Conventional Commits for every commit. - A scope is mandatory. Commit subjects must
-          use the form `type(scope): description`. - Keep commits atomic: each commit must contain
-          one coherent change and nothing unrelated. - Review the staged diff before committing and
-          split independent changes into separate commits. - Never add a `Co-authored-by` trailer,
-          any capitalization variant of it, or any other co-author attribution. There are no
-          exceptions.
-        </p>
+        <ul>
+          <li>Use Conventional Commits for every commit.</li>
+          <li>
+            A scope is mandatory. Commit subjects must use the form
+            <code>type(scope): description</code>.
+          </li>
+          <li>
+            Keep commits atomic: each commit must contain one coherent change and nothing unrelated.
+          </li>
+          <li>
+            Review the staged diff before committing and split independent changes into separate
+            commits.
+          </li>
+          <li>
+            Never add a <code>Co-authored-by</code> trailer, any capitalization variant of it, or
+            any other co-author attribution. There are no exceptions.
+          </li>
+        </ul>
         <p>Examples:</p>
-        <pre><code class="language-text">
-docs(product): document the initial product vision
+        <pre><code class="language-text">docs(product): document the initial product vision
 feat(renderer): add composition discovery
 fix(engine): preserve delay state during playback
-        </code></pre>
+</code></pre>
         <h2 id="agent-skills">Agent skills</h2>
         <h3 id="trunk-based-development">Trunk-based development</h3>
-        <p>
-          - Treat `main` as the only integration line for every workspace. - Use short-lived pull
-          requests by default while repository readiness is not `ready`. Direct commits are allowed
-          only for low-risk changes after the verified fast gate passes. - Andrés Tobelem and future
-          maintainers explicitly authorized in GitHub may integrate changes. - Every author must
-          review the complete diff and obtain a passing fast gate. Changes to public APIs, DSP
-          behavior, CI, security, or dependencies also require an independent human or review-agent
-          review. - The author classifies risk and the integrator confirms it. Treat uncertainty as
-          high risk. - Integrate work the same day. A branch or pull request must never remain open
-          longer than 24 hours. - A newly red `main` stops integration. Repair it immediately or
-          revert the responsible atomic batch. - Use `$trunk-based-development` for daily delivery
-          and exposure strategy. Its integration contract lives in
-          `docs/agents/trunk-based-development.md`.
-        </p>
+        <ul>
+          <li>Treat <code>main</code> as the only integration line for every workspace.</li>
+          <li>
+            Use short-lived pull requests by default while repository readiness is not
+            <code>ready</code>. Direct commits are allowed only for low-risk changes after the
+            verified fast gate passes.
+          </li>
+          <li>
+            Andrés Tobelem and future maintainers explicitly authorized in GitHub may integrate
+            changes.
+          </li>
+          <li>
+            Every author must review the complete diff and obtain a passing fast gate. Changes to
+            public APIs, DSP behavior, CI, security, or dependencies also require an independent
+            human or review-agent review.
+          </li>
+          <li>
+            The author classifies risk and the integrator confirms it. Treat uncertainty as high
+            risk.
+          </li>
+          <li>
+            Integrate work the same day. A branch or pull request must never remain open longer than
+            24 hours.
+          </li>
+          <li>
+            A newly red <code>main</code> stops integration. Repair it immediately or revert the
+            responsible atomic batch.
+          </li>
+          <li>
+            Use <code>$trunk-based-development</code> for daily delivery and exposure strategy. Its
+            integration contract lives in <code>docs/agents/trunk-based-development.md</code>.
+          </li>
+        </ul>
         <h3 id="issue-tracker">Issue tracker</h3>
         <p>
-          Issues and PRDs are tracked in GitHub Issues using the `gh` CLI. See
-          `docs/agents/issue-tracker.md`.
+          Issues and PRDs are tracked in GitHub Issues using the <code>gh</code> CLI. See
+          <code>docs/agents/issue-tracker.md</code>.
         </p>
         <h3 id="triage-labels">Triage labels</h3>
         <p>
-          Triage uses the default `needs-triage`, `needs-info`, `ready-for-agent`,
-          `ready-for-human`, and `wontfix` labels. See `docs/agents/triage-labels.md`.
+          Triage uses the default <code>needs-triage</code>, <code>needs-info</code>,
+          <code>ready-for-agent</code>, <code>ready-for-human</code>, and
+          <code>wontfix</code> labels. See <code>docs/agents/triage-labels.md</code>.
         </p>
         <h3 id="domain-docs">Domain docs</h3>
         <p>
-          This repository uses a multi-context layout with a root `CONTEXT-MAP.md` pointing to the
-          relevant context documentation. System-wide ADRs live in `docs/adr/`. See
-          `docs/agents/domain.md`.
+          This repository uses a multi-context layout with a root
+          <code>CONTEXT-MAP.md</code> pointing to the relevant context documentation. System-wide
+          ADRs live in <code>docs/adr/</code>. See <code>docs/agents/domain.md</code>.
         </p>
       </article>
     </main>

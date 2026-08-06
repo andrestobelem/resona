@@ -10,34 +10,48 @@
     <main>
       <p class="source-path">docs/adr/0035-linear-absolute-adsr-envelope.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="la-envolvente-adsr-es-lineal-y-usa-tiempo-absoluto">
           La envolvente ADSR es lineal y usa tiempo absoluto
         </h1>
         <p>
-          La envolvente de `PolySynth` usa segmentos lineales en amplitud. Attack, decay y release
-          son duraciones absolutas; sustain es un escalar en `[0, 1]`. Sus defaults respectivos son
-          `10 ms`, `100 ms`, `0.8` y `200 ms`.
+          La envolvente de <code>PolySynth</code> usa segmentos lineales en amplitud. Attack, decay
+          y release son duraciones absolutas; sustain es un escalar en <code>[0, 1]</code>. Sus
+          defaults respectivos son <code>10 ms</code>, <code>100 ms</code>, <code>0.8</code> y
+          <code>200 ms</code>.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Exigir todos los parámetros y dejar curvas y unidades abiertas. - Permitir tiempos
-          musicales y absolutos con curvas configurables desde el inicio. - Fijar una envolvente
-          absoluta, lineal y con defaults reproducibles.
-        </p>
+        <ul>
+          <li>Exigir todos los parámetros y dejar curvas y unidades abiertas.</li>
+          <li>Permitir tiempos musicales y absolutos con curvas configurables desde el inicio.</li>
+          <li>Fijar una envolvente absoluta, lineal y con defaults reproducibles.</li>
+        </ul>
         <p>
           Se eligió la tercera opción para que notas cortas, límites de gate y colas tengan una
           semántica completa sin incorporar todavía otro sistema de curvas y sincronización.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - Attack va de cero a uno y decay de uno a sustain. - Release parte del nivel instantáneo
-          alcanzado y termina en cero. - La voz queda libre cuando finaliza release. - Una duración
-          cero es una transición instantánea en el frame correspondiente. - Duraciones negativas y
-          sustain fuera de `[0, 1]` fallan la validación. - Los defaults forman parte del resultado
-          y deben quedar resueltos en el plan. - Curvas exponenciales y tiempos sincronizados al
-          tempo quedan fuera del MVP.
-        </p>
+        <ul>
+          <li>Attack va de cero a uno y decay de uno a sustain.</li>
+          <li>Release parte del nivel instantáneo alcanzado y termina en cero.</li>
+          <li>La voz queda libre cuando finaliza release.</li>
+          <li>Una duración cero es una transición instantánea en el frame correspondiente.</li>
+          <li>Duraciones negativas y sustain fuera de <code>[0, 1]</code> fallan la validación.</li>
+          <li>Los defaults forman parte del resultado y deben quedar resueltos en el plan.</li>
+          <li>Curvas exponenciales y tiempos sincronizados al tempo quedan fuera del MVP.</li>
+        </ul>
       </article>
     </main>
   </body>

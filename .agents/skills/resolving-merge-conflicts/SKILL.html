@@ -10,32 +10,49 @@
     <main>
       <p class="source-path">.agents/skills/resolving-merge-conflicts/SKILL.md</p>
       <article>
-        <p>
-          --- name: resolving-merge-conflicts description: &quot;Use when you need to resolve an
-          in-progress git merge/rebase conflict.&quot; ---
-        </p>
-        <p>
-          1. **See the current state** of the merge/rebase. Check git history, and the conflicting
-          files.
-        </p>
-        <p>
-          2. **Find the primary sources** for each conflict. Understand deeply why each change was
-          made, and what the original intent was. Read the commit messages, check the PRs, check
-          original issues/tickets.
-        </p>
-        <p>
-          3. **Resolve each hunk.** Preserve both intents where possible. Where incompatible, pick
-          the one matching the merge's stated goal and note the trade-off. Do **not** invent new
-          behaviour. Always resolve; never `--abort`.
-        </p>
-        <p>
-          4. Discover the project's **automated checks** and run them — typically typecheck, then
-          tests, then format. Fix anything the merge broke.
-        </p>
-        <p>
-          5. **Finish the merge/rebase.** Stage everything and commit. If rebasing, continue the
-          rebase process until all commits are rebased.
-        </p>
+        <aside class="frontmatter">
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+name: resolving-merge-conflicts
+description: &quot;Use when you need to resolve an in-progress git merge/rebase conflict.&quot;
+---</code></pre>
+          </details>
+        </aside>
+        <ol>
+          <li>
+            <p>
+              <strong>See the current state</strong> of the merge/rebase. Check git history, and the
+              conflicting files.
+            </p>
+          </li>
+          <li>
+            <p>
+              <strong>Find the primary sources</strong> for each conflict. Understand deeply why
+              each change was made, and what the original intent was. Read the commit messages,
+              check the PRs, check original issues/tickets.
+            </p>
+          </li>
+          <li>
+            <p>
+              <strong>Resolve each hunk.</strong> Preserve both intents where possible. Where
+              incompatible, pick the one matching the merge's stated goal and note the trade-off. Do
+              <strong>not</strong> invent new behaviour. Always resolve; never <code>--abort</code>.
+            </p>
+          </li>
+          <li>
+            <p>
+              Discover the project's <strong>automated checks</strong> and run them — typically
+              typecheck, then tests, then format. Fix anything the merge broke.
+            </p>
+          </li>
+          <li>
+            <p>
+              <strong>Finish the merge/rebase.</strong> Stage everything and commit. If rebasing,
+              continue the rebase process until all commits are rebased.
+            </p>
+          </li>
+        </ol>
       </article>
     </main>
   </body>

@@ -10,22 +10,31 @@
     <main>
       <p class="source-path">.agents/skills/claude-handoff/SKILL.md</p>
       <article>
-        <p>
-          --- name: claude-handoff description: Hand the current conversation off to a fresh
-          background agent that picks up the work immediately. argument-hint: &quot;What will the
-          next session be used for?&quot; disable-model-invocation: true ---
-        </p>
+        <aside class="frontmatter">
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+name: claude-handoff
+description: Hand the current conversation off to a fresh background agent that picks up the work immediately.
+argument-hint: &quot;What will the next session be used for?&quot;
+disable-model-invocation: true
+---</code></pre>
+          </details>
+        </aside>
         <p>
           Write a handoff summary of the current conversation so a fresh agent can continue the
           work. Instead of saving it, launch a background agent seeded with the summary as its
-          prompt: `claude --bg --name &quot;&lt;descriptive name&gt;&quot; &quot;&lt;handoff
-          summary&gt;&quot;`. It starts in the current working directory and returns immediately;
-          the user manages it with `claude agents`.
+          prompt:
+          <code
+            >claude --bg --name &quot;&lt;descriptive name&gt;&quot; &quot;&lt;handoff
+            summary&gt;&quot;</code
+          >. It starts in the current working directory and returns immediately; the user manages it
+          with <code>claude agents</code>.
         </p>
         <p>
-          Always pass `-n`/`--name` with a descriptive name (e.g. `--name &quot;Fix login
-          bug&quot;`) — it sets the display name shown in the job list, session picker, and terminal
-          title.
+          Always pass <code>-n</code>/<code>--name</code> with a descriptive name (e.g.
+          <code>--name &quot;Fix login bug&quot;</code>) — it sets the display name shown in the job
+          list, session picker, and terminal title.
         </p>
         <p>
           Include a &quot;suggested skills&quot; section in the summary, which suggests skills that

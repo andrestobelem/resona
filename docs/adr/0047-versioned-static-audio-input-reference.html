@@ -10,32 +10,49 @@
     <main>
       <p class="source-path">docs/adr/0047-versioned-static-audio-input-reference.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="las-referencias-static-audio-son-objetos-etiquetados">
           Las referencias static-audio son objetos etiquetados
         </h1>
         <p>
-          `staticAudio()` produce un objeto plano, congelado y versionado con `type:
-          &quot;resona/static-audio&quot;`, `version: 1` y un `path` relativo validado. Esa misma
-          forma puede cruzar como input JSON.
+          <code>staticAudio()</code> produce un objeto plano, congelado y versionado con
+          <code>type: &quot;resona/static-audio&quot;</code>, <code>version: 1</code> y un
+          <code>path</code> relativo validado. Esa misma forma puede cruzar como input JSON.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Interpretar strings como paths cuando el schema espere audio. - Usar URLs o paths
-          absolutos en los inputs. - Exigir un objeto explícito con discriminante y versión.
-        </p>
+        <ul>
+          <li>Interpretar strings como paths cuando el schema espere audio.</li>
+          <li>Usar URLs o paths absolutos en los inputs.</li>
+          <li>Exigir un objeto explícito con discriminante y versión.</li>
+        </ul>
         <p>
           Se eligió la tercera opción para que el significado sobreviva a serialización, pueda
           evolucionar y no otorgue acceso a archivos por inferencia contextual.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - Un string nunca se convierte implícitamente en recurso. - El helper de Zod valida la
-          forma y genera un campo `audio-resource` en `InputSchemaIR`. - Studio restringe el
-          selector al directorio estático del proyecto. - CLI y API pueden recibir la misma forma
-          mediante JSON. - La versión permite rechazar o migrar formas futuras de manera explícita.
-          - Resolver la referencia continúa siendo responsabilidad de preparación.
-        </p>
+        <ul>
+          <li>Un string nunca se convierte implícitamente en recurso.</li>
+          <li>
+            El helper de Zod valida la forma y genera un campo <code>audio-resource</code> en
+            <code>InputSchemaIR</code>.
+          </li>
+          <li>Studio restringe el selector al directorio estático del proyecto.</li>
+          <li>CLI y API pueden recibir la misma forma mediante JSON.</li>
+          <li>La versión permite rechazar o migrar formas futuras de manera explícita.</li>
+          <li>Resolver la referencia continúa siendo responsabilidad de preparación.</li>
+        </ul>
       </article>
     </main>
   </body>

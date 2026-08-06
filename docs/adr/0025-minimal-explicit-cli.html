@@ -10,36 +10,59 @@
     <main>
       <p class="source-path">docs/adr/0025-minimal-explicit-cli.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="el-primer-corte-vertical-del-cli-tiene-cuatro-comandos-explicitos">
           El primer corte vertical del CLI tiene cuatro comandos explícitos
         </h1>
         <p>
-          El primer corte vertical del CLI expone `studio`, `compositions`, `validate` y `render`
-          como operaciones de producto. Cada comando adapta una capacidad programática compartida;
-          ninguno implementa lógica de dominio propia.
+          El primer corte vertical del CLI expone <code>studio</code>, <code>compositions</code>,
+          <code>validate</code> y <code>render</code> como operaciones de producto. Cada comando
+          adapta una capacidad programática compartida; ninguno implementa lógica de dominio propia.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Replicar desde el inicio toda la superficie de herramientas de Remotion. - Ofrecer un
-          único comando implícito cuyo comportamiento dependa de sus argumentos. - Cubrir los cuatro
-          recorridos iniciales con subcomandos pequeños y explícitos.
-        </p>
+        <ul>
+          <li>Replicar desde el inicio toda la superficie de herramientas de Remotion.</li>
+          <li>Ofrecer un único comando implícito cuyo comportamiento dependa de sus argumentos.</li>
+          <li>Cubrir los cuatro recorridos iniciales con subcomandos pequeños y explícitos.</li>
+        </ul>
         <p>
           Se eligió la tercera opción porque alcanza desarrollo interactivo, descubrimiento,
           validación y automatización del render sin estabilizar capacidades que todavía no existen.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - `resona studio [entry]` inicia Studio local. - `resona compositions [entry]` enumera el
-          registro compartido. - `resona validate [entry] --composition &lt;id&gt;` prepara y valida
-          sin renderizar. - `resona render &lt;entry&gt; &lt;composition-id&gt; &lt;output.wav&gt;`
-          construye y ejecuta un trabajo. - Flags y archivos JSON usan los descriptores y schemas
-          compartidos con la API. - Bundle, caché, plugins, benchmark y cloud quedan fuera del CLI
-          del MVP. - Los comandos futuros deben justificarse por un recorrido nuevo, no por simetría
-          nominal. - `resona skills add`, `status` y `update` llegan después como mantenimiento de
-          Agent Skills, no como operaciones de dominio del corte vertical.
-        </p>
+        <ul>
+          <li><code>resona studio [entry]</code> inicia Studio local.</li>
+          <li><code>resona compositions [entry]</code> enumera el registro compartido.</li>
+          <li>
+            <code>resona validate [entry] --composition &lt;id&gt;</code> prepara y valida sin
+            renderizar.
+          </li>
+          <li>
+            <code>resona render &lt;entry&gt; &lt;composition-id&gt; &lt;output.wav&gt;</code>
+            construye y ejecuta un trabajo.
+          </li>
+          <li>Flags y archivos JSON usan los descriptores y schemas compartidos con la API.</li>
+          <li>Bundle, caché, plugins, benchmark y cloud quedan fuera del CLI del MVP.</li>
+          <li>
+            Los comandos futuros deben justificarse por un recorrido nuevo, no por simetría nominal.
+          </li>
+          <li>
+            <code>resona skills add</code>, <code>status</code> y <code>update</code> llegan después
+            como mantenimiento de Agent Skills, no como operaciones de dominio del corte vertical.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

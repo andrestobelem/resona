@@ -10,80 +10,106 @@
     <main>
       <p class="source-path">docs/adr/0065-composition-ir-v1-structural-payloads.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="compositionir-v1-fija-sus-payloads-estructurales">
           CompositionIR v1 fija sus payloads estructurales
         </h1>
         <p>Secuencias, pistas, clips y notas usan estas formas:</p>
-        <pre><code class="language-ts">
-type SequenceIR = IRNodeBase &amp; Readonly&lt;{
-  type: &quot;sequence&quot;;
-  from: PositionIR;
+        <pre><code class="language-ts"><span class="token keyword">type</span> SequenceIR = IRNodeBase &amp; Readonly&lt;{
+  <span class="token keyword">type</span>: <span class="token string">&quot;sequence&quot;</span>;
+  <span class="token keyword">from</span>: PositionIR;
   duration?: DurationIR;
   children: readonly (SequenceIR | TrackIR)[];
 }&gt;;
 
-type AudioTrackIR = IRNodeBase &amp; Readonly&lt;{
-  type: &quot;audio-track&quot;;
+<span class="token keyword">type</span> AudioTrackIR = IRNodeBase &amp; Readonly&lt;{
+  <span class="token keyword">type</span>: <span class="token string">&quot;audio-track&quot;</span>;
   clips: readonly AudioClipIR[];
   effects: readonly EffectIR[];
   automation: readonly AutomationLaneIR[];
 }&gt;;
 
-type InstrumentTrackIR = IRNodeBase &amp; Readonly&lt;{
-  type: &quot;instrument-track&quot;;
+<span class="token keyword">type</span> InstrumentTrackIR = IRNodeBase &amp; Readonly&lt;{
+  <span class="token keyword">type</span>: <span class="token string">&quot;instrument-track&quot;</span>;
   clips: readonly EventClipIR[];
   instrument: PolySynthIR;
   effects: readonly EffectIR[];
   automation: readonly AutomationLaneIR[];
 }&gt;;
 
-type AudioClipIR = IRNodeBase &amp; Readonly&lt;{
-  type: &quot;audio-clip&quot;;
-  from: PositionIR;
+<span class="token keyword">type</span> AudioClipIR = IRNodeBase &amp; Readonly&lt;{
+  <span class="token keyword">type</span>: <span class="token string">&quot;audio-clip&quot;</span>;
+  <span class="token keyword">from</span>: PositionIR;
   resource: StaticAudioReference;
   offset: AbsoluteDurationIR;
   duration?: DurationIR;
   loop: boolean;
 }&gt;;
 
-type EventClipIR = IRNodeBase &amp; Readonly&lt;{
-  type: &quot;event-clip&quot;;
-  from: PositionIR;
+<span class="token keyword">type</span> EventClipIR = IRNodeBase &amp; Readonly&lt;{
+  <span class="token keyword">type</span>: <span class="token string">&quot;event-clip&quot;</span>;
+  <span class="token keyword">from</span>: PositionIR;
   events: readonly NoteIR[];
 }&gt;;
 
-type NoteIR = Readonly&lt;{
-  type: &quot;note&quot;;
+<span class="token keyword">type</span> NoteIR = Readonly&lt;{
+  <span class="token keyword">type</span>: <span class="token string">&quot;note&quot;</span>;
   at: PositionIR;
   duration: DurationIR;
   pitch: PitchIR;
   velocity: number;
 }&gt;;
-        </code></pre>
+</code></pre>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Omitir arrays vacíos y defaults para reducir el JSON. - Agregar IDs u ordinales
-          serializados a cada nota. - Materializar defaults, conservar arrays ordenados y derivar la
-          identidad densa desde el clip y el índice del evento.
-        </p>
+        <ul>
+          <li>Omitir arrays vacíos y defaults para reducir el JSON.</li>
+          <li>Agregar IDs u ordinales serializados a cada nota.</li>
+          <li>
+            Materializar defaults, conservar arrays ordenados y derivar la identidad densa desde el
+            clip y el índice del evento.
+          </li>
+        </ul>
         <p>
           Se eligió la tercera opción porque produce una sola forma canónica, preserva el orden que
           afecta la ejecución y evita duplicar una identidad que ya está determinada por la
           estructura.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - Todos los arrays están presentes aunque estén vacíos y su orden es semántico. -
-          `offset`, `loop` y `velocity` materializan los defaults cero, `false` y `1`. - Solo
-          `source` y duraciones semánticamente abiertas pueden omitirse. - `AudioClipIR.offset`
-          exige una duración absoluta. - La identidad de nota deriva de la ruta del clip y su
-          índice; `NoteIR` no tiene `id`, `path`, `source` ni `ordinal`. - La raíz empieza en cero y
-          su duración coincide con la cabecera de la composición. - `AudioTrackIR` no admite
-          instrumento y `InstrumentTrackIR` exige exactamente uno. - Toda frontera que recibe una IR
-          serializada vuelve a validar estas invariantes. - Cabecera, tempo y pitch se fijan en el
-          [ADR 0066](0066-composition-ir-v1-header-tempo-and-pitch.md).
-        </p>
+        <ul>
+          <li>Todos los arrays están presentes aunque estén vacíos y su orden es semántico.</li>
+          <li>
+            <code>offset</code>, <code>loop</code> y <code>velocity</code> materializan los defaults
+            cero, <code>false</code> y <code>1</code>.
+          </li>
+          <li>Solo <code>source</code> y duraciones semánticamente abiertas pueden omitirse.</li>
+          <li><code>AudioClipIR.offset</code> exige una duración absoluta.</li>
+          <li>
+            La identidad de nota deriva de la ruta del clip y su índice; <code>NoteIR</code> no
+            tiene <code>id</code>, <code>path</code>, <code>source</code> ni <code>ordinal</code>.
+          </li>
+          <li>La raíz empieza en cero y su duración coincide con la cabecera de la composición.</li>
+          <li>
+            <code>AudioTrackIR</code> no admite instrumento y <code>InstrumentTrackIR</code> exige
+            exactamente uno.
+          </li>
+          <li>Toda frontera que recibe una IR serializada vuelve a validar estas invariantes.</li>
+          <li>
+            Cabecera, tempo y pitch se fijan en el
+            <a href="0066-composition-ir-v1-header-tempo-and-pitch.html">ADR 0066</a>.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

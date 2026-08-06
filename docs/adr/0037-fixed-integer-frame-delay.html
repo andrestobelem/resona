@@ -10,35 +10,60 @@
     <main>
       <p class="source-path">docs/adr/0037-fixed-integer-frame-delay.md</p>
       <article>
-        <p>--- status: accepted date: 2026-08-04 ---</p>
+        <aside class="frontmatter">
+          <div class="frontmatter-meta">
+            <span class="frontmatter-badge">status: accepted</span>
+            <span class="frontmatter-badge">date: 2026-08-04</span>
+          </div>
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+status: accepted
+date: 2026-08-04
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="delay-usa-una-cantidad-fija-y-entera-de-frames">
           Delay usa una cantidad fija y entera de frames
         </h1>
         <p>
-          El `Delay` del MVP usa tiempo absoluto fijo convertido a una cantidad entera de frames,
-          feedback no negativo menor que uno y una mezcla dry/wet lineal. Cada canal conserva su
-          propio buffer inicialmente en cero.
+          El <code>Delay</code> del MVP usa tiempo absoluto fijo convertido a una cantidad entera de
+          frames, feedback no negativo menor que uno y una mezcla dry/wet lineal. Cada canal
+          conserva su propio buffer inicialmente en cero.
         </p>
         <h2 id="opciones-consideradas">Opciones consideradas</h2>
-        <p>
-          - Delegar el delay a nodos distintos en navegador y Node. - Incorporar desde el inicio
-          delay fraccional, modulación y sincronización musical. - Definir un delay entero mínimo
-          dentro del núcleo DSP compartido.
-        </p>
+        <ul>
+          <li>Delegar el delay a nodos distintos en navegador y Node.</li>
+          <li>Incorporar desde el inicio delay fraccional, modulación y sincronización musical.</li>
+          <li>Definir un delay entero mínimo dentro del núcleo DSP compartido.</li>
+        </ul>
         <p>
           Se eligió la tercera opción para disponer de un procesador con estado útil que ejercite
           seek, loop, preroll y colas sin introducir interpoladores ni backends divergentes.
         </p>
         <h2 id="consecuencias">Consecuencias</h2>
-        <p>
-          - `time` tiene default `250 ms` y debe resolverse a uno o más frames. - `feedback`
-          pertenece a `[0, 1)` y tiene default `0.3`. - `mix` pertenece a `[0, 1]` y tiene default
-          `0.25`. - La salida es `input * (1 - mix) + delayed * mix`. - El buffer recibe `input +
-          delayed * feedback`. - Los canales no comparten señal ni feedback. - Automatización, delay
-          fraccional, modulación y sync al tempo quedan fuera del MVP. - La canonización de
-          parámetros y las fronteras `Float32` de salida y buffer se fijan en el [ADR
-          0078](0078-explicit-float32-audio-boundaries.md).
-        </p>
+        <ul>
+          <li>
+            <code>time</code> tiene default <code>250 ms</code> y debe resolverse a uno o más
+            frames.
+          </li>
+          <li>
+            <code>feedback</code> pertenece a <code>[0, 1)</code> y tiene default <code>0.3</code>.
+          </li>
+          <li>
+            <code>mix</code> pertenece a <code>[0, 1]</code> y tiene default <code>0.25</code>.
+          </li>
+          <li>La salida es <code>input * (1 - mix) + delayed * mix</code>.</li>
+          <li>El buffer recibe <code>input + delayed * feedback</code>.</li>
+          <li>Los canales no comparten señal ni feedback.</li>
+          <li>
+            Automatización, delay fraccional, modulación y sync al tempo quedan fuera del MVP.
+          </li>
+          <li>
+            La canonización de parámetros y las fronteras <code>Float32</code> de salida y buffer se
+            fijan en el <a href="0078-explicit-float32-audio-boundaries.html">ADR 0078</a>.
+          </li>
+        </ul>
       </article>
     </main>
   </body>

@@ -10,23 +10,32 @@
     <main>
       <p class="source-path">.agents/skills/research/SKILL.md</p>
       <article>
+        <aside class="frontmatter">
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+name: research
+description: Investigate a question against high-trust primary sources and capture the findings as a Markdown file in the repo. Use when the user wants a topic researched, docs or API facts gathered, or reading legwork delegated to a background agent.
+---</code></pre>
+          </details>
+        </aside>
         <p>
-          --- name: research description: Investigate a question against high-trust primary sources
-          and capture the findings as a Markdown file in the repo. Use when the user wants a topic
-          researched, docs or API facts gathered, or reading legwork delegated to a background
-          agent. ---
-        </p>
-        <p>
-          Spin up a **background agent** to do the research, so you keep working while it reads.
+          Spin up a <strong>background agent</strong> to do the research, so you keep working while
+          it reads.
         </p>
         <p>Its job:</p>
-        <p>
-          1. Investigate the question against **primary sources** — official docs, source code,
-          specs, first-party APIs — not a secondary write-up of them. Follow every claim back to the
-          source that owns it. 2. Write the findings to a single Markdown file, citing each claim's
-          source. 3. Save it where the repo already keeps such notes; match the existing convention,
-          and if there is none, put it somewhere sensible and say where.
-        </p>
+        <ol>
+          <li>
+            Investigate the question against <strong>primary sources</strong> — official docs,
+            source code, specs, first-party APIs — not a secondary write-up of them. Follow every
+            claim back to the source that owns it.
+          </li>
+          <li>Write the findings to a single Markdown file, citing each claim's source.</li>
+          <li>
+            Save it where the repo already keeps such notes; match the existing convention, and if
+            there is none, put it somewhere sensible and say where.
+          </li>
+        </ol>
       </article>
     </main>
   </body>

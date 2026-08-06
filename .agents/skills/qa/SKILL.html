@@ -10,12 +10,15 @@
     <main>
       <p class="source-path">.agents/skills/qa/SKILL.md</p>
       <article>
-        <p>
-          --- name: qa description: Interactive QA session where user reports bugs or issues
-          conversationally, and the agent files GitHub issues. Explores the codebase in the
-          background for context and domain language. Use when user wants to report bugs, do QA,
-          file issues conversationally, or mentions &quot;QA session&quot;. ---
-        </p>
+        <aside class="frontmatter">
+          <details>
+            <summary>Frontmatter</summary>
+            <pre><code>---
+name: qa
+description: Interactive QA session where user reports bugs or issues conversationally, and the agent files GitHub issues. Explores the codebase in the background for context and domain language. Use when user wants to report bugs, do QA, file issues conversationally, or mentions &quot;QA session&quot;.
+---</code></pre>
+          </details>
+        </aside>
         <h1 id="qa-session">QA Session</h1>
         <p>
           Run an interactive QA session. The user describes problems they're encountering. You
@@ -25,13 +28,14 @@
         <h2 id="for-each-issue-the-user-raises">For each issue the user raises</h2>
         <h3 id="1-listen-and-lightly-clarify">1. Listen and lightly clarify</h3>
         <p>
-          Let the user describe the problem in their own words. Ask **at most 2-3 short clarifying
-          questions** focused on:
+          Let the user describe the problem in their own words. Ask
+          <strong>at most 2-3 short clarifying questions</strong> focused on:
         </p>
-        <p>
-          - What they expected vs what actually happened - Steps to reproduce (if not obvious) -
-          Whether it's consistent or intermittent
-        </p>
+        <ul>
+          <li>What they expected vs what actually happened</li>
+          <li>Steps to reproduce (if not obvious)</li>
+          <li>Whether it's consistent or intermittent</li>
+        </ul>
         <p>Do NOT over-interview. If the description is clear enough to file, move on.</p>
         <h3 id="2-explore-the-codebase-in-the-background">
           2. Explore the codebase in the background
@@ -40,10 +44,11 @@
           While talking to the user, kick off an Agent (subagent_type=Explore) in the background to
           understand the relevant area. The goal is NOT to find a fix — it's to:
         </p>
-        <p>
-          - Learn the domain language used in that area (check UBIQUITOUS_LANGUAGE.md) - Understand
-          what the feature is supposed to do - Identify the user-facing behavior boundary
-        </p>
+        <ul>
+          <li>Learn the domain language used in that area (check UBIQUITOUS_LANGUAGE.md)</li>
+          <li>Understand what the feature is supposed to do</li>
+          <li>Identify the user-facing behavior boundary</li>
+        </ul>
         <p>
           This context helps you write a better issue — but the issue itself should NOT reference
           specific files, line numbers, or internal implementation details.
@@ -52,34 +57,37 @@
           3. Assess scope: single issue or breakdown?
         </h3>
         <p>
-          Before filing, decide whether this is a **single issue** or needs to be **broken down**
-          into multiple issues.
+          Before filing, decide whether this is a <strong>single issue</strong> or needs to be
+          <strong>broken down</strong> into multiple issues.
         </p>
         <p>Break down when:</p>
-        <p>
-          - The fix spans multiple independent areas (e.g. &quot;the form validation is wrong AND
-          the success message is missing AND the redirect is broken&quot;) - There are clearly
-          separable concerns that different people could work on in parallel - The user describes
-          something that has multiple distinct failure modes or symptoms
-        </p>
+        <ul>
+          <li>
+            The fix spans multiple independent areas (e.g. &quot;the form validation is wrong AND
+            the success message is missing AND the redirect is broken&quot;)
+          </li>
+          <li>
+            There are clearly separable concerns that different people could work on in parallel
+          </li>
+          <li>The user describes something that has multiple distinct failure modes or symptoms</li>
+        </ul>
         <p>Keep as a single issue when:</p>
+        <ul>
+          <li>It's one behavior that's wrong in one place</li>
+          <li>The symptoms are all caused by the same root behavior</li>
+        </ul>
+        <h3 id="4-file-the-github-issues">4. File the GitHub issue(s)</h3>
         <p>
-          - It's one behavior that's wrong in one place - The symptoms are all caused by the same
-          root behavior
+          Create issues with <code>gh issue create</code>. Do NOT ask the user to review first —
+          just file and share URLs.
         </p>
-        <h3 id="4-file-the-github-issue-s">4. File the GitHub issue(s)</h3>
         <p>
-          Create issues with `gh issue create`. Do NOT ask the user to review first — just file and
-          share URLs.
-        </p>
-        <p>
-          Issues must be **durable** — they should still make sense after major refactors. Write
-          from the user's perspective.
+          Issues must be <strong>durable</strong> — they should still make sense after major
+          refactors. Write from the user's perspective.
         </p>
         <h4 id="for-a-single-issue">For a single issue</h4>
         <p>Use this template:</p>
-        <pre><code>
-## What happened
+        <pre><code>## What happened
 
 [Describe the actual behavior the user experienced, in plain language]
 
@@ -96,15 +104,14 @@
 ## Additional context
 
 [Any extra observations from the user or from codebase exploration that help frame the issue — e.g. &quot;this only happens when using the Docker layer, not the filesystem layer&quot; — use domain language but don't cite files]
-        </code></pre>
+</code></pre>
         <h4 id="for-a-breakdown-multiple-issues">For a breakdown (multiple issues)</h4>
         <p>
           Create issues in dependency order (blockers first) so you can reference real issue
           numbers.
         </p>
         <p>Use this template for each sub-issue:</p>
-        <pre><code>
-## Parent issue
+        <pre><code>## Parent issue
 
 #&lt;parent-issue-number&gt; (if you created a tracking issue) or &quot;Reported during QA session&quot;
 
@@ -129,25 +136,47 @@ Or &quot;None — can start immediately&quot; if no blockers.
 ## Additional context
 
 [Any extra observations relevant to this slice]
-        </code></pre>
+</code></pre>
         <p>When creating a breakdown:</p>
-        <p>
-          - **Prefer many thin issues over few thick ones** — each should be independently fixable
-          and verifiable - **Mark blocking relationships honestly** — if issue B genuinely can't be
-          tested until issue A is fixed, say so. If they're independent, mark both as &quot;None —
-          can start immediately&quot; - **Create issues in dependency order** so you can reference
-          real issue numbers in &quot;Blocked by&quot; - **Maximize parallelism** — the goal is that
-          multiple people (or agents) can grab different issues simultaneously
-        </p>
+        <ul>
+          <li>
+            <strong>Prefer many thin issues over few thick ones</strong> — each should be
+            independently fixable and verifiable
+          </li>
+          <li>
+            <strong>Mark blocking relationships honestly</strong> — if issue B genuinely can't be
+            tested until issue A is fixed, say so. If they're independent, mark both as &quot;None —
+            can start immediately&quot;
+          </li>
+          <li>
+            <strong>Create issues in dependency order</strong> so you can reference real issue
+            numbers in &quot;Blocked by&quot;
+          </li>
+          <li>
+            <strong>Maximize parallelism</strong> — the goal is that multiple people (or agents) can
+            grab different issues simultaneously
+          </li>
+        </ul>
         <h4 id="rules-for-all-issue-bodies">Rules for all issue bodies</h4>
-        <p>
-          - **No file paths or line numbers** — these go stale - **Use the project's domain
-          language** (check UBIQUITOUS_LANGUAGE.md if it exists) - **Describe behaviors, not code**
-          — &quot;the sync service fails to apply the patch&quot; not &quot;applyPatch() throws on
-          line 42&quot; - **Reproduction steps are mandatory** — if you can't determine them, ask
-          the user - **Keep it concise** — a developer should be able to read the issue in 30
-          seconds
-        </p>
+        <ul>
+          <li><strong>No file paths or line numbers</strong> — these go stale</li>
+          <li>
+            <strong>Use the project's domain language</strong> (check UBIQUITOUS_LANGUAGE.md if it
+            exists)
+          </li>
+          <li>
+            <strong>Describe behaviors, not code</strong> — &quot;the sync service fails to apply
+            the patch&quot; not &quot;applyPatch() throws on line 42&quot;
+          </li>
+          <li>
+            <strong>Reproduction steps are mandatory</strong> — if you can't determine them, ask the
+            user
+          </li>
+          <li>
+            <strong>Keep it concise</strong> — a developer should be able to read the issue in 30
+            seconds
+          </li>
+        </ul>
         <p>
           After filing, print all issue URLs (with blocking relationships summarized) and ask:
           &quot;Next issue, or are we done?&quot;
