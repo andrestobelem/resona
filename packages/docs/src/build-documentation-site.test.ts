@@ -150,6 +150,43 @@ describe("buildDocumentationSite", () => {
     await expect(runDocumentationBuild(projectRoot)).resolves.toMatchObject({ sourceCount: 1 });
   });
 
+  it("preserves escaped references and autolink text", async () => {
+    const projectRoot = await mkdtemp(join(tmpdir(), "resona-docs-reference-literal-test-"));
+    temporaryRoots.push(projectRoot);
+    await writeFile(
+      join(projectRoot, "README.md"),
+      [
+        "# Literal",
+        "",
+        String.raw`\[missing]`,
+        String.raw`\[missing][unknown-label]`,
+        "<https://example.com/[missing]>",
+        "<span>[inside-html]</span>",
+      ].join("\n"),
+    );
+
+    await expect(runDocumentationBuild(projectRoot)).resolves.toMatchObject({ sourceCount: 1 });
+  });
+
+  it("does not hide references after void inline HTML", async () => {
+    const projectRoot = await mkdtemp(join(tmpdir(), "resona-docs-reference-void-html-test-"));
+    temporaryRoots.push(projectRoot);
+    await writeFile(join(projectRoot, "README.md"), "# Broken\n\nprefix <br> [missing]\n");
+
+    await expect(runDocumentationBuild(projectRoot)).rejects.toThrow("missing");
+  });
+
+  it.each(["missing.foo", "missing!", "missing/foo"])(
+    "rejects unresolved shortcut labels with punctuation: %s",
+    async (label) => {
+      const projectRoot = await mkdtemp(join(tmpdir(), "resona-docs-shortcut-label-test-"));
+      temporaryRoots.push(projectRoot);
+      await writeFile(join(projectRoot, "README.md"), `# Broken\n\n[${label}]\n`);
+
+      await expect(runDocumentationBuild(projectRoot)).rejects.toThrow(label);
+    },
+  );
+
   it("rejects invalid frontmatter", async () => {
     const projectRoot = await mkdtemp(join(tmpdir(), "resona-docs-frontmatter-test-"));
     temporaryRoots.push(projectRoot);
