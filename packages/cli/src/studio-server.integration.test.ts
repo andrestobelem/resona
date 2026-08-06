@@ -100,8 +100,11 @@ describe("Studio local service", () => {
     expect(html).toContain("AbortController");
     expect(html).toContain("requestId");
     expect(html).toContain("variantRequestSequence");
+    expect(html).toContain("variantRequestSequence += 1");
     expect(html).toContain("currentCursorFrame");
     expect(html).toContain("requestSequence !== variantRequestSequence");
+    expect(html).toContain("if (!isCurrent()) return");
+    expect(html).toContain("inputPresent");
     expect(html).toContain("JSON fallback with server-side validation.");
 
     const worklet = await fetch(`${server.url}/studio/audio-worklet.js`);

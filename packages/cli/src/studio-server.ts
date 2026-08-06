@@ -314,7 +314,7 @@ const shell = (state: StudioState): string => {
         } else {
           control = document.createElement(schema['x-resona-ui'] === 'textarea' || (isRecord(schema['x-resona-ui']) && schema['x-resona-ui'].control === 'textarea') ? 'textarea' : 'input'); control.type = 'text'; control.value = typeof value === 'string' ? value : '';
         }
-        control.dataset.inputPath = JSON.stringify(path); label.append(control); parent.append(label);
+        control.dataset.inputPath = JSON.stringify(path); control.dataset.inputPresent = value === undefined ? 'false' : 'true'; label.append(control); parent.append(label);
       };
       const renderInputs = composition => {
         selectedComposition = composition;
@@ -333,7 +333,7 @@ const shell = (state: StudioState): string => {
       const readInputs = () => {
         if (fallbackInputs) { const parsed = JSON.parse(inputJson.value); if (!isRecord(parsed)) throw new Error('Inputs JSON must be an object.'); return parsed; }
         const result = cloneJson(selectedComposition.defaultInputs);
-        for (const control of inputControls.querySelectorAll('[data-input-path]')) { const path = JSON.parse(control.dataset.inputPath); let value; if (control.dataset.inputKind === 'audio-resource') value = {type: 'resona/static-audio', version: 1, path: control.value}; else if (control.dataset.inputKind === 'enum') value = JSON.parse(control.value); else if (control.type === 'checkbox') value = control.checked; else if (control.type === 'number') value = control.value === '' ? null : Number(control.value); else value = control.value; setAt(result, path, value); }
+        for (const control of inputControls.querySelectorAll('[data-input-path]')) { if (control.dataset.inputPresent !== 'true') continue; const path = JSON.parse(control.dataset.inputPath); let value; if (control.dataset.inputKind === 'audio-resource') value = {type: 'resona/static-audio', version: 1, path: control.value}; else if (control.dataset.inputKind === 'enum') value = JSON.parse(control.value); else if (control.type === 'checkbox') value = control.checked; else if (control.type === 'number') value = control.value === '' ? null : Number(control.value); else value = control.value; setAt(result, path, value); }
         return result;
       };
       const load = async () => { const value = await request('/api/v1/compositions'); compositions = value.compositions; try { const resources = await request('/api/v1/static-resources'); staticResources = resources.payload.resources; } catch { staticResources = []; } for (const composition of compositions) { const option = document.createElement('option'); option.value = composition.id; option.textContent = composition.id; select.append(option); } if (compositions[0] !== undefined) renderInputs(compositions[0]); status.textContent = compositions.length + ' compositions'; };
@@ -357,6 +357,7 @@ const shell = (state: StudioState): string => {
             const abort = () => { clearTimeout(timeout); const error = new Error('AudioWorklet preparation was cancelled.'); error.name = 'AbortError'; reject(error); };
             signal.addEventListener('abort', abort, {once: true});
             node.port.onmessage = event => {
+              if (!isCurrent()) return;
               const message = event.data;
               if (message.type === 'ready') { clearTimeout(timeout); signal.removeEventListener('abort', abort); ready = true; resolve(message); }
               if (message.type === 'snapshot') { currentCursorFrame = message.cursorFrame; cursor.textContent = ' · frame ' + message.cursorFrame; }
@@ -381,16 +382,17 @@ const shell = (state: StudioState): string => {
           currentCursorFrame = seekFrame;
           play.disabled = false;
           pause.disabled = false;
-          if (resumePlayback) { await context.resume(); node.port.postMessage({type: 'play'}); isPlaying = true; ended = false; }
+          if (resumePlayback) { await context.resume(); if (!isCurrent()) return; node.port.postMessage({type: 'play'}); isPlaying = true; ended = false; }
           completed = true;
         } finally {
           if (!completed || !isCurrent()) { node?.disconnect(); if (audioNode === node) audioNode = undefined; if (audioContext === context) audioContext = undefined; await context.close(); }
         }
       };
+      const invalidateVariantRequest = () => { variantRequestSequence += 1; variantController?.abort(); variantController = undefined; activeVariant = undefined; details.textContent = ''; currentCursorFrame = 0; void closeAudio(); };
       const prepareVariant = async () => { const requestSequence = ++variantRequestSequence; variantController?.abort(); const controller = new AbortController(); variantController = controller; const resumeFrame = currentCursorFrame; const resumePlayback = isPlaying; status.textContent = 'Preparing…'; inspect.disabled = true; play.disabled = true; pause.disabled = true; inputError.textContent = ''; let inputs; try { inputs = readInputs(); await closeAudio(); if (requestSequence !== variantRequestSequence) return; const requestId = 'studio-variant-' + requestSequence + '-' + Date.now(); const value = await request('/api/v1/variants', {method: 'POST', headers: {'x-resona-request-id': requestId}, signal: controller.signal, body: JSON.stringify({compositionId: select.value, inputs, requestId})}); if (requestSequence !== variantRequestSequence) return; activeVariant = value.variantId; ended = false; details.textContent = JSON.stringify(value.payload, null, 2); await prepareAudio(value.variantId, value.payload, resumeFrame, resumePlayback, requestSequence, controller.signal); if (requestSequence !== variantRequestSequence) return; status.textContent = resumePlayback ? 'Playing variant ' + value.variantId : 'Variant ' + value.variantId + ' ready'; } catch (error) { if (error?.name === 'AbortError' || requestSequence !== variantRequestSequence) return; inputError.textContent = error.message; status.textContent = error.message; await closeAudio(); } finally { if (requestSequence === variantRequestSequence) { variantController = undefined; inspect.disabled = false; } } };
-      select.addEventListener('change', () => { const composition = compositions.find(candidate => candidate.id === select.value); if (composition !== undefined) renderInputs(composition); });
+      select.addEventListener('change', () => { invalidateVariantRequest(); const composition = compositions.find(candidate => candidate.id === select.value); if (composition !== undefined) renderInputs(composition); });
       inspect.addEventListener('click', () => { void prepareVariant(); });
-      inputControls.addEventListener('change', () => { if (!fallbackInputs) void prepareVariant(); });
+      inputControls.addEventListener('change', event => { if (!fallbackInputs) { event.target?.dataset && (event.target.dataset.inputPresent = 'true'); void prepareVariant(); } });
       inputJson.addEventListener('change', () => { if (fallbackInputs) void prepareVariant(); });
       play.addEventListener('click', async () => { if (!ready || audioNode === undefined || audioContext === undefined) return; try { if (ended) { audioNode.port.postMessage({type: 'seek', frame: 0}); currentCursorFrame = 0; ended = false; } await audioContext.resume(); audioNode.port.postMessage({type: 'play'}); isPlaying = true; status.textContent = 'Playing'; } catch (error) { status.textContent = error.message; } });
       pause.addEventListener('click', async () => { if (!ready || audioNode === undefined || audioContext === undefined) return; audioNode.port.postMessage({type: 'pause'}); isPlaying = false; await audioContext.suspend(); status.textContent = 'Paused'; });
