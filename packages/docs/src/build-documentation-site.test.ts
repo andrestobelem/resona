@@ -112,6 +112,7 @@ describe("buildDocumentationSite", () => {
     await runDocumentationBuild(projectRoot);
 
     const guideHtml = await readFile(join(projectRoot, "fixture", "docs", "guide.html"), "utf8");
+    const styles = await readFile(join(projectRoot, ".resona-docs", "styles.css"), "utf8");
     expect(guideHtml).toContain('<a class="skip-link" href="#content">Saltar al contenido</a>');
     expect(guideHtml).toContain('<aside class="docs-sidebar"');
     expect(guideHtml).toContain('<nav aria-label="Documentación">');
@@ -123,7 +124,7 @@ describe("buildDocumentationSite", () => {
     expect(guideHtml).toContain('href="#top"');
     expect(guideHtml).toContain('id="theme-select"');
     expect(guideHtml).toContain("localStorage");
-    expect(guideHtml).toContain("prefers-color-scheme");
+    expect(styles).toContain("prefers-color-scheme");
   });
 
   it("derives navigation categories from repository paths", async () => {
