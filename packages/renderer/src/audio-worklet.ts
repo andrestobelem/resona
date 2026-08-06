@@ -11,6 +11,7 @@ export type AudioWorkletCommand =
     }>
   | Readonly<{ type: "play" }>
   | Readonly<{ type: "pause" }>
+  | Readonly<{ type: "loop"; enabled: boolean }>
   | Readonly<{ type: "seek"; frame: number }>;
 
 export type AudioWorkletEvent =
@@ -22,6 +23,18 @@ export type AudioWorkletEvent =
     }>
   | Readonly<{ type: "snapshot"; cursorFrame: number }>
   | Readonly<{ type: "ended"; cursorFrame: number }>
+  | Readonly<{
+      type: "underrun";
+      cursorFrame: number;
+      diagnostic: Readonly<{
+        code: "audio.underrun";
+        phase: "render";
+        severity: "error";
+        message: string;
+        compositionId: string;
+        cause: Readonly<{ requestedFrames: number; producedFrames: number }>;
+      }>;
+    }>
   | Readonly<{ type: "error"; message: string }>;
 
 export type AudioWorkletPortLike = {
@@ -38,12 +51,20 @@ export type AudioWorkletProcessorConstructor = new () => AudioWorkletProcessorIn
 
 const quantumFrames = 128;
 
+type AudioEngineFactory = (
+  plan: Parameters<typeof createAudioEngine>[0],
+  resources: readonly AudioRuntimeResource[],
+) => AudioEngine;
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === "object" && !Array.isArray(value);
 
 const asCommand = (value: unknown): AudioWorkletCommand | undefined => {
   if (!isRecord(value) || typeof value.type !== "string") return undefined;
   if (value.type === "play" || value.type === "pause") return { type: value.type };
+  if (value.type === "loop" && typeof value.enabled === "boolean") {
+    return { type: "loop", enabled: value.enabled };
+  }
   if (
     value.type === "seek" &&
     typeof value.frame === "number" &&
@@ -69,11 +90,14 @@ const asCommand = (value: unknown): AudioWorkletCommand | undefined => {
 
 export const createResonaAudioWorkletProcessor = (
   Base: new () => { port: AudioWorkletPortLike },
+  createEngine: AudioEngineFactory = createAudioEngine,
 ): AudioWorkletProcessorConstructor => {
   return class ResonaAudioWorkletProcessor extends Base {
     private engine: AudioEngine | undefined;
+    private compositionId = "";
     private nominalDurationFrames = Number.POSITIVE_INFINITY;
     private playing = false;
+    private looping = false;
     private readonly interleaved = new Float32Array(quantumFrames * 2);
     private readonly snapshotMessage = { type: "snapshot" as const, cursorFrame: 0 };
     private readonly endedMessage = { type: "ended" as const, cursorFrame: 0 };
@@ -88,9 +112,11 @@ export const createResonaAudioWorkletProcessor = (
         }
         try {
           if (command.type === "load") {
-            this.engine = createAudioEngine(command.plan, command.resources);
+            this.engine = createEngine(command.plan, command.resources);
+            this.compositionId = command.plan.compositionId;
             this.nominalDurationFrames = command.plan.nominalDurationFrames;
             this.playing = false;
+            this.looping = false;
             this.port.postMessage({
               type: "ready",
               sampleRate: 48_000,
@@ -102,6 +128,9 @@ export const createResonaAudioWorkletProcessor = (
             this.playing = true;
           } else if (command.type === "pause") {
             this.playing = false;
+          } else if (command.type === "loop") {
+            if (this.engine === undefined) throw new Error("AudioWorklet is not ready.");
+            this.looping = command.enabled;
           } else {
             if (this.engine === undefined) throw new Error("AudioWorklet is not ready.");
             this.engine.seek(command.frame);
@@ -143,13 +172,40 @@ export const createResonaAudioWorkletProcessor = (
         } satisfies AudioWorkletEvent);
         return true;
       }
-      const remaining = Math.max(0, this.nominalDurationFrames - this.engine.cursorFrame);
-      const frames = Math.min(left.length, remaining);
       try {
-        this.engine.process(this.interleaved, frames);
-        for (let frame = 0; frame < frames; frame += 1) {
-          left[frame] = this.interleaved[frame * 2] ?? 0;
-          right[frame] = this.interleaved[frame * 2 + 1] ?? 0;
+        let outputFrame = 0;
+        while (outputFrame < left.length) {
+          if (this.engine.cursorFrame >= this.nominalDurationFrames) {
+            if (!this.looping) break;
+            this.engine.seek(0);
+            this.snapshotMessage.cursorFrame = 0;
+            this.port.postMessage(this.snapshotMessage satisfies AudioWorkletEvent);
+          }
+          const remaining = Math.max(0, this.nominalDurationFrames - this.engine.cursorFrame);
+          const frames = Math.min(left.length - outputFrame, remaining);
+          if (frames <= 0) break;
+          const produced = this.engine.process(this.interleaved, frames);
+          if (produced !== frames) {
+            this.playing = false;
+            this.port.postMessage({
+              type: "underrun",
+              cursorFrame: this.engine.cursorFrame,
+              diagnostic: {
+                code: "audio.underrun",
+                phase: "render",
+                severity: "error",
+                message: "AudioWorklet could not produce the requested audio quantum.",
+                compositionId: this.compositionId,
+                cause: { requestedFrames: frames, producedFrames: produced },
+              },
+            } satisfies AudioWorkletEvent);
+            return true;
+          }
+          for (let frame = 0; frame < frames; frame += 1) {
+            left[outputFrame + frame] = this.interleaved[frame * 2] ?? 0;
+            right[outputFrame + frame] = this.interleaved[frame * 2 + 1] ?? 0;
+          }
+          outputFrame += frames;
         }
       } catch (error) {
         this.playing = false;
@@ -161,7 +217,7 @@ export const createResonaAudioWorkletProcessor = (
       }
       this.snapshotMessage.cursorFrame = this.engine.cursorFrame;
       this.port.postMessage(this.snapshotMessage satisfies AudioWorkletEvent);
-      if (this.engine.cursorFrame >= this.nominalDurationFrames) {
+      if (!this.looping && this.engine.cursorFrame >= this.nominalDurationFrames) {
         this.playing = false;
         this.endedMessage.cursorFrame = this.engine.cursorFrame;
         this.port.postMessage(this.endedMessage satisfies AudioWorkletEvent);
