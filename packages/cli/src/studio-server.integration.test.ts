@@ -119,6 +119,10 @@ describe("Studio local service", () => {
     expect(html).toContain('id="studio-timeline-tracks"');
     expect(html).toContain('id="studio-chain"');
     expect(html).toContain('id="meter-master"');
+    expect(html).toContain("audioRegionBuckets");
+    expect(html).toContain("secondsLabel(entry.start)");
+    expect(html).toContain("clipNode.style.left");
+    expect(html).toContain("clipNode.style.width");
     expect(html).toContain('id="studio-diagnostics"');
     expect(html).toContain('id="composition-ir"');
     expect(html).toContain('id="execution-plan"');

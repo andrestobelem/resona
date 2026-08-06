@@ -396,21 +396,24 @@ const shell = (state: StudioState): string => {
         return 0;
       };
       const pathLabel = value => Array.isArray(value) ? value.join(' / ') : 'unknown node';
-      const collectTracks = (sequence, tempo, output = [], depth = 0, parentStart = 0) => {
+      const secondsLabel = value => Number.isFinite(value) ? Number(value).toFixed(3) + ' s' : 'unknown';
+      const collectTracks = (sequence, tempo, output = [], depth = 0, parentStart = 0, parentEnd = Infinity) => {
         if (!isRecord(sequence) || !Array.isArray(sequence.children)) return output;
         const sequenceStart = parentStart + positionSeconds(sequence.from, tempo);
+        const sequenceEnd = sequence.duration ? Math.min(parentEnd, sequenceStart + durationSeconds(sequence.duration, tempo)) : parentEnd;
         for (const child of sequence.children) {
-          if (child?.type === 'sequence') collectTracks(child, tempo, output, depth + 1, sequenceStart);
-          else if (child?.type === 'instrument-track' || child?.type === 'audio-track') output.push({track: child, depth, start: sequenceStart});
+          if (child?.type === 'sequence') collectTracks(child, tempo, output, depth + 1, sequenceStart, sequenceEnd);
+          else if (child?.type === 'instrument-track' || child?.type === 'audio-track') output.push({track: child, depth, start: sequenceStart, end: sequenceEnd});
         }
         return output;
       };
-      const collectSequences = (sequence, tempo, output = [], depth = 0, parentStart = 0) => {
+      const collectSequences = (sequence, tempo, output = [], depth = 0, parentStart = 0, parentEnd = Infinity) => {
         if (!isRecord(sequence)) return output;
         const start = parentStart + positionSeconds(sequence.from, tempo);
-        output.push({sequence, depth, start});
+        const end = sequence.duration ? Math.min(parentEnd, start + durationSeconds(sequence.duration, tempo)) : parentEnd;
+        output.push({sequence, depth, start, end});
         if (!Array.isArray(sequence.children)) return output;
-        for (const child of sequence.children) if (child?.type === 'sequence') collectSequences(child, tempo, output, depth + 1, start);
+        for (const child of sequence.children) if (child?.type === 'sequence') collectSequences(child, tempo, output, depth + 1, start, end);
         return output;
       };
       const textNode = (tag, text, className) => {
@@ -448,13 +451,24 @@ const shell = (state: StudioState): string => {
         executionPlanJson.textContent = JSON.stringify(payload.plan, null, 2);
         const tempo = payload.composition.tempo?.bpm;
         const totalSeconds = Math.max(1e-9, durationSeconds(payload.composition.duration, tempo));
-        for (const entry of collectSequences(payload.composition.root, tempo)) {
-          const sequenceNode = textNode('div', (entry.depth ? '↳ ' : '') + 'Sequence · ' + String(entry.sequence.id) + ' · from ' + temporalLabel(entry.sequence.from), 'inspection-muted');
+        const sampleRate = Math.max(1, Number(activePlan.sampleRate) || 48_000);
+        const audioRegionBuckets = new Map();
+        for (const region of Array.isArray(activePlan.audioRegions) ? activePlan.audioRegions : []) {
+          if (!isRecord(region)) continue;
+          const key = String(region.destination) + ':' + String(region.startFrame);
+          const bucket = audioRegionBuckets.get(key);
+          if (bucket) bucket.push(region);
+          else audioRegionBuckets.set(key, [region]);
+        }
+        for (const entry of collectSequences(payload.composition.root, tempo, [], 0, 0, totalSeconds)) {
+          const sequenceDuration = Math.max(0, Math.min(totalSeconds, entry.end) - entry.start);
+          const sequenceNode = textNode('div', (entry.depth ? '↳ ' : '') + 'Sequence · ' + String(entry.sequence.id) + ' · from ' + temporalLabel(entry.sequence.from) + ' · start ' + secondsLabel(entry.start) + ' · duration ' + secondsLabel(sequenceDuration), 'inspection-muted');
           sequenceNode.dataset.nodePath = pathLabel(entry.sequence.path);
           sequenceNode.dataset.startSeconds = String(entry.start);
+          sequenceNode.dataset.endSeconds = String(entry.end);
           timelineSequences.append(sequenceNode);
         }
-        const tracks = collectTracks(payload.composition.root, tempo);
+        const tracks = collectTracks(payload.composition.root, tempo, [], 0, 0, totalSeconds);
         let processorIndex = 0;
         activeMeterEntries = [];
         for (const entry of tracks) {
@@ -472,11 +486,17 @@ const shell = (state: StudioState): string => {
             const clipNode = textNode('li', clipLabel, 'timeline-clip');
             clipNode.dataset.nodePath = pathLabel(clip.path);
             const clipStart = entry.start + positionSeconds(clip.from, tempo);
+            const regionKey = String(processorIndex) + ':' + String(Math.round(clipStart * sampleRate));
+            const regionBucket = audioRegionBuckets.get(regionKey);
+            const audioRegion = clip.type === 'audio-clip' && regionBucket ? regionBucket.shift() : undefined;
+            const trackEnd = Math.min(totalSeconds, entry.end);
+            const availableDuration = Math.max(0, trackEnd - clipStart);
+            const eventDuration = Array.isArray(clip.events) ? clip.events.reduce((end, event) => Math.max(end, positionSeconds(event.at, tempo) + durationSeconds(event.duration, tempo)), 0) : 0;
             const clipDuration = clip.type === 'audio-clip'
-              ? (clip.duration ? durationSeconds(clip.duration, tempo) : Math.max(0, totalSeconds - clipStart))
-              : (Array.isArray(clip.events) ? clip.events.reduce((end, event) => Math.max(end, positionSeconds(event.at, tempo) + durationSeconds(event.duration, tempo)), 0) : 0);
+              ? (audioRegion ? Number(audioRegion.durationFrames) / sampleRate : clip.duration ? durationSeconds(clip.duration, tempo) : availableDuration)
+              : eventDuration;
             clipNode.style.left = String(Math.max(0, Math.min(100, clipStart / totalSeconds * 100))) + '%';
-            clipNode.style.width = String(Math.max(2, Math.min(100, clipDuration / totalSeconds * 100))) + '%';
+            clipNode.style.width = String(Math.max(2, Math.min(100, Math.min(availableDuration, clipDuration) / totalSeconds * 100))) + '%';
             clips.append(clipNode);
           }
           if (clips.children.length === 0) clips.append(textNode('li', 'No clips', 'inspection-muted'));
