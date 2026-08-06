@@ -106,6 +106,7 @@ describe("Studio local service", () => {
     expect(html).toContain("if (!isCurrent()) return");
     expect(html).toContain("inputPresent");
     expect(html).toContain("audioClosePromise");
+    expect(html).toContain("schema.additionalProperties !== false");
     expect(html).toContain("JSON fallback with server-side validation.");
 
     const worklet = await fetch(`${server.url}/studio/audio-worklet.js`);

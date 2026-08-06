@@ -281,6 +281,7 @@ const shell = (state: StudioState): string => {
         if (resourceHint(schema) || Array.isArray(schema.enum)) return true;
         if (schema.type === 'boolean' || schema.type === 'number' || schema.type === 'integer' || schema.type === 'string') return true;
         if (schema.type !== 'object' || !isRecord(schema.properties)) return false;
+        if (schema.additionalProperties !== false || isRecord(schema.patternProperties)) return false;
         return Object.values(schema.properties).every(hasControl);
       };
       const labelFor = path => String(path[path.length - 1] || 'value');
