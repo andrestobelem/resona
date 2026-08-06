@@ -22,6 +22,7 @@ export type AudioWorkletEvent =
       nominalDurationFrames: number;
     }>
   | Readonly<{ type: "snapshot"; cursorFrame: number }>
+  | Readonly<{ type: "meter"; levels: readonly number[] }>
   | Readonly<{ type: "ended"; cursorFrame: number }>
   | Readonly<{
       type: "underrun";
@@ -217,6 +218,10 @@ export const createResonaAudioWorkletProcessor = (
       }
       this.snapshotMessage.cursorFrame = this.engine.cursorFrame;
       this.port.postMessage(this.snapshotMessage satisfies AudioWorkletEvent);
+      this.port.postMessage({
+        type: "meter",
+        levels: Array.from(this.engine.meters()),
+      } satisfies AudioWorkletEvent);
       if (!this.looping && this.engine.cursorFrame >= this.nominalDurationFrames) {
         this.playing = false;
         this.endedMessage.cursorFrame = this.engine.cursorFrame;
