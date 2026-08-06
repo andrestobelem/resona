@@ -403,6 +403,11 @@ summary:focus-visible {
   text-decoration: none;
 }
 
+.table-of-contents a.toc-current {
+  color: var(--text);
+  font-weight: 800;
+}
+
 .page-navigation {
   display: grid;
   grid-template-columns: 1fr 1fr;

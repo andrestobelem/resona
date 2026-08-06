@@ -2339,7 +2339,11 @@ exercises/05-memory-skill-building/05.03-long-term-memory/explainer/readme.md -&
           <nav class="table-of-contents" aria-label="En esta página">
             <h2>En esta página</h2>
             <ol>
-              <li class="toc-level-2"><a href="#directory-naming">Directory naming</a></li>
+              <li class="toc-level-2">
+                <a href="#directory-naming" class="toc-current" aria-current="location"
+                  >Directory naming</a
+                >
+              </li>
               <li class="toc-level-2"><a href="#exercise-variants">Exercise variants</a></li>
               <li class="toc-level-2"><a href="#required-files">Required files</a></li>
               <li class="toc-level-2"><a href="#workflow">Workflow</a></li>
@@ -2381,6 +2385,32 @@ exercises/05-memory-skill-building/05.03-long-term-memory/explainer/readme.md -&
             window.localStorage.setItem(key, theme);
           } catch {}
         });
+        const tocLinks = [...document.querySelectorAll(".table-of-contents a")];
+        const setCurrentHeading = (id) => {
+          for (const link of tocLinks) {
+            const current = link.getAttribute("href") === "#" + id;
+            link.classList.toggle("toc-current", current);
+            if (current) link.setAttribute("aria-current", "location");
+            else link.removeAttribute("aria-current");
+          }
+        };
+        if (tocLinks.length > 0 && "IntersectionObserver" in window) {
+          const observer = new IntersectionObserver(
+            (entries) => {
+              const visible = entries
+                .filter((entry) => entry.isIntersecting)
+                .sort((left, right) => left.boundingClientRect.top - right.boundingClientRect.top);
+              const id = visible[0]?.target.id;
+              if (id) setCurrentHeading(id);
+            },
+            { rootMargin: "-10% 0px -70% 0px", threshold: [0, 1] },
+          );
+          for (const link of tocLinks) {
+            const id = link.getAttribute("href")?.slice(1);
+            const heading = id ? document.getElementById(id) : null;
+            if (heading) observer.observe(heading);
+          }
+        }
       })();
     </script>
   </body>
