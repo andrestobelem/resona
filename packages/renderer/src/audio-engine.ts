@@ -214,7 +214,7 @@ const validatePlan = (plan: ExecutionPlan): void => {
     if (
       event.type === "note-attack" &&
       (!Number.isSafeInteger(event.semitonesFromA4) ||
-        !isCanonicalF32(event.velocity) ||
+        !Number.isFinite(event.velocity) ||
         event.velocity < 0 ||
         event.velocity > 1)
     ) {
