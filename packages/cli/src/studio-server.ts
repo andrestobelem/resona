@@ -241,7 +241,7 @@ const shell = (state: StudioState): string => {
     <style>body{font:15px system-ui,sans-serif;max-width:1000px;margin:2rem auto;padding:0 1rem;background:#111827;color:#e5e7eb}button,select,input,textarea{font:inherit;padding:.45rem .7rem;margin:.25rem;background:#1f2937;color:#e5e7eb;border:1px solid #4b5563;border-radius:.35rem}textarea{display:block;width:100%;box-sizing:border-box;font-family:ui-monospace,monospace}fieldset{border:1px solid #4b5563;border-radius:.35rem;margin:.5rem 0;padding:.5rem}#input-error{display:block;color:#fca5a5;min-height:1.3rem}pre{white-space:pre-wrap;background:#030712;padding:1rem;border-radius:.4rem;overflow:auto}header{display:flex;align-items:center;gap:1rem}</style>
   </head>
   <body><header><h1>Resona Studio</h1><span id="status">Loading compositions…</span><span id="cursor"></span></header>
-    <label>Composition <select id="composition"></select></label><button id="inspect">Prepare variant</button><button id="play" disabled>Play</button><button id="pause" disabled>Pause</button>
+    <label>Composition <select id="composition"></select></label><button id="inspect">Prepare variant</button><button id="play" disabled>Play</button><button id="pause" disabled>Pause</button><label>Seek <input id="seek" type="range" min="0" max="0" value="0" step="1" disabled><span id="seek-value">0</span></label><label><input id="loop" type="checkbox" disabled> Loop</label>
     <section id="inputs" hidden><h2>Inputs</h2><div id="input-controls"></div><label>JSON fallback<textarea id="input-json" rows="8"></textarea></label><span id="input-error" role="alert"></span></section>
     <pre id="details"></pre>
     <script>
@@ -254,6 +254,9 @@ const shell = (state: StudioState): string => {
       const inspect = document.querySelector('#inspect');
       const play = document.querySelector('#play');
       const pause = document.querySelector('#pause');
+      const seek = document.querySelector('#seek');
+      const seekValue = document.querySelector('#seek-value');
+      const loop = document.querySelector('#loop');
       const inputSection = document.querySelector('#inputs');
       const inputControls = document.querySelector('#input-controls');
       const inputJson = document.querySelector('#input-json');
@@ -339,7 +342,7 @@ const shell = (state: StudioState): string => {
         return result;
       };
       const load = async () => { const value = await request('/api/v1/compositions'); compositions = value.compositions; try { const resources = await request('/api/v1/static-resources'); staticResources = resources.payload.resources; } catch { staticResources = []; } for (const composition of compositions) { const option = document.createElement('option'); option.value = composition.id; option.textContent = composition.id; select.append(option); } if (compositions[0] !== undefined) renderInputs(compositions[0]); status.textContent = compositions.length + ' compositions'; };
-      const closeAudio = () => { const close = async () => { ready = false; isPlaying = false; const node = audioNode; const context = audioContext; audioNode = undefined; audioContext = undefined; node?.disconnect(); if (context !== undefined) await context.close(); play.disabled = true; pause.disabled = true; }; audioClosePromise = audioClosePromise.then(close, close); return audioClosePromise; };
+      const closeAudio = () => { const close = async () => { ready = false; isPlaying = false; const node = audioNode; const context = audioContext; audioNode = undefined; audioContext = undefined; node?.disconnect(); if (context !== undefined) await context.close(); play.disabled = true; pause.disabled = true; seek.disabled = true; loop.disabled = true; }; audioClosePromise = audioClosePromise.then(close, close); return audioClosePromise; };
       const prepareAudio = async (variantId, payload, resumeFrame, resumePlayback, requestSequence, signal) => {
         if (typeof AudioContext === 'undefined') throw new Error('This browser does not support AudioWorklet preview.');
         const context = new AudioContext({sampleRate: 48000});
@@ -362,8 +365,9 @@ const shell = (state: StudioState): string => {
               if (!isCurrent()) return;
               const message = event.data;
               if (message.type === 'ready') { clearTimeout(timeout); signal.removeEventListener('abort', abort); ready = true; resolve(message); }
-              if (message.type === 'snapshot') { currentCursorFrame = message.cursorFrame; cursor.textContent = ' · frame ' + message.cursorFrame; }
+              if (message.type === 'snapshot') { currentCursorFrame = message.cursorFrame; cursor.textContent = ' · frame ' + message.cursorFrame; seekValue.textContent = String(message.cursorFrame); if (document.activeElement !== seek) seek.value = String(message.cursorFrame); }
               if (message.type === 'ended') { currentCursorFrame = message.cursorFrame; isPlaying = false; ended = true; play.disabled = false; pause.disabled = true; status.textContent = 'Playback ended'; }
+              if (message.type === 'underrun') { const code = message.diagnostic?.code || 'audio.underrun'; clearTimeout(timeout); signal.removeEventListener('abort', abort); ready = false; isPlaying = false; play.disabled = true; pause.disabled = true; seek.disabled = true; loop.disabled = true; inputError.textContent = message.diagnostic.message + ' (' + code + ')'; status.textContent = 'Preview error: ' + message.diagnostic.message; void context.suspend(); const error = new Error(message.diagnostic.message); error.name = code; reject(error); }
               if (message.type === 'error') { clearTimeout(timeout); signal.removeEventListener('abort', abort); ready = false; play.disabled = true; pause.disabled = true; status.textContent = 'Preview error: ' + message.message; reject(new Error(message.message)); }
             };
             if (signal.aborted) abort();
@@ -382,6 +386,12 @@ const shell = (state: StudioState): string => {
           const seekFrame = Math.min(Math.max(0, resumeFrame), Math.max(0, payload.plan.nominalDurationFrames - 1));
           if (seekFrame > 0) node.port.postMessage({type: 'seek', frame: seekFrame});
           currentCursorFrame = seekFrame;
+          seek.max = String(Math.max(0, payload.plan.nominalDurationFrames - 1));
+          seek.value = String(seekFrame);
+          seekValue.textContent = String(seekFrame);
+          seek.disabled = false;
+          loop.disabled = false;
+          node.port.postMessage({type: 'loop', enabled: loop.checked});
           play.disabled = false;
           pause.disabled = false;
           if (resumePlayback) { await context.resume(); if (!isCurrent()) return; node.port.postMessage({type: 'play'}); isPlaying = true; ended = false; }
@@ -390,14 +400,16 @@ const shell = (state: StudioState): string => {
           if (!completed || !isCurrent()) { node?.disconnect(); if (audioNode === node) audioNode = undefined; if (audioContext === context) audioContext = undefined; await context.close(); }
         }
       };
-      const invalidateVariantRequest = () => { variantRequestSequence += 1; variantController?.abort(); variantController = undefined; activeVariant = undefined; details.textContent = ''; currentCursorFrame = 0; ready = false; isPlaying = false; inspect.disabled = false; play.disabled = true; pause.disabled = true; void closeAudio(); };
-      const prepareVariant = async () => { const requestSequence = ++variantRequestSequence; variantController?.abort(); const controller = new AbortController(); variantController = controller; const resumeFrame = currentCursorFrame; const resumePlayback = isPlaying; status.textContent = 'Preparing…'; inspect.disabled = true; play.disabled = true; pause.disabled = true; inputError.textContent = ''; let inputs; try { inputs = readInputs(); await closeAudio(); if (requestSequence !== variantRequestSequence) return; const requestId = 'studio-variant-' + requestSequence + '-' + Date.now(); const value = await request('/api/v1/variants', {method: 'POST', headers: {'x-resona-request-id': requestId}, signal: controller.signal, body: JSON.stringify({compositionId: select.value, inputs, requestId})}); if (requestSequence !== variantRequestSequence) return; activeVariant = value.variantId; ended = false; details.textContent = JSON.stringify(value.payload, null, 2); await prepareAudio(value.variantId, value.payload, resumeFrame, resumePlayback, requestSequence, controller.signal); if (requestSequence !== variantRequestSequence) return; status.textContent = resumePlayback ? 'Playing variant ' + value.variantId : 'Variant ' + value.variantId + ' ready'; } catch (error) { if (error?.name === 'AbortError' || requestSequence !== variantRequestSequence) return; inputError.textContent = error.message; status.textContent = error.message; await closeAudio(); } finally { if (requestSequence === variantRequestSequence) { variantController = undefined; inspect.disabled = false; } } };
+      const invalidateVariantRequest = () => { variantRequestSequence += 1; variantController?.abort(); variantController = undefined; activeVariant = undefined; details.textContent = ''; currentCursorFrame = 0; cursor.textContent = ''; seek.value = '0'; seek.max = '0'; seekValue.textContent = '0'; ready = false; isPlaying = false; inspect.disabled = false; play.disabled = true; pause.disabled = true; seek.disabled = true; loop.disabled = true; void closeAudio(); };
+      const prepareVariant = async () => { const requestSequence = ++variantRequestSequence; variantController?.abort(); const controller = new AbortController(); variantController = controller; const resumeFrame = currentCursorFrame; const resumePlayback = isPlaying; status.textContent = 'Preparing…'; inspect.disabled = true; play.disabled = true; pause.disabled = true; seek.disabled = true; loop.disabled = true; inputError.textContent = ''; let inputs; try { inputs = readInputs(); await closeAudio(); if (requestSequence !== variantRequestSequence) return; const requestId = 'studio-variant-' + requestSequence + '-' + Date.now(); const value = await request('/api/v1/variants', {method: 'POST', headers: {'x-resona-request-id': requestId}, signal: controller.signal, body: JSON.stringify({compositionId: select.value, inputs, requestId})}); if (requestSequence !== variantRequestSequence) return; activeVariant = value.variantId; ended = false; details.textContent = JSON.stringify(value.payload, null, 2); await prepareAudio(value.variantId, value.payload, resumeFrame, resumePlayback, requestSequence, controller.signal); if (requestSequence !== variantRequestSequence) return; status.textContent = resumePlayback ? 'Playing variant ' + value.variantId : 'Variant ' + value.variantId + ' ready'; } catch (error) { if (error?.name === 'AbortError' || requestSequence !== variantRequestSequence) return; inputError.textContent = error.message; status.textContent = error.message; await closeAudio(); } finally { if (requestSequence === variantRequestSequence) { variantController = undefined; inspect.disabled = false; } } };
       select.addEventListener('change', () => { invalidateVariantRequest(); const composition = compositions.find(candidate => candidate.id === select.value); if (composition !== undefined) renderInputs(composition); });
       inspect.addEventListener('click', () => { void prepareVariant(); });
       inputControls.addEventListener('change', event => { if (!fallbackInputs) { event.target?.dataset && (event.target.dataset.inputPresent = 'true'); void prepareVariant(); } });
       inputJson.addEventListener('change', () => { if (fallbackInputs) void prepareVariant(); });
-      play.addEventListener('click', async () => { if (!ready || audioNode === undefined || audioContext === undefined) return; try { if (ended) { audioNode.port.postMessage({type: 'seek', frame: 0}); currentCursorFrame = 0; ended = false; } await audioContext.resume(); audioNode.port.postMessage({type: 'play'}); isPlaying = true; status.textContent = 'Playing'; } catch (error) { status.textContent = error.message; } });
+      play.addEventListener('click', async () => { if (!ready || audioNode === undefined || audioContext === undefined) return; try { if (ended) { audioNode.port.postMessage({type: 'seek', frame: 0}); currentCursorFrame = 0; seek.value = '0'; seekValue.textContent = '0'; ended = false; } await audioContext.resume(); audioNode.port.postMessage({type: 'play'}); isPlaying = true; status.textContent = 'Playing'; } catch (error) { status.textContent = error.message; } });
       pause.addEventListener('click', async () => { if (!ready || audioNode === undefined || audioContext === undefined) return; audioNode.port.postMessage({type: 'pause'}); isPlaying = false; await audioContext.suspend(); status.textContent = 'Paused'; });
+      seek.addEventListener('change', async () => { if (!ready || audioNode === undefined || audioContext === undefined) return; const frame = Math.max(0, Math.min(Number(seek.value), Number(seek.max))); const resumePlayback = isPlaying; ended = false; isPlaying = false; currentCursorFrame = frame; seek.value = String(frame); seekValue.textContent = String(frame); audioNode.port.postMessage({type: 'seek', frame}); if (resumePlayback) { await audioContext.resume(); if (!ready || audioNode === undefined) return; audioNode.port.postMessage({type: 'play'}); isPlaying = true; status.textContent = 'Playing'; } else { status.textContent = 'Paused'; } });
+      loop.addEventListener('change', () => { if (!ready || audioNode === undefined) return; audioNode.port.postMessage({type: 'loop', enabled: loop.checked}); status.textContent = loop.checked ? 'Loop enabled' : 'Loop disabled'; });
       load().catch(error => { status.textContent = error.message; });
     </script>
   </body>
