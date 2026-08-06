@@ -54,6 +54,12 @@ importers:
 
   packages/docs:
     dependencies:
+      js-yaml:
+        specifier: 5.2.2
+        version: 5.2.2
+      markdown-it:
+        specifier: 14.3.0
+        version: 14.3.0
       prettier:
         specifier: 3.9.6
         version: 3.9.6
