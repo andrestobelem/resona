@@ -467,8 +467,9 @@ const shell = (state: StudioState): string => {
           meter.setAttribute('aria-label', 'Level ' + String(track.id));
           meterRow.append(meter);
           trackMeters.append(meterRow);
-          activeMeterEntries.push({meter, processorIndex});
-          processorIndex += 1 + (Array.isArray(track.effects) ? track.effects.length : 0);
+          const effectCount = Array.isArray(track.effects) ? track.effects.length : 0;
+          activeMeterEntries.push({meter, processorIndex: processorIndex + effectCount});
+          processorIndex += 1 + effectCount;
         }
         const diagnostics = Array.isArray(payload.diagnostics) ? payload.diagnostics : [];
         if (diagnostics.length === 0) diagnosticsList.append(textNode('li', 'No diagnostics', 'inspection-muted'));
