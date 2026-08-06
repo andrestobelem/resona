@@ -124,6 +124,7 @@ describe("buildDocumentationSite", () => {
     expect(guideHtml).toContain('href="#top"');
     expect(guideHtml).toContain('id="theme-select"');
     expect(guideHtml).toContain("localStorage");
+    expect(guideHtml).toContain("IntersectionObserver");
     expect(styles).toContain("prefers-color-scheme");
   });
 
