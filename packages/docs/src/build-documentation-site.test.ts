@@ -184,7 +184,7 @@ describe("buildDocumentationSite", () => {
     await expect(runDocumentationBuild(projectRoot)).resolves.toMatchObject({ sourceCount: 1 });
   });
 
-  it.each(["missing.foo", "missing!", "missing/foo"])(
+  it.each(["missing.foo", "missing!", "missing/foo", "x"])(
     "rejects unresolved shortcut labels with punctuation: %s",
     async (label) => {
       const projectRoot = await mkdtemp(join(tmpdir(), "resona-docs-shortcut-label-test-"));
