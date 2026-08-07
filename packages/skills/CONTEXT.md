@@ -25,4 +25,6 @@ an installed third-party Matt Pocock corpus tracked by `skills-lock.json`. The C
 delegate to `skills@1.5.20` and install the official corpus in the standard
 `.agents/skills` location without replacing unrelated lock entries. Status is read-only;
 updates reject modified official skills unless `--force` is explicit. This package remains
-the canonical source and must not edit generated artifacts.
+the canonical source and must not edit generated artifacts. The CLI re-runs this package's
+metadata and workflow gate after a successful install or update and restores the prior
+installation if that check fails.

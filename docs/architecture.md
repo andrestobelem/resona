@@ -1211,13 +1211,16 @@ La fuente canónica de las skills vive dentro del monorepo, bajo
 `resona skills update` delegan en `skills@1.5.20`, instalan solo en el
 directorio estándar `.agents/skills` y conservan el formato estándar de
 `skills-lock.json`. No existe un formato paralelo ni una copia canónica dentro del
-proyecto consumidor.
+proyecto consumidor. `add` y `update` rechazan una instalación modificada o no confiable;
+`--force` autoriza explícitamente el reemplazo.
 
 `resona skills status` es una operación de solo lectura: distingue `missing`,
 `current`, `outdated` y `modified` usando el release declarado, la identidad
 oficial y los hashes de árbol registrados por el instalador estándar. La ausencia no bloquea ni
 genera una actualización implícita. `update` solo ocurre por una invocación explícita y
-rechaza cambios locales; `--force` autoriza el reemplazo.
+rechaza cambios locales o estados cuyo hash/identidad no puede verificarse; `--force`
+autoriza el reemplazo. Después de instalar, la CLI vuelve a ejecutar el gate determinista
+de metadata y workflows publicado por `@resona/skills`.
 
 El `skills-lock.json` que ya existe en el checkout registra una instalación de terceros y
 no es la fuente de las skills oficiales de Resona. Las instalaciones oficiales agregan sus

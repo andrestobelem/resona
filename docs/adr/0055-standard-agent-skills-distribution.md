@@ -41,6 +41,8 @@ el CLI de Resona.
   advertencia no bloqueante con el comando de actualización.
 - La detección nunca modifica el proyecto y las actualizaciones solo ocurren ante un
   `resona skills update` explícito.
+- `add` y `update` rechazan una instalación local modificada o cuya identidad
+  y hash no puedan verificarse; `--force` es la autorización explícita para reemplazarla.
 - El hash calculado del lockfile permite distinguir una skill desactualizada de una skill
   modificada localmente sin crear un formato de estado paralelo.
 - `update` rechaza sobrescribir modificaciones locales; `update --force` permite hacerlo de

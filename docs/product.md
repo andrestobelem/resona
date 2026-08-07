@@ -543,8 +543,10 @@ Los wrappers `resona skills add`, `resona skills status` y
 formato estándar de `skills-lock.json` y escriben en `.agents/skills`. `status`
 es de solo lectura y distingue skills ausentes, vigentes, desactualizadas y modificadas a
 partir de su identidad, release y hash. Ninguna actualización ocurre automáticamente:
-`update` rechaza una skill modificada localmente y solo `--force` autoriza
-sobrescribirla. La ausencia de skills no afecta autoría, reproducción ni render. El lockfile
+`add` y `update` rechazan una skill modificada o no confiable, y solo
+`--force` autoriza sobrescribirla. Después de instalar, la CLI vuelve a ejecutar el gate
+determinista de metadata y workflows. La ausencia de skills no afecta autoría, reproducción
+ni render. El lockfile
 estándar puede contener además skills de terceros; esas entradas no se modifican.
 
 Una skill oficial solo se publica si sus metadatos, referencias, comandos, ejemplos y
