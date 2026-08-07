@@ -15,6 +15,7 @@ import {
   type RenderProgress,
 } from "@resona/renderer";
 import { startStudioServer } from "./studio-server.js";
+import { runSkills, SkillsUsageError, skillsHelp } from "./skills.js";
 
 const usage = `Usage:
   resona studio [entry] [--config <path>] [--json]
@@ -32,6 +33,7 @@ type CliContext = Readonly<{
   output: { stdout: string; stderr: string };
   signal?: AbortSignal;
   flush?: () => void;
+  environment?: NodeJS.ProcessEnv;
 }>;
 
 type ParsedArgs = Readonly<{
@@ -50,6 +52,7 @@ type ParsedArgs = Readonly<{
   tailFrames?: number;
   blockFrames?: number;
   renderOptions?: JsonObject;
+  force?: boolean;
   json: boolean;
   help: boolean;
 }>;
@@ -112,6 +115,7 @@ const parseArgs = (argv: readonly string[]): ParsedArgs => {
   let tailFrames: number | undefined;
   let blockFrames: number | undefined;
   let renderOptions: JsonObject | undefined;
+  let force = false;
   let json = false;
   let help = false;
 
@@ -172,6 +176,10 @@ const parseArgs = (argv: readonly string[]): ParsedArgs => {
       overwrite = true;
       continue;
     }
+    if (argument === "--force") {
+      force = true;
+      continue;
+    }
     if (argument === "--options" || argument === "--render-options") {
       if (renderOptions !== undefined) {
         throw new CliUsageError("--options may be provided once.");
@@ -213,7 +221,7 @@ const parseArgs = (argv: readonly string[]): ParsedArgs => {
     positional.push(argument);
   }
 
-  if (command !== "render" && positional.length > 1) {
+  if (command !== "render" && command !== "skills" && positional.length > 1) {
     throw new CliUsageError("Only one project entry may be provided.");
   }
   if (command === "render" && positional.length > 3) {
@@ -235,6 +243,7 @@ const parseArgs = (argv: readonly string[]): ParsedArgs => {
     ...(tailFrames === undefined ? {} : { tailFrames }),
     ...(blockFrames === undefined ? {} : { blockFrames }),
     ...(renderOptions === undefined ? {} : { renderOptions }),
+    ...(force ? { force } : {}),
     json,
     help,
   };
@@ -367,7 +376,7 @@ const errorMessage = (error: unknown): string =>
 
 const errorExitCode = (error: unknown, signal: AbortSignal | undefined): 1 | 2 | 130 => {
   if (isCancellation(error, signal)) return 130;
-  if (error instanceof CliUsageError) return 2;
+  if (error instanceof CliUsageError || error instanceof SkillsUsageError) return 2;
   if (
     error instanceof ResonaError &&
     error.diagnostics.some(({ phase }) => phase === "configuration")
@@ -769,7 +778,7 @@ const runRender = async (args: ParsedArgs, context: CliContext): Promise<void> =
 };
 
 const help = (context: CliContext): void => {
-  context.output.stdout += `${usage}\n`;
+  context.output.stdout += `${usage}\n${skillsHelp}\n`;
 };
 
 export const runCli = async (
@@ -779,6 +788,7 @@ export const runCli = async (
     output: { stdout: string; stderr: string };
     signal?: AbortSignal;
     flush?: () => void;
+    environment?: NodeJS.ProcessEnv;
   }>,
 ): Promise<0 | 1 | 2 | 130> => {
   const context: CliContext = options;
@@ -792,11 +802,26 @@ export const runCli = async (
     }
     if (args.command === undefined) throw new CliUsageError("A command is required.");
     if (context.signal?.aborted === true) throw new CliCancellationError("Operation cancelled.");
+    if (args.force === true && args.command !== "skills") {
+      throw new CliUsageError("--force is only valid for resona skills update.");
+    }
     if (args.command === "compositions") await runCompositions(args, context);
     else if (args.command === "studio") await runStudio(args, context);
     else if (args.command === "validate") await runValidate(args, context);
     else if (args.command === "render") await runRender(args, context);
-    else throw new CliUsageError(`Unknown command: ${args.command}.`);
+    else if (args.command === "skills") {
+      if (args.config !== undefined) {
+        throw new CliUsageError("skills does not accept a config or entry option.");
+      }
+      const location = await resolveProjectRoot(context.cwd, undefined, undefined);
+      await runSkills(args.positionals, args.force === true, {
+        cwd: location.root,
+        output: context.output,
+        json: args.json,
+        ...(context.environment === undefined ? {} : { environment: context.environment }),
+        ...(context.signal === undefined ? {} : { signal: context.signal }),
+      });
+    } else throw new CliUsageError(`Unknown command: ${args.command}.`);
     return 0;
   } catch (error) {
     const exitCode = errorExitCode(error, context.signal);

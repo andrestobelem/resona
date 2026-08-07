@@ -12,7 +12,8 @@
   },
   "dependencies": {
     "@resona/engine": "workspace:*",
-    "@resona/renderer": "workspace:*"
+    "@resona/renderer": "workspace:*",
+    "@resona/skills": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "24.13.3",
