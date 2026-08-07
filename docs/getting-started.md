@@ -24,9 +24,8 @@ pnpm install
 pnpm check:environment
 ```
 
-El preflight muestra la versión detectada y termina con un diagnóstico accionable si Node o
-pnpm no coinciden con el contrato. El mismo preflight forma parte de los gates y de
-`pnpm resona`.
+El preflight verifica las versiones y termina con un diagnóstico accionable si Node o pnpm no
+coinciden con el contrato. El mismo preflight forma parte de los gates y de `pnpm resona`.
 
 ## Construir
 
@@ -72,7 +71,9 @@ pnpm resona -- studio --config "$CONFIG"
 ```
 
 Studio escucha solo en loopback. Copia la URL que imprime el proceso y ábrela en el navegador.
-Para detenerlo, vuelve a la terminal y pulsa `Ctrl-C`.
+Para detenerlo, vuelve a la terminal y pulsa `Ctrl-C`. El mensaje `Operation cancelled.` y el
+código de salida no cero que puede mostrar pnpm son la finalización esperada de Studio; no
+indican un fallo del render.
 
 ### 4. Renderizar un WAV
 

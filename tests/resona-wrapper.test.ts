@@ -23,4 +23,24 @@ describe("runResona", () => {
       await rm(root, { recursive: true, force: true });
     }
   });
+
+  it("reports an incompatible Node version before checking the build", async () => {
+    const root = await mkdtemp(join(tmpdir(), "resona-wrapper-"));
+    let stderr = "";
+    try {
+      const exitCode = await runResona({
+        root,
+        cwd: root,
+        env: { ...process.env, npm_config_user_agent: "pnpm/11.20.0 npm/? node/v26.7.0" },
+        nodeVersion: "26.7.0",
+        output: { write: (chunk) => (stderr += chunk) },
+      });
+
+      expect(exitCode).toBe(1);
+      expect(stderr).toContain("Node.js 26.7.0 is outside the supported range");
+      expect(stderr).not.toContain("CLI build is missing");
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
 });

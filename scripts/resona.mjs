@@ -22,11 +22,12 @@ export const runResona = async ({
   argv = process.argv.slice(2),
   cwd = process.cwd(),
   env = process.env,
+  nodeVersion = process.versions.node,
   root = repositoryRoot,
   output = process.stderr,
 } = {}) => {
   const environment = checkEnvironment({
-    nodeVersion: process.versions.node,
+    nodeVersion,
     pnpmVersion: pnpmVersionFromUserAgent(env.npm_config_user_agent),
   });
   if (!environment.ok) {
@@ -49,8 +50,23 @@ export const runResona = async ({
       env,
       stdio: "inherit",
     });
-    child.once("error", () => resolveExit(1));
-    child.once("close", (code, signal) => resolveExit(code ?? (signal === null ? 1 : 1)));
+    const forwardSignal = (signal) => child.kill(signal);
+    const cleanup = () => {
+      process.removeListener("SIGINT", onInterrupt);
+      process.removeListener("SIGTERM", onTerminate);
+    };
+    const onInterrupt = () => forwardSignal("SIGINT");
+    const onTerminate = () => forwardSignal("SIGTERM");
+    process.once("SIGINT", onInterrupt);
+    process.once("SIGTERM", onTerminate);
+    child.once("error", () => {
+      cleanup();
+      resolveExit(1);
+    });
+    child.once("close", (code) => {
+      cleanup();
+      resolveExit(code ?? 1);
+    });
   });
 };
 

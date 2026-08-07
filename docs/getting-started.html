@@ -2244,7 +2244,7 @@
                     </li>
                     <li>
                       <a class="nav-document" href="architecture.html">
-                        <span class="nav-title">Arquitectura propuesta</span>
+                        <span class="nav-title">Arquitectura y contratos</span>
                         <span class="nav-path">docs/architecture.md</span>
                       </a>
                     </li>
@@ -2611,9 +2611,9 @@
           pnpm check:environment</code></pre>
               </div>
               <p>
-                El preflight muestra la versión detectada y termina con un diagnóstico accionable si
-                Node o pnpm no coinciden con el contrato. El mismo preflight forma parte de los
-                gates y de <code>pnpm resona</code>.
+                El preflight verifica las versiones y termina con un diagnóstico accionable si Node
+                o pnpm no coinciden con el contrato. El mismo preflight forma parte de los gates y
+                de <code>pnpm resona</code>.
               </p>
               <h2 id="construir">Construir</h2>
               <p>La compilación es explícita:</p>
@@ -2669,7 +2669,9 @@
               </div>
               <p>
                 Studio escucha solo en loopback. Copia la URL que imprime el proceso y ábrela en el
-                navegador. Para detenerlo, vuelve a la terminal y pulsa <code>Ctrl-C</code>.
+                navegador. Para detenerlo, vuelve a la terminal y pulsa <code>Ctrl-C</code>. El
+                mensaje <code>Operation cancelled.</code> y el código de salida no cero que puede
+                mostrar pnpm son la finalización esperada de Studio; no indican un fallo del render.
               </p>
               <h3 id="4-renderizar-un-wav">4. Renderizar un WAV</h3>
               <p>Después de detener Studio, publica el render en la salida ignorada del ejemplo:</p>
@@ -2745,11 +2747,15 @@
               <h2 id="backlinks">Referenced by</h2>
               <ul>
                 <li><a href="../README.html">Resona</a> <code>README.md</code></li>
+                <li>
+                  <a href="architecture.html">Arquitectura y contratos</a>
+                  <code>docs/architecture.md</code>
+                </li>
               </ul>
             </section>
             <nav class="page-navigation" aria-label="Document navigation">
               <a class="previous" href="architecture.html">
-                <small>Previous</small>Arquitectura propuesta
+                <small>Previous</small>Arquitectura y contratos
               </a>
               <a class="next" href="product.html"> <small>Next</small>Visión de producto </a>
             </nav>

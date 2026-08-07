@@ -1,10 +1,12 @@
-# Arquitectura propuesta
+# Arquitectura y contratos
 
-> Estado: diseño en discusión. No hay una implementación; las decisiones aceptadas están
-> enlazadas a sus ADRs y los demás nombres de APIs, paquetes y tecnologías son candidatos.
+> Estado: arquitectura del prototipo ejecutable. El repositorio ya incluye motor, Studio,
+> renderer, CLI y el proyecto de ejemplo; las decisiones aceptadas están enlazadas a sus ADRs
+> y las extensiones futuras siguen siendo propuestas.
 
-Los verbos normativos de este documento describen restricciones a probar en el primer
-prototipo.
+Los verbos normativos de este documento describen restricciones del MVP y de sus superficies
+ejecutables. El [getting started](getting-started.md) documenta el recorrido práctico sin
+duplicar estos contratos.
 
 ## Objetivo arquitectónico
 

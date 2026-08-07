@@ -18,6 +18,7 @@ canónico es:
 
 ```sh
 pnpm install
+pnpm check:environment
 pnpm build
 pnpm resona -- compositions --config examples/cantata-de-las-estaciones/resona.config.ts
 pnpm resona -- validate --config examples/cantata-de-las-estaciones/resona.config.ts \
