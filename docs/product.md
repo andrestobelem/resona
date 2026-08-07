@@ -537,13 +537,15 @@ determinista contra un proyecto fixture. El conjunto cubre buenas prácticas, co
 audio y MIDI, Studio y render. Cada skill declara exactamente la versión del release de
 Resona cuyos workflows documenta; no tiene un ciclo de versiones independiente.
 
-La sincronización al repositorio oficial compatible con el estándar Agent Skills y la
-instalación (`npx skills add`, `resona skills add`, `resona skills update` y
-`resona skills status`) son el alcance de T20/#21 y todavía no están disponibles en el
-release actual. La ausencia de skills no afecta autoría, reproducción ni render. El lockfile,
-la detección de modificaciones locales y la actualización con `--force` se implementarán
-junto con esa story; no deben confundirse con el `skills-lock.json` de terceros que ya existe
-en el checkout.
+La instalación interoperable usa `npx skills add https://github.com/andrestobelem/resona/tree/main/packages/skills/skills`.
+Los wrappers `resona skills add`, `resona skills status` y
+`resona skills update` delegan en la versión fijada `skills@1.5.20`, conservan el
+formato estándar de `skills-lock.json` y escriben en `.agents/skills`. `status`
+es de solo lectura y distingue skills ausentes, vigentes, desactualizadas y modificadas a
+partir de su identidad, release y hash. Ninguna actualización ocurre automáticamente:
+`update` rechaza una skill modificada localmente y solo `--force` autoriza
+sobrescribirla. La ausencia de skills no afecta autoría, reproducción ni render. El lockfile
+estándar puede contener además skills de terceros; esas entradas no se modifican.
 
 Una skill oficial solo se publica si sus metadatos, referencias, comandos, ejemplos y
 workflows pasan pruebas deterministas contra el mismo release de Resona. Las evaluaciones

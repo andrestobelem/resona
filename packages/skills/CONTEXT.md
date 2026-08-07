@@ -20,6 +20,9 @@ render publication, cancellation, and cleanup. A deterministic failure blocks pu
 model evaluations remain complementary metrics as recorded by ADR 0056.
 
 The package is intentionally separate from the existing `.agents/skills` directory, which is
-an installed third-party Matt Pocock corpus tracked by `skills-lock.json`. T20/#21 owns
-install/update/status commands and synchronization to an external skills repository; this
-package must not overwrite that installation or edit generated artifacts.
+an installed third-party Matt Pocock corpus tracked by `skills-lock.json`. The CLI's
+`resona skills add`, `resona skills status`, and `resona skills update` wrappers
+delegate to `skills@1.5.20` and install the official corpus in the standard
+`.agents/skills` location without replacing unrelated lock entries. Status is read-only;
+updates reject modified official skills unless `--force` is explicit. This package remains
+the canonical source and must not edit generated artifacts.
