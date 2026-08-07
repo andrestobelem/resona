@@ -23,6 +23,11 @@ _Evitar_: Fuente, archivo editable
 **Proyecto**:
 Fuente, configuración y recursos que pueden declarar una o más composiciones.
 
+**Proyecto de ejemplo**:
+Proyecto versionado y autocontenido que demuestra el contrato público de Resona y sirve como
+punto de partida reproducible para una persona nueva.
+_Evitar_: Demo, fixture
+
 **Configuración del proyecto**:
 Objeto plano, síncrono y validado exportado opcionalmente por `resona.config.ts`. Define el
 entry point, el directorio estático y defaults de render sin contener lógica ejecutable en
@@ -78,6 +83,11 @@ de señal. Una pista no es lo mismo que un canal de audio o un canal MIDI.
 **Clip**:
 Colocación temporal acotada de contenido dentro de una pista.
 _Evitar_: Bloque
+
+**Evento de nota**:
+Intervalo musical tipado con inicio, duración, pitch y velocity que alimenta un instrumento;
+su representación pública no separa ataques y liberaciones.
+_Evitar_: Par note-on/note-off, evento MIDI cuando no se habla del formato de borde
 
 ## Tiempo
 
