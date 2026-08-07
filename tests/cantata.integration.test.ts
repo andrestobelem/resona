@@ -115,35 +115,34 @@ describe("CantataDeLasEstaciones example", () => {
   it("starts Studio for the cantata and forwards Ctrl-C to the child process", async () => {
     const studio = spawnWrapper(["studio", "--config", configPath, "--json"]);
     let output = "";
-    const document = await new Promise<{ format: string; url: string }>((resolve, reject) => {
-      const timeout = setTimeout(
-        () => reject(new Error("Studio did not announce its URL.")),
-        10_000,
-      );
-      studio.stdout.setEncoding("utf8");
-      studio.stdout.on("data", (chunk: string) => {
-        output += chunk;
-        for (const line of output.split("\n")) {
-          if (!line.startsWith("{")) continue;
-          try {
-            const candidate = JSON.parse(line) as { format?: string; url?: string };
-            if (candidate.format === "resona/studio" && candidate.url !== undefined) {
-              clearTimeout(timeout);
-              resolve({ format: candidate.format, url: candidate.url });
-              return;
-            }
-          } catch {
-            // Wait for the complete JSON line.
-          }
-        }
-      });
-      studio.once("error", (error) => {
-        clearTimeout(timeout);
-        reject(error);
-      });
-    });
-
     try {
+      const document = await new Promise<{ format: string; url: string }>((resolve, reject) => {
+        const timeout = setTimeout(
+          () => reject(new Error("Studio did not announce its URL.")),
+          10_000,
+        );
+        studio.stdout.setEncoding("utf8");
+        studio.stdout.on("data", (chunk: string) => {
+          output += chunk;
+          for (const line of output.split("\n")) {
+            if (!line.startsWith("{")) continue;
+            try {
+              const candidate = JSON.parse(line) as { format?: string; url?: string };
+              if (candidate.format === "resona/studio" && candidate.url !== undefined) {
+                clearTimeout(timeout);
+                resolve({ format: candidate.format, url: candidate.url });
+                return;
+              }
+            } catch {
+              // Wait for the complete JSON line.
+            }
+          }
+        });
+        studio.once("error", (error) => {
+          clearTimeout(timeout);
+          reject(error);
+        });
+      });
       expect(document.format).toBe("resona/studio");
       expect(document.url).toMatch(/^http:\/\/127\.0\.0\.1:\d+$/);
       studio.kill("SIGINT");
