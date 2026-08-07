@@ -3,10 +3,11 @@
 ## Readiness
 
 - Status: `partial`.
-- Evidence captured: 2026-08-07T07:40:38-03:00.
+- Evidence captured: 2026-08-07T08:03:28-03:00.
 - Integration line: `main`.
-- Baseline commit: `f524868`.
-- Worktree condition: dirty with the onboarding implementation for issue #57 on `main`.
+- Baseline commit: `16ed293`.
+- Worktree condition: clean on `feat/onboarding-cli-example` after the onboarding
+  implementation for issue #57.
 - Canonical runtime: Node.js `24.18.0` from `.node-version` and pnpm `11.20.0`; the package
   declares the compatible range `>=24.18.0 <25`.
 - Node.js 26 is a future compatibility target, not the baseline, until it reaches LTS and
@@ -78,11 +79,12 @@ Recorded result:
 
 - Run date: 2026-08-07.
 - Exit code: `0`.
-- Baseline commit: `f524868`.
-- Worktree: dirty with the onboarding implementation for issue #57 on `main`.
+- Baseline commit: `16ed293`.
+- Worktree: clean on `feat/onboarding-cli-example` after the onboarding implementation for
+  issue #57.
 - Formatting, ESLint, Markdown validation, typecheck, unit tests, and generated documentation
   checks passed under Node.js `24.18.0`.
-- Vitest ran 17 unit files containing 72 passing tests.
+- Vitest ran 17 unit files containing 73 passing tests.
 - Documentation check found 174 Markdown sources and 179 current generated artifacts.
 
 The fast gate runs after every integration batch. Its duration target is p95 at or below
@@ -108,12 +110,13 @@ Recorded result:
 
 - Run date: 2026-08-07.
 - Exit code: `0`.
-- Baseline commit: `f524868`.
-- Worktree: dirty with the onboarding implementation for issue #57 on `main`.
+- Baseline commit: `16ed293`.
+- Worktree: clean on `feat/onboarding-cli-example` after the onboarding implementation for
+  issue #57.
 - The embedded fast gate passed.
 - Build emitted all seven buildable production workspaces successfully.
-- Vitest ran 12 integration files containing 83 passing tests, including the cantata discovery,
-  validation, and short WAV render smoke.
+- Vitest ran 12 integration files containing 86 passing tests, including the cantata discovery,
+  validation, Studio lifecycle, and short WAV render smoke.
 
 The full gate runs before handoff or release. There is currently no executable release
 workflow.
