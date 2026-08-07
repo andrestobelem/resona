@@ -292,6 +292,17 @@ const statusForSkill = async (
 ): Promise<SkillStatus> => {
   const directory = skillDirectory(projectRoot, name);
   const path = SKILLS_DIRECTORY + "/" + name;
+  const officialIdentity = isOfficialLockEntry(name, entry);
+  if (entry !== undefined && !officialIdentity) {
+    return {
+      name,
+      state: "outdated",
+      path,
+      expectedRelease: RESONA_RELEASE,
+      requiresForce: true,
+      reason: "source-mismatch",
+    };
+  }
   let directoryExists: boolean;
   try {
     directoryExists = (await stat(directory)).isDirectory();
@@ -338,7 +349,6 @@ const statusForSkill = async (
     };
   }
 
-  const officialIdentity = isOfficialLockEntry(name, entry);
   const hashMatches =
     typeof entry?.computedHash === "string" &&
     entry.computedHash.length > 0 &&
@@ -362,17 +372,6 @@ const statusForSkill = async (
       expectedRelease: RESONA_RELEASE,
       requiresForce: true,
       reason: "not-managed",
-    };
-  }
-  if (!officialIdentity) {
-    return {
-      name,
-      state: "outdated",
-      path,
-      expectedRelease: RESONA_RELEASE,
-      requiresForce: true,
-      installedRelease: installed.release,
-      reason: "source-mismatch",
     };
   }
   if (typeof entry.computedHash !== "string" || entry.computedHash.length === 0) {
