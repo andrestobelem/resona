@@ -810,8 +810,21 @@ export const runCli = async (
     else if (args.command === "validate") await runValidate(args, context);
     else if (args.command === "render") await runRender(args, context);
     else if (args.command === "skills") {
-      if (args.config !== undefined) {
-        throw new CliUsageError("skills does not accept a config or entry option.");
+      if (
+        args.config !== undefined ||
+        args.composition !== undefined ||
+        args.input !== undefined ||
+        args.inputFile !== undefined ||
+        args.seed !== undefined ||
+        args.output !== undefined ||
+        args.overwrite === true ||
+        args.startFrame !== undefined ||
+        args.endFrame !== undefined ||
+        args.tailFrames !== undefined ||
+        args.blockFrames !== undefined ||
+        args.renderOptions !== undefined
+      ) {
+        throw new CliUsageError("skills accepts only its subcommand, --force, and --json.");
       }
       const location = await resolveProjectRoot(context.cwd, undefined, undefined);
       await runSkills(args.positionals, args.force === true, {

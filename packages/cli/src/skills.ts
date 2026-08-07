@@ -1,9 +1,15 @@
 import { createHash } from "node:crypto";
 import { spawn } from "node:child_process";
-import { readdir, readFile, realpath, stat } from "node:fs/promises";
+import { cp, mkdtemp, readdir, readFile, realpath, rm, stat, writeFile } from "node:fs/promises";
 import { isAbsolute, join, relative, sep } from "node:path";
+import { tmpdir } from "node:os";
 
-import { OFFICIAL_SKILLS, RESONA_RELEASE, type OfficialSkillName } from "@resona/skills";
+import {
+  OFFICIAL_SKILLS,
+  RESONA_RELEASE,
+  type OfficialSkillName,
+  validateInstalledSkill,
+} from "@resona/skills";
 
 export const SKILLS_INSTALLER_VERSION = "1.5.20" as const;
 export const OFFICIAL_SKILLS_SOURCE =
@@ -22,6 +28,7 @@ export type SkillStatus = Readonly<{
   state: SkillState;
   path: string;
   expectedRelease: typeof RESONA_RELEASE;
+  requiresForce: boolean;
   installedRelease?: string;
   reason:
     | "not-installed"
@@ -74,11 +81,19 @@ type InstallerResult = Readonly<{
   stderr: string;
 }>;
 
+type InstallationSnapshot = Readonly<{
+  directory: string;
+  lockFile?: Buffer;
+  presentSkills: ReadonlySet<OfficialSkillName>;
+}>;
+
 export class SkillsInstallerError extends Error {}
 export class SkillsUsageError extends Error {}
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   value !== null && typeof value === "object" && !Array.isArray(value);
+
+const isMissingPathError = (error: unknown): boolean => isRecord(error) && error.code === "ENOENT";
 
 const isOfficialSkillName = (value: string): value is OfficialSkillName =>
   (OFFICIAL_SKILLS as readonly string[]).includes(value);
@@ -115,6 +130,8 @@ const collectFiles = async (
     if (entry.isDirectory()) {
       if (entry.name === ".git" || entry.name === "node_modules") continue;
       files.push(...(await collectFiles(baseDirectory, fullPath)));
+    } else if (entry.isSymbolicLink()) {
+      throw new SkillsInstallerError("Agent Skill trees must not contain symbolic links.");
     } else if (entry.isFile()) {
       files.push({
         relativePath: relative(baseDirectory, fullPath).split("\\").join("/"),
@@ -138,12 +155,24 @@ export const computeSkillFolderHash = async (skillDirectory: string): Promise<st
 };
 
 const readSkillsLock = async (projectRoot: string): Promise<SkillsLock> => {
+  const lockPath = join(projectRoot, LOCKFILE_NAME);
+  let source: string;
   try {
-    const parsed: unknown = JSON.parse(await readFile(join(projectRoot, LOCKFILE_NAME), "utf8"));
-    return isRecord(parsed) ? parsed : {};
-  } catch {
-    return {};
+    source = await readFile(lockPath, "utf8");
+  } catch (error: unknown) {
+    if (isMissingPathError(error)) return {};
+    throw error;
   }
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(source);
+  } catch (error: unknown) {
+    throw new SkillsInstallerError("skills-lock.json is not valid JSON.", { cause: error });
+  }
+  if (!isRecord(parsed) || parsed.version !== 1 || !isRecord(parsed.skills)) {
+    throw new SkillsInstallerError("skills-lock.json must use standard version 1.");
+  }
+  return parsed;
 };
 
 const lockEntries = (lock: SkillsLock): Readonly<Record<string, SkillLockEntry>> => {
@@ -183,6 +212,79 @@ const safeSkillHash = async (projectRoot: string, name: OfficialSkillName): Prom
   return computeSkillFolderHash(directory);
 };
 
+const assertSkillsDirectoryContained = async (projectRoot: string): Promise<void> => {
+  const canonicalProjectRoot = await realpath(projectRoot);
+  for (const directory of [
+    join(projectRoot, ".agents"),
+    join(projectRoot, SKILLS_DIRECTORY),
+    join(projectRoot, LOCKFILE_NAME),
+  ]) {
+    try {
+      const canonicalDirectory = await realpath(directory);
+      if (!contained(canonicalProjectRoot, canonicalDirectory)) {
+        throw new SkillsInstallerError(
+          "The standard Agent Skills directory must remain inside the project root.",
+        );
+      }
+    } catch (error: unknown) {
+      if (error instanceof SkillsInstallerError) throw error;
+      if (!isMissingPathError(error)) throw error;
+    }
+  }
+};
+
+const takeInstallationSnapshot = async (
+  projectRoot: string,
+  names: readonly OfficialSkillName[],
+): Promise<InstallationSnapshot> => {
+  const directory = await mkdtemp(join(tmpdir(), "resona-skills-rollback-"));
+  const presentSkills = new Set<OfficialSkillName>();
+  try {
+    let lockFile: Buffer | undefined;
+    try {
+      lockFile = await readFile(join(projectRoot, LOCKFILE_NAME));
+    } catch (error: unknown) {
+      if (!isMissingPathError(error)) throw error;
+    }
+    for (const name of names) {
+      try {
+        await stat(skillDirectory(projectRoot, name));
+        await cp(skillDirectory(projectRoot, name), join(directory, name), {
+          recursive: true,
+          verbatimSymlinks: true,
+        });
+        presentSkills.add(name);
+      } catch (error: unknown) {
+        if (!isMissingPathError(error)) throw error;
+      }
+    }
+    return { directory, ...(lockFile === undefined ? {} : { lockFile }), presentSkills };
+  } catch (error) {
+    await rm(directory, { recursive: true, force: true });
+    throw error;
+  }
+};
+
+const restoreInstallationSnapshot = async (
+  projectRoot: string,
+  snapshot: InstallationSnapshot,
+  names: readonly OfficialSkillName[],
+): Promise<void> => {
+  for (const name of names) {
+    const target = skillDirectory(projectRoot, name);
+    await rm(target, { recursive: true, force: true });
+    if (snapshot.presentSkills.has(name)) {
+      await cp(join(snapshot.directory, name), target, {
+        recursive: true,
+        verbatimSymlinks: true,
+      });
+    }
+  }
+  const lockPath = join(projectRoot, LOCKFILE_NAME);
+  if (snapshot.lockFile === undefined) await rm(lockPath, { force: true });
+  else await writeFile(lockPath, snapshot.lockFile);
+};
+
 const statusForSkill = async (
   projectRoot: string,
   name: OfficialSkillName,
@@ -202,6 +304,7 @@ const statusForSkill = async (
       state: "missing",
       path,
       expectedRelease: RESONA_RELEASE,
+      requiresForce: false,
       reason: "not-installed",
     };
   }
@@ -210,7 +313,14 @@ const statusForSkill = async (
   try {
     installed = await readInstalledRelease(projectRoot, name);
   } catch {
-    return { name, state: "modified", path, expectedRelease: RESONA_RELEASE, reason: "unreadable" };
+    return {
+      name,
+      state: "modified",
+      path,
+      expectedRelease: RESONA_RELEASE,
+      requiresForce: true,
+      reason: "unreadable",
+    };
   }
 
   let installedHash: string;
@@ -222,24 +332,37 @@ const statusForSkill = async (
       state: "modified",
       path,
       expectedRelease: RESONA_RELEASE,
+      requiresForce: true,
       ...(installed.release === undefined ? {} : { installedRelease: installed.release }),
       reason: "unreadable",
     };
   }
 
   const officialIdentity = isOfficialLockEntry(name, entry);
+  const hashMatches =
+    typeof entry?.computedHash === "string" &&
+    entry.computedHash.length > 0 &&
+    installedHash === entry.computedHash;
   if (installed.release !== RESONA_RELEASE) {
     return {
       name,
       state: "outdated",
       path,
       expectedRelease: RESONA_RELEASE,
+      requiresForce: !(officialIdentity && hashMatches),
       ...(installed.release === undefined ? {} : { installedRelease: installed.release }),
       reason: "release-mismatch",
     };
   }
   if (!entry) {
-    return { name, state: "missing", path, expectedRelease: RESONA_RELEASE, reason: "not-managed" };
+    return {
+      name,
+      state: "missing",
+      path,
+      expectedRelease: RESONA_RELEASE,
+      requiresForce: true,
+      reason: "not-managed",
+    };
   }
   if (!officialIdentity) {
     return {
@@ -247,6 +370,7 @@ const statusForSkill = async (
       state: "outdated",
       path,
       expectedRelease: RESONA_RELEASE,
+      requiresForce: true,
       installedRelease: installed.release,
       reason: "source-mismatch",
     };
@@ -257,6 +381,7 @@ const statusForSkill = async (
       state: "outdated",
       path,
       expectedRelease: RESONA_RELEASE,
+      requiresForce: true,
       installedRelease: installed.release,
       reason: "lock-hash-missing",
     };
@@ -267,6 +392,7 @@ const statusForSkill = async (
       state: "modified",
       path,
       expectedRelease: RESONA_RELEASE,
+      requiresForce: true,
       installedRelease: installed.release,
       reason: "local-modification",
     };
@@ -276,12 +402,14 @@ const statusForSkill = async (
     state: "current",
     path,
     expectedRelease: RESONA_RELEASE,
+    requiresForce: false,
     installedRelease: installed.release,
     reason: "current",
   };
 };
 
 export const inspectSkills = async (projectRoot: string): Promise<SkillsStatus> => {
+  await assertSkillsDirectoryContained(projectRoot);
   const lock = await readSkillsLock(projectRoot);
   const entries = lockEntries(lock);
   const skills = await Promise.all(
@@ -385,12 +513,13 @@ const assertCurrentAfterInstall = (
   operation: "add" | "update",
   status: SkillsStatus,
   targetNames: readonly OfficialSkillName[],
+  requireInstalled: boolean,
 ): void => {
   const targets = new Set(targetNames);
   const failed = status.skills.filter(
     (skill) =>
       targets.has(skill.name) &&
-      (operation === "add" || skill.state !== "missing") &&
+      (requireInstalled || skill.state !== "missing") &&
       skill.state !== "current",
   );
   if (failed.length > 0) {
@@ -400,6 +529,18 @@ const assertCurrentAfterInstall = (
         failed.map((skill) => skill.name + "=" + skill.state).join(", ") +
         ".",
     );
+  }
+};
+
+const validateInstalledSkills = async (
+  projectRoot: string,
+  status: SkillsStatus,
+  targetNames: readonly OfficialSkillName[],
+): Promise<void> => {
+  const targets = new Set(targetNames);
+  for (const skill of status.skills) {
+    if (!targets.has(skill.name) || skill.state !== "current") continue;
+    await validateInstalledSkill(join(projectRoot, skill.path, "SKILL.md"), skill.name);
   }
 };
 
@@ -425,7 +566,7 @@ const parseSkillNames = (values: readonly string[]): readonly OfficialSkillName[
 
 export const skillsHelp =
   "Usage:\n" +
-  "  resona skills add [--json]\n" +
+  "  resona skills add [--force] [--json]\n" +
   "  resona skills status [--json]\n" +
   "  resona skills update [skill ...] [--force] [--json]";
 
@@ -436,7 +577,7 @@ export const runSkills = async (
 ): Promise<void> => {
   const [operation, ...requestedNames] = values;
   if (operation === undefined || operation === "help") {
-    if (force) throw new SkillsUsageError("--force is only valid for resona skills update.");
+    if (force) throw new SkillsUsageError("--force requires an add or update operation.");
     options.output.stdout += skillsHelp + "\n";
     return;
   }
@@ -452,19 +593,29 @@ export const runSkills = async (
   if (operation !== "add" && operation !== "update") {
     throw new SkillsUsageError("Unknown resona skills operation: " + operation + ".");
   }
-  if (operation === "add" && (force || requestedNames.length > 0)) {
-    throw new SkillsUsageError("resona skills add does not accept skill names or --force.");
+  if (operation === "add" && requestedNames.length > 0) {
+    throw new SkillsUsageError("resona skills add does not accept skill names.");
   }
 
   const statusBefore = await inspectSkills(options.cwd);
   const names = parseSkillNames(requestedNames);
-  if (operation === "update" && !force) {
+  const sourceMismatch = statusBefore.skills.filter(
+    (skill) => names.includes(skill.name) && skill.reason === "source-mismatch",
+  );
+  if (operation === "update" && sourceMismatch.length > 0) {
+    throw new SkillsInstallerError(
+      "Cannot update Agent Skills from an untrusted source: " +
+        sourceMismatch.map((skill) => skill.name).join(", ") +
+        ". Reinstall with resona skills add --force.",
+    );
+  }
+  if (!force) {
     const modified = statusBefore.skills.filter(
-      (skill) => names.includes(skill.name) && skill.state === "modified",
+      (skill) => names.includes(skill.name) && skill.requiresForce,
     );
     if (modified.length > 0) {
       throw new SkillsInstallerError(
-        "Refusing to overwrite locally modified Agent Skills: " +
+        "Refusing to overwrite modified or untrusted Agent Skills: " +
           modified.map((skill) => skill.name).join(", ") +
           ". Re-run with --force to authorize replacement.",
       );
@@ -486,10 +637,31 @@ export const runSkills = async (
           "--yes",
         ]
       : ["--yes", "skills@" + SKILLS_INSTALLER_VERSION, "update", "--project", "--yes", ...names];
-  const installer = await runInstaller(installerArgs, options);
-  printInstallerOutput(options, installer);
-  const status = await inspectSkills(options.cwd);
-  assertCurrentAfterInstall(operation, status, names);
-  if (options.json) writeJson(options, resultDocument(operation, status));
-  else humanStatus(options, status);
+  const snapshot = await takeInstallationSnapshot(options.cwd, names);
+  try {
+    const installer = await runInstaller(installerArgs, options);
+    printInstallerOutput(options, installer);
+    const status = await inspectSkills(options.cwd);
+    assertCurrentAfterInstall(
+      operation,
+      status,
+      names,
+      operation === "add" || requestedNames.length > 0,
+    );
+    await validateInstalledSkills(options.cwd, status, names);
+    if (options.json) writeJson(options, resultDocument(operation, status));
+    else humanStatus(options, status);
+  } catch (error) {
+    try {
+      await restoreInstallationSnapshot(options.cwd, snapshot, names);
+    } catch (restoreError: unknown) {
+      throw new SkillsInstallerError(
+        "Agent Skills operation failed and its previous installation could not be restored.",
+        { cause: restoreError },
+      );
+    }
+    throw error;
+  } finally {
+    await rm(snapshot.directory, { recursive: true, force: true });
+  }
 };
