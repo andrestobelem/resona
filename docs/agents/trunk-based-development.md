@@ -3,9 +3,9 @@
 ## Readiness
 
 - Status: `partial`.
-- Evidence captured: 2026-08-07T08:03:28-03:00.
+- Evidence captured: 2026-08-07T08:13:34-03:00.
 - Integration line: `main`.
-- Baseline commit: `16ed293`.
+- Baseline commit: `c5cb393`.
 - Worktree condition: clean on `feat/onboarding-cli-example` after the onboarding
   implementation for issue #57.
 - Canonical runtime: Node.js `24.18.0` from `.node-version` and pnpm `11.20.0`; the package
@@ -79,7 +79,7 @@ Recorded result:
 
 - Run date: 2026-08-07.
 - Exit code: `0`.
-- Baseline commit: `16ed293`.
+- Baseline commit: `c5cb393`.
 - Worktree: clean on `feat/onboarding-cli-example` after the onboarding implementation for
   issue #57.
 - Formatting, ESLint, Markdown validation, typecheck, unit tests, and generated documentation
@@ -110,7 +110,7 @@ Recorded result:
 
 - Run date: 2026-08-07.
 - Exit code: `0`.
-- Baseline commit: `16ed293`.
+- Baseline commit: `c5cb393`.
 - Worktree: clean on `feat/onboarding-cli-example` after the onboarding implementation for
   issue #57.
 - The embedded fast gate passed.

@@ -611,7 +611,7 @@
     },
     {
       "path": "docs/agents/trunk-based-development.md",
-      "sha256": "3e62ddba4fd71a20cf6a898bd619989a6b0f204e8646a55ae42a9b680e62946f"
+      "sha256": "e4cccee9ef41a287b3d81097054bbca5af958cc0c933e326d5eee316903f89a0"
     },
     {
       "path": "docs/architecture.md",
@@ -961,7 +961,7 @@
     },
     {
       "path": ".resona-docs/search-index.js",
-      "sha256": "7219290e8d4bd0655112cdf7975c00eb649e6c0fb4bc3dc5b1b64ac7417b9206"
+      "sha256": "69edccb9bd5eefa7d3b3f2f95d7cd201ad6bedc24499199b5853f0ad12fa8ff1"
     },
     {
       "path": ".resona-docs/styles.css",
@@ -1321,7 +1321,7 @@
     },
     {
       "path": "docs/agents/trunk-based-development.html",
-      "sha256": "673f44998d623eb08deb226695a40b9c324f6e7a6e9b7507732b3446682b9bde"
+      "sha256": "8903420cf344c9de3df92c321876ba36b5f7bf031ff73a59ccdebf893f47dd07"
     },
     {
       "path": "docs/architecture.html",
