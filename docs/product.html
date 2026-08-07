@@ -119,6 +119,22 @@
                 packages/docs/test/fixtures/basic/docs
               </option>
               <option value="packages/renderer">packages/renderer</option>
+              <option value="packages/skills">packages/skills</option>
+              <option value="packages/skills/skills/resona-audio-midi">
+                packages/skills/skills/resona-audio-midi
+              </option>
+              <option value="packages/skills/skills/resona-best-practices">
+                packages/skills/skills/resona-best-practices
+              </option>
+              <option value="packages/skills/skills/resona-compositions">
+                packages/skills/skills/resona-compositions
+              </option>
+              <option value="packages/skills/skills/resona-rendering">
+                packages/skills/skills/resona-rendering
+              </option>
+              <option value="packages/skills/skills/resona-studio">
+                packages/skills/skills/resona-studio
+              </option>
               <option value="packages/zod">packages/zod</option>
             </select>
           </form>
@@ -2345,6 +2361,116 @@
                     </li>
                     <li>
                       <details>
+                        <summary>skills</summary>
+                        <ul class="nav-tree nav-tree-nested">
+                          <li>
+                            <details>
+                              <summary>skills</summary>
+                              <ul class="nav-tree nav-tree-nested">
+                                <li>
+                                  <details>
+                                    <summary>resona-audio-midi</summary>
+                                    <ul class="nav-tree nav-tree-nested">
+                                      <li>
+                                        <a
+                                          class="nav-document"
+                                          href="../packages/skills/skills/resona-audio-midi/SKILL.html"
+                                        >
+                                          <span class="nav-title">Resona audio and MIDI</span>
+                                          <span class="nav-path"
+                                            >packages/skills/skills/resona-audio-midi/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li>
+                                  <details>
+                                    <summary>resona-best-practices</summary>
+                                    <ul class="nav-tree nav-tree-nested">
+                                      <li>
+                                        <a
+                                          class="nav-document"
+                                          href="../packages/skills/skills/resona-best-practices/SKILL.html"
+                                        >
+                                          <span class="nav-title">Resona best practices</span>
+                                          <span class="nav-path"
+                                            >packages/skills/skills/resona-best-practices/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li>
+                                  <details>
+                                    <summary>resona-compositions</summary>
+                                    <ul class="nav-tree nav-tree-nested">
+                                      <li>
+                                        <a
+                                          class="nav-document"
+                                          href="../packages/skills/skills/resona-compositions/SKILL.html"
+                                        >
+                                          <span class="nav-title">Resona compositions</span>
+                                          <span class="nav-path"
+                                            >packages/skills/skills/resona-compositions/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li>
+                                  <details>
+                                    <summary>resona-rendering</summary>
+                                    <ul class="nav-tree nav-tree-nested">
+                                      <li>
+                                        <a
+                                          class="nav-document"
+                                          href="../packages/skills/skills/resona-rendering/SKILL.html"
+                                        >
+                                          <span class="nav-title">Resona rendering</span>
+                                          <span class="nav-path"
+                                            >packages/skills/skills/resona-rendering/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li>
+                                  <details>
+                                    <summary>resona-studio</summary>
+                                    <ul class="nav-tree nav-tree-nested">
+                                      <li>
+                                        <a
+                                          class="nav-document"
+                                          href="../packages/skills/skills/resona-studio/SKILL.html"
+                                        >
+                                          <span class="nav-title">Resona Studio</span>
+                                          <span class="nav-path"
+                                            >packages/skills/skills/resona-studio/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                              </ul>
+                            </details>
+                          </li>
+                          <li>
+                            <a class="nav-document" href="../packages/skills/CONTEXT.html">
+                              <span class="nav-title">Agent Skills context</span>
+                              <span class="nav-path">packages/skills/CONTEXT.md</span>
+                            </a>
+                          </li>
+                        </ul>
+                      </details>
+                    </li>
+                    <li>
+                      <details>
                         <summary>zod</summary>
                         <ul class="nav-tree nav-tree-nested">
                           <li>
@@ -2849,6 +2975,12 @@
                   mantener motores paralelos.
                 </li>
                 <li>
+                  Studio inicia ese render desde una variante preparada mediante
+                  <code>POST /api/v1/variants/:variantId/render</code>. El usuario debe indicar un
+                  output path; la respuesta conserva el fingerprint/spec de la variante y expone las
+                  opciones efectivas sin cambiar su identidad.
+                </li>
+                <li>
                   Las opciones de render se resuelven una vez con precedencia de invocación
                   explícita, configuración del proyecto y default de Resona. El trabajo conserva el
                   origen de cada valor y todas las superficies comparten sus descriptores,
@@ -2934,8 +3066,8 @@
                 </li>
                 <li>
                   Studio muestra selector e inputs, transporte, timeline de solo lectura, cadenas
-                  por pista, medidores e inspector de IR y diagnósticos; no incluye waveform, piano
-                  roll ni mixer.
+                  por pista, medidores, inspector de IR y diagnósticos, y permite publicar una
+                  variante preparada; no incluye waveform, piano roll ni mixer.
                 </li>
                 <li>
                   Un cambio de código o inputs pausa y cancela la variante anterior, recompila desde
@@ -3319,24 +3451,22 @@
                 <a href="adr/0054-versioned-agent-skills-for-coding-agents.html">ADR 0054</a>.
               </p>
               <p>
-                Las primeras skills forman parte de la primera versión utilizable del producto. Se
-                diseñan en paralelo con sus superficies públicas, pero no bloquean el primer corte
-                vertical del motor: solo se publican cuando los workflows que describen funcionan de
-                punta a punta. El conjunto inicial cubre buenas prácticas, composición, audio y
-                MIDI, Studio y render. Su fuente canónica vive en el monorepo y se sincroniza a un
-                repositorio oficial compatible con el estándar Agent Skills. Pueden instalarse con
-                el instalador estándar o mediante <code>resona skills add</code>;
-                <code>resona skills update</code> actualiza una instalación existente. Cada skill
-                declara exactamente la versión del release de Resona cuyos workflows documenta; no
-                tiene un ciclo de versiones independiente. La ausencia de skills no produce
-                advertencias. Si hay una instalación cuya versión difiere de Resona, Studio y
-                <code>resona skills status</code> informan la versión instalada, la esperada y el
-                comando correctivo sin impedir autoría, reproducción ni render. Las actualizaciones
-                nunca modifican el proyecto automáticamente. El estado también detecta cambios
-                locales mediante el hash del lockfile. <code>update</code> no sobrescribe una skill
-                oficial modificada; requiere <code>--force</code>. Una personalización durable se
-                guarda como otra skill, con identidad propia, para no bloquear futuras
-                actualizaciones.
+                Las primeras skills forman parte de la primera versión utilizable del producto. El
+                corpus canónico inicial ya vive en <code>packages/skills/skills</code> y sus
+                workflows pasan un gate determinista contra un proyecto fixture. El conjunto cubre
+                buenas prácticas, composición, audio y MIDI, Studio y render. Cada skill declara
+                exactamente la versión del release de Resona cuyos workflows documenta; no tiene un
+                ciclo de versiones independiente.
+              </p>
+              <p>
+                La sincronización al repositorio oficial compatible con el estándar Agent Skills y
+                la instalación (<code>npx skills add</code>, <code>resona skills add</code>,
+                <code>resona skills update</code> y <code>resona skills status</code>) son el
+                alcance de T20/#21 y todavía no están disponibles en el release actual. La ausencia
+                de skills no afecta autoría, reproducción ni render. El lockfile, la detección de
+                modificaciones locales y la actualización con <code>--force</code> se implementarán
+                junto con esa story; no deben confundirse con el <code>skills-lock.json</code> de
+                terceros que ya existe en el checkout.
               </p>
               <p>
                 Una skill oficial solo se publica si sus metadatos, referencias, comandos, ejemplos

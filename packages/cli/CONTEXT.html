@@ -119,6 +119,22 @@
                 packages/docs/test/fixtures/basic/docs
               </option>
               <option value="packages/renderer">packages/renderer</option>
+              <option value="packages/skills">packages/skills</option>
+              <option value="packages/skills/skills/resona-audio-midi">
+                packages/skills/skills/resona-audio-midi
+              </option>
+              <option value="packages/skills/skills/resona-best-practices">
+                packages/skills/skills/resona-best-practices
+              </option>
+              <option value="packages/skills/skills/resona-compositions">
+                packages/skills/skills/resona-compositions
+              </option>
+              <option value="packages/skills/skills/resona-rendering">
+                packages/skills/skills/resona-rendering
+              </option>
+              <option value="packages/skills/skills/resona-studio">
+                packages/skills/skills/resona-studio
+              </option>
               <option value="packages/zod">packages/zod</option>
             </select>
           </form>
@@ -2387,6 +2403,116 @@
                     </li>
                     <li>
                       <details>
+                        <summary>skills</summary>
+                        <ul class="nav-tree nav-tree-nested">
+                          <li>
+                            <details>
+                              <summary>skills</summary>
+                              <ul class="nav-tree nav-tree-nested">
+                                <li>
+                                  <details>
+                                    <summary>resona-audio-midi</summary>
+                                    <ul class="nav-tree nav-tree-nested">
+                                      <li>
+                                        <a
+                                          class="nav-document"
+                                          href="../skills/skills/resona-audio-midi/SKILL.html"
+                                        >
+                                          <span class="nav-title">Resona audio and MIDI</span>
+                                          <span class="nav-path"
+                                            >packages/skills/skills/resona-audio-midi/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li>
+                                  <details>
+                                    <summary>resona-best-practices</summary>
+                                    <ul class="nav-tree nav-tree-nested">
+                                      <li>
+                                        <a
+                                          class="nav-document"
+                                          href="../skills/skills/resona-best-practices/SKILL.html"
+                                        >
+                                          <span class="nav-title">Resona best practices</span>
+                                          <span class="nav-path"
+                                            >packages/skills/skills/resona-best-practices/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li>
+                                  <details>
+                                    <summary>resona-compositions</summary>
+                                    <ul class="nav-tree nav-tree-nested">
+                                      <li>
+                                        <a
+                                          class="nav-document"
+                                          href="../skills/skills/resona-compositions/SKILL.html"
+                                        >
+                                          <span class="nav-title">Resona compositions</span>
+                                          <span class="nav-path"
+                                            >packages/skills/skills/resona-compositions/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li>
+                                  <details>
+                                    <summary>resona-rendering</summary>
+                                    <ul class="nav-tree nav-tree-nested">
+                                      <li>
+                                        <a
+                                          class="nav-document"
+                                          href="../skills/skills/resona-rendering/SKILL.html"
+                                        >
+                                          <span class="nav-title">Resona rendering</span>
+                                          <span class="nav-path"
+                                            >packages/skills/skills/resona-rendering/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li>
+                                  <details>
+                                    <summary>resona-studio</summary>
+                                    <ul class="nav-tree nav-tree-nested">
+                                      <li>
+                                        <a
+                                          class="nav-document"
+                                          href="../skills/skills/resona-studio/SKILL.html"
+                                        >
+                                          <span class="nav-title">Resona Studio</span>
+                                          <span class="nav-path"
+                                            >packages/skills/skills/resona-studio/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                              </ul>
+                            </details>
+                          </li>
+                          <li>
+                            <a class="nav-document" href="../skills/CONTEXT.html">
+                              <span class="nav-title">Agent Skills context</span>
+                              <span class="nav-path">packages/skills/CONTEXT.md</span>
+                            </a>
+                          </li>
+                        </ul>
+                      </details>
+                    </li>
+                    <li>
+                      <details>
                         <summary>zod</summary>
                         <ul class="nav-tree nav-tree-nested">
                           <li>
@@ -2496,12 +2622,26 @@
                 it alive until SIGINT. The static shell is served at <code>/</code>; authenticated
                 API requests use a bearer session token and the versioned
                 <code>/api/v1/session</code>, <code>/api/v1/compositions</code>,
-                <code>/api/v1/variants</code>, <code>/api/v1/variants/:variantId/plan</code>, and
+                <code>/api/v1/variants</code>, <code>/api/v1/variants/:variantId/plan</code>,
+                <code>/api/v1/variants/:variantId/render</code>, and
                 <code>/api/v1/variants/:variantId/resources/:sha256-hash</code> routes. Host and
                 Origin are checked against the exact loopback URL, and resource requests are
                 authorized against hashes already resolved by that variant. The browser receives
                 serializable IR, plans, metadata, diagnostics, and resource samples; it never
                 receives or evaluates the authoring bundle.
+              </p>
+              <p>
+                <code>POST /api/v1/variants/:variantId/render</code> renders the already prepared
+                variant through <code>renderAudioToFile()</code>. It requires an explicit
+                <code>outputPath</code> (relative paths resolve from the project root; absolute
+                paths are accepted), defaults <code>overwrite</code> to <code>false</code>, and
+                accepts the same operational range fields as the CLI: <code>startFrame</code>,
+                <code>endFrame</code>, <code>tailFrames</code>, and <code>blockFrames</code>. The
+                <code>render</code> envelope reports the variant&#39;s unchanged fingerprint and
+                spec, the resolved <code>effectiveOptions</code>, output dimensions, diagnostics,
+                and an output path redacted to <code>&lt;project&gt;</code> when it is inside the
+                project. Studio does not create a second render job or renderer; atomic publication
+                and collision handling remain in the renderer package.
               </p>
               <p>
                 The first Studio shell also loads the private same-origin

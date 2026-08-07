@@ -1187,16 +1187,16 @@ Agentes de código externos consumen las mismas capacidades de descubrimiento, s
 diagnóstico, Studio y render que una persona o cualquier automatización. Resona no define
 una API de agentes paralela ni ejecuta modelos dentro del runtime.
 
-Como Remotion, el proyecto mantendrá Agent Skills de primera parte junto al código. Cada
+Como Remotion, el proyecto mantiene Agent Skills de primera parte junto al código. Cada
 skill declara exactamente la versión del release de Resona cuyos workflows documenta, sin
 un semver independiente. Las skills documentan workflows completos y pueden componer una
 skill router con referencias especializadas. La distribución seguirá el estándar Agent
 Skills y priorizará instalación local en `.agents/skills`, con adaptadores o symlinks de
 compatibilidad para herramientas como Claude Code.
 
-Las primeras skills se publicarán con la primera versión utilizable, una vez que sus
-workflows funcionen de punta a punta. No bloquean el primer corte vertical del motor. El
-conjunto inicial es:
+El corpus canónico inicial está publicado en `packages/skills/skills` y no bloquea el primer
+corte vertical del motor. Sus workflows ya pasan el gate determinista y el fixture de
+integración del mismo release. El conjunto inicial es:
 
 - `resona-best-practices`: router que conduce a las instrucciones especializadas.
 - `resona-compositions`: proyecto, inputs, timeline, pistas y clips.
@@ -1204,33 +1204,27 @@ conjunto inicial es:
 - `resona-studio`: reproducción, inspección y diagnóstico.
 - `resona-rendering`: variantes, CLI, API y entregables.
 
-La fuente canónica de las skills vive dentro del monorepo. El proceso de release la
-sincroniza a un repositorio oficial instalable con
-`npx skills add <repositorio-oficial-de-resona>`. Como conveniencia,
-`resona skills add` y `resona skills update` delegan en una versión fijada del instalador
-estándar y escriben en `.agents/skills`; no implementan otro formato ni mantienen una copia
-divergente. Estos comandos de mantenimiento llegan con la primera versión utilizable y no
-amplían las cuatro operaciones de producto del primer corte vertical.
+La fuente canónica de las skills vive dentro del monorepo, bajo
+`packages/skills/skills`. La sincronización al repositorio oficial y la instalación estándar
+(`npx skills add`) son el trabajo pendiente de T20/#21; todavía no son comandos disponibles
+de Resona. Esa story también definirá los adaptadores para `.agents/skills`, sin crear otro
+formato ni mantener una copia divergente.
 
-`resona skills status` lee la versión declarada por cada skill instalada y produce un estado
-estructurado con las versiones instalada y esperada. Si difieren, Studio presenta esa misma
-información como advertencia no bloqueante junto con el comando de actualización. La
-ausencia completa de skills no genera una advertencia: son una integración opcional. Resona
-nunca invoca `update` automáticamente ni modifica archivos del proyecto al detectar una
-diferencia.
+La ausencia de una instalación de skills no afecta el runtime actual: T19/#20 solo publica el
+corpus y su gate. `resona skills status`, las advertencias de versión y la actualización
+explícita quedan documentados como el contrato de T20/#21; no deben afirmarse como
+funcionalidad disponible hasta que esa story se integre.
 
-El lockfile estándar conserva el hash calculado de cada skill. `status` lo compara con el
-contenido instalado para distinguir una versión desactualizada de una copia modificada
-localmente. `update` se niega a sobrescribir una skill oficial modificada y enumera los
-archivos afectados; `update --force` habilita el reemplazo explícito. Las personalizaciones
-durables deben usar otra identidad de skill y pueden referenciar las instrucciones oficiales
-sin convertirlas en una copia administrada divergente.
+El lockfile de instalaciones, los hashes y las reglas de actualización segura también
+pertenecen a T20/#21. El `skills-lock.json` que ya existe en el checkout registra una
+instalación de terceros y no es la fuente de las skills oficiales de Resona.
 
-El pipeline de release valida el frontmatter, la versión, los enlaces y las referencias de
-cada skill. Ejecuta sus comandos y ejemplos en un proyecto fixture y prueba de punta a punta
-los workflows publicados contra la CLI y las APIs del mismo release. Una falla determinista
-bloquea la publicación. Evals con Codex, Claude u otros modelos se registran como métricas
-complementarias y no son inicialmente un gate, porque su resultado no es reproducible.
+El gate local `pnpm --filter @resona/skills validate` valida el frontmatter, la versión, los
+enlaces del repositorio, los comandos y las referencias de cada skill. La suite de integración
+ejecuta los workflows publicados en un proyecto fixture contra la CLI y Studio del mismo
+release. Una falla determinista bloquea la publicación. Evals con Codex, Claude u otros
+modelos se registran como métricas complementarias y no son inicialmente un gate, porque su
+resultado no es reproducible.
 
 La decisión de producto está registrada en el
 [ADR 0054](adr/0054-versioned-agent-skills-for-coding-agents.md) y el contrato de distribución

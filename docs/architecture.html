@@ -119,6 +119,22 @@
                 packages/docs/test/fixtures/basic/docs
               </option>
               <option value="packages/renderer">packages/renderer</option>
+              <option value="packages/skills">packages/skills</option>
+              <option value="packages/skills/skills/resona-audio-midi">
+                packages/skills/skills/resona-audio-midi
+              </option>
+              <option value="packages/skills/skills/resona-best-practices">
+                packages/skills/skills/resona-best-practices
+              </option>
+              <option value="packages/skills/skills/resona-compositions">
+                packages/skills/skills/resona-compositions
+              </option>
+              <option value="packages/skills/skills/resona-rendering">
+                packages/skills/skills/resona-rendering
+              </option>
+              <option value="packages/skills/skills/resona-studio">
+                packages/skills/skills/resona-studio
+              </option>
               <option value="packages/zod">packages/zod</option>
             </select>
           </form>
@@ -2345,6 +2361,116 @@
                     </li>
                     <li>
                       <details>
+                        <summary>skills</summary>
+                        <ul class="nav-tree nav-tree-nested">
+                          <li>
+                            <details>
+                              <summary>skills</summary>
+                              <ul class="nav-tree nav-tree-nested">
+                                <li>
+                                  <details>
+                                    <summary>resona-audio-midi</summary>
+                                    <ul class="nav-tree nav-tree-nested">
+                                      <li>
+                                        <a
+                                          class="nav-document"
+                                          href="../packages/skills/skills/resona-audio-midi/SKILL.html"
+                                        >
+                                          <span class="nav-title">Resona audio and MIDI</span>
+                                          <span class="nav-path"
+                                            >packages/skills/skills/resona-audio-midi/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li>
+                                  <details>
+                                    <summary>resona-best-practices</summary>
+                                    <ul class="nav-tree nav-tree-nested">
+                                      <li>
+                                        <a
+                                          class="nav-document"
+                                          href="../packages/skills/skills/resona-best-practices/SKILL.html"
+                                        >
+                                          <span class="nav-title">Resona best practices</span>
+                                          <span class="nav-path"
+                                            >packages/skills/skills/resona-best-practices/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li>
+                                  <details>
+                                    <summary>resona-compositions</summary>
+                                    <ul class="nav-tree nav-tree-nested">
+                                      <li>
+                                        <a
+                                          class="nav-document"
+                                          href="../packages/skills/skills/resona-compositions/SKILL.html"
+                                        >
+                                          <span class="nav-title">Resona compositions</span>
+                                          <span class="nav-path"
+                                            >packages/skills/skills/resona-compositions/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li>
+                                  <details>
+                                    <summary>resona-rendering</summary>
+                                    <ul class="nav-tree nav-tree-nested">
+                                      <li>
+                                        <a
+                                          class="nav-document"
+                                          href="../packages/skills/skills/resona-rendering/SKILL.html"
+                                        >
+                                          <span class="nav-title">Resona rendering</span>
+                                          <span class="nav-path"
+                                            >packages/skills/skills/resona-rendering/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                                <li>
+                                  <details>
+                                    <summary>resona-studio</summary>
+                                    <ul class="nav-tree nav-tree-nested">
+                                      <li>
+                                        <a
+                                          class="nav-document"
+                                          href="../packages/skills/skills/resona-studio/SKILL.html"
+                                        >
+                                          <span class="nav-title">Resona Studio</span>
+                                          <span class="nav-path"
+                                            >packages/skills/skills/resona-studio/SKILL.md</span
+                                          >
+                                        </a>
+                                      </li>
+                                    </ul>
+                                  </details>
+                                </li>
+                              </ul>
+                            </details>
+                          </li>
+                          <li>
+                            <a class="nav-document" href="../packages/skills/CONTEXT.html">
+                              <span class="nav-title">Agent Skills context</span>
+                              <span class="nav-path">packages/skills/CONTEXT.md</span>
+                            </a>
+                          </li>
+                        </ul>
+                      </details>
+                    </li>
+                    <li>
+                      <details>
                         <summary>zod</summary>
                         <ul class="nav-tree nav-tree-nested">
                           <li>
@@ -3667,11 +3793,26 @@
               <p>
                 El primer servicio HTTP expone <code>/api/v1/session</code>,
                 <code>/api/v1/compositions</code>, <code>/api/v1/static-resources</code>,
-                <code>/api/v1/variants</code>, <code>/api/v1/variants/:variantId/plan</code> y
+                <code>/api/v1/variants</code>, <code>/api/v1/variants/:variantId/plan</code>,
+                <code>/api/v1/variants/:variantId/render</code> y
                 <code>/api/v1/variants/:variantId/resources/:sha256-hash</code>. Las respuestas usan
                 <code>resona/studio-envelope</code> v1; los planes, IR y recursos viajan como
                 payload serializable, y los paths físicos y <code>sourcePaths</code> permanecen en
                 Node. El cliente solo puede pedir hashes que la variante ya autorizó.
+              </p>
+              <p>
+                El endpoint <code>POST /api/v1/variants/:variantId/render</code> recibe una variante
+                existente y exige un <code>outputPath</code> explícito. Una ruta relativa se
+                resuelve desde la raíz del proyecto y una absoluta se conserva;
+                <code>overwrite</code> es <code>false</code> por defecto. También acepta
+                <code>startFrame</code>, <code>endFrame</code>, <code>tailFrames</code> y
+                <code>blockFrames</code>, con los defaults del renderer (<code>0</code>, duración
+                nominal, <code>0</code> y <code>128</code>). El servicio no recompila ni crea otro
+                trabajo: delega el mismo <code>RenderJob</code> a <code>renderAudioToFile()</code>,
+                devuelve <code>type: &quot;render&quot;</code> con el fingerprint/spec de la
+                variante y <code>effectiveOptions</code>, y deja la publicación atómica y el rechazo
+                de destinos existentes al renderer. Las rutas dentro del proyecto se redaccionan
+                como <code>&lt;project&gt;</code> en el envelope.
               </p>
               <p>
                 <code>/api/v1/static-resources</code> devuelve únicamente rutas lógicas de archivos
@@ -3727,6 +3868,10 @@
                 <li>Muestra la cadena de instrumento y efectos de cada pista.</li>
                 <li>Mide niveles por pista y master.</li>
                 <li>Inspecciona la <code>CompositionIR</code> y sus diagnósticos.</li>
+                <li>
+                  Publica una variante preparada con un output path explícito mediante el renderer
+                  canónico.
+                </li>
                 <li>Enlaza diagnósticos a la identidad del nodo y a su ubicación fuente.</li>
                 <li>Recarga cambios con un ciclo de feedback corto.</li>
               </ul>
@@ -3800,7 +3945,9 @@
                 adapta el render en memoria a publicación de filesystem. Relee y valida el WAV
                 temporal antes de publicarlo; el resultado exitoso solo se resuelve después de la
                 publicación. La operación conserva el destino existente sin
-                <code>overwrite: true</code> y elimina el temporal ante cualquier falla.
+                <code>overwrite: true</code> y elimina el temporal ante cualquier falla. El endpoint
+                de render de Studio es un adaptador HTTP de esta misma operación: no mantiene un
+                renderer ni una variante paralelos.
               </p>
               <p>
                 La atomicidad depende de que el temporal y el destino estén en el mismo filesystem y
@@ -3896,7 +4043,7 @@
                 Resona no define una API de agentes paralela ni ejecuta modelos dentro del runtime.
               </p>
               <p>
-                Como Remotion, el proyecto mantendrá Agent Skills de primera parte junto al código.
+                Como Remotion, el proyecto mantiene Agent Skills de primera parte junto al código.
                 Cada skill declara exactamente la versión del release de Resona cuyos workflows
                 documenta, sin un semver independiente. Las skills documentan workflows completos y
                 pueden componer una skill router con referencias especializadas. La distribución
@@ -3905,9 +4052,9 @@
                 herramientas como Claude Code.
               </p>
               <p>
-                Las primeras skills se publicarán con la primera versión utilizable, una vez que sus
-                workflows funcionen de punta a punta. No bloquean el primer corte vertical del
-                motor. El conjunto inicial es:
+                El corpus canónico inicial está publicado en <code>packages/skills/skills</code> y
+                no bloquea el primer corte vertical del motor. Sus workflows ya pasan el gate
+                determinista y el fixture de integración del mismo release. El conjunto inicial es:
               </p>
               <ul>
                 <li>
@@ -3925,41 +4072,34 @@
                 <li><code>resona-rendering</code>: variantes, CLI, API y entregables.</li>
               </ul>
               <p>
-                La fuente canónica de las skills vive dentro del monorepo. El proceso de release la
-                sincroniza a un repositorio oficial instalable con
-                <code>npx skills add &lt;repositorio-oficial-de-resona&gt;</code>. Como
-                conveniencia, <code>resona skills add</code> y
-                <code>resona skills update</code> delegan en una versión fijada del instalador
-                estándar y escriben en <code>.agents/skills</code>; no implementan otro formato ni
-                mantienen una copia divergente. Estos comandos de mantenimiento llegan con la
-                primera versión utilizable y no amplían las cuatro operaciones de producto del
-                primer corte vertical.
+                La fuente canónica de las skills vive dentro del monorepo, bajo
+                <code>packages/skills/skills</code>. La sincronización al repositorio oficial y la
+                instalación estándar (<code>npx skills add</code>) son el trabajo pendiente de
+                T20/#21; todavía no son comandos disponibles de Resona. Esa story también definirá
+                los adaptadores para <code>.agents/skills</code>, sin crear otro formato ni mantener
+                una copia divergente.
               </p>
               <p>
-                <code>resona skills status</code> lee la versión declarada por cada skill instalada
-                y produce un estado estructurado con las versiones instalada y esperada. Si
-                difieren, Studio presenta esa misma información como advertencia no bloqueante junto
-                con el comando de actualización. La ausencia completa de skills no genera una
-                advertencia: son una integración opcional. Resona nunca invoca
-                <code>update</code> automáticamente ni modifica archivos del proyecto al detectar
-                una diferencia.
+                La ausencia de una instalación de skills no afecta el runtime actual: T19/#20 solo
+                publica el corpus y su gate. <code>resona skills status</code>, las advertencias de
+                versión y la actualización explícita quedan documentados como el contrato de
+                T20/#21; no deben afirmarse como funcionalidad disponible hasta que esa story se
+                integre.
               </p>
               <p>
-                El lockfile estándar conserva el hash calculado de cada skill.
-                <code>status</code> lo compara con el contenido instalado para distinguir una
-                versión desactualizada de una copia modificada localmente. <code>update</code> se
-                niega a sobrescribir una skill oficial modificada y enumera los archivos afectados;
-                <code>update --force</code> habilita el reemplazo explícito. Las personalizaciones
-                durables deben usar otra identidad de skill y pueden referenciar las instrucciones
-                oficiales sin convertirlas en una copia administrada divergente.
+                El lockfile de instalaciones, los hashes y las reglas de actualización segura
+                también pertenecen a T20/#21. El <code>skills-lock.json</code> que ya existe en el
+                checkout registra una instalación de terceros y no es la fuente de las skills
+                oficiales de Resona.
               </p>
               <p>
-                El pipeline de release valida el frontmatter, la versión, los enlaces y las
-                referencias de cada skill. Ejecuta sus comandos y ejemplos en un proyecto fixture y
-                prueba de punta a punta los workflows publicados contra la CLI y las APIs del mismo
-                release. Una falla determinista bloquea la publicación. Evals con Codex, Claude u
-                otros modelos se registran como métricas complementarias y no son inicialmente un
-                gate, porque su resultado no es reproducible.
+                El gate local <code>pnpm --filter @resona/skills validate</code> valida el
+                frontmatter, la versión, los enlaces del repositorio, los comandos y las referencias
+                de cada skill. La suite de integración ejecuta los workflows publicados en un
+                proyecto fixture contra la CLI y Studio del mismo release. Una falla determinista
+                bloquea la publicación. Evals con Codex, Claude u otros modelos se registran como
+                métricas complementarias y no son inicialmente un gate, porque su resultado no es
+                reproducible.
               </p>
               <p>
                 La decisión de producto está registrada en el
@@ -4487,6 +4627,14 @@
                 <a href="adr/0058-studio-render-numeric-parity-budget.html">ADR 0058</a>. Las
                 fronteras que sí deben ser reproducibles dentro de un mismo runtime se fijan en el
                 <a href="adr/0078-explicit-float32-audio-boundaries.html">ADR 0078</a>.
+              </p>
+              <p>
+                La prueba de integración
+                <code>packages/renderer/src/studio-render-parity.integration.test.ts</code> compara
+                el <code>AudioWorklet</code> y <code>renderAudio()</code> sobre el fixture de
+                referencia, que combina input alternativo, MIDI normalizado, clip WAV, PolySynth,
+                Gain, Delay y automatización. Verifica el render completo, el seek con preroll y dos
+                ciclos de loop sin definir una segunda expectativa musical independiente.
               </p>
               <h2 id="recursos-de-audio">Recursos de audio</h2>
               <p>
