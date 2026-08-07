@@ -56,4 +56,31 @@ describe("official Agent Skills", () => {
       await rm(temporaryRoot, { recursive: true, force: true });
     }
   });
+
+  it("rejects a local reference that escapes the repository root", async () => {
+    const temporaryRoot = await mkdtemp(join(tmpdir(), "resona-skills-validation-"));
+    try {
+      await cp(
+        join(repositoryRoot, "packages", "skills"),
+        join(temporaryRoot, "packages", "skills"),
+        { recursive: true },
+      );
+      const sourcePath = join(
+        temporaryRoot,
+        "packages",
+        "skills",
+        "skills",
+        "resona-compositions",
+        "SKILL.md",
+      );
+      const source = await readFile(sourcePath, "utf8");
+      await writeFile(sourcePath, `${source}\n[escape](../../../../outside.md)\n`);
+
+      await expect(
+        validateSkillCorpus(repositoryRoot, join(temporaryRoot, "packages", "skills", "skills")),
+      ).rejects.toThrow(/escapes the repository root/);
+    } finally {
+      await rm(temporaryRoot, { recursive: true, force: true });
+    }
+  });
 });

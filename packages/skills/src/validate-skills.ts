@@ -1,5 +1,5 @@
 import { readdir, readFile, stat } from "node:fs/promises";
-import { dirname, join, relative, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const RESONA_RELEASE = "0.0.0" as const;
@@ -57,6 +57,37 @@ const commandExamples = (body: string): readonly string[] =>
     .map((match) => (match[1] ?? "").trim())
     .filter((value) => /^(?:pnpm|node|npx|resona)\s/.test(value));
 
+const supportedRepositoryCommands = [
+  "pnpm --filter @resona/cli build",
+  "pnpm --filter @resona/renderer build",
+  "pnpm --filter @resona/renderer typecheck",
+  "pnpm build",
+  "pnpm check:fast",
+  "pnpm test:integration",
+] as const;
+
+const validateCommandExample = (command: string, sourcePath: string): void => {
+  if (command.startsWith("resona ")) {
+    const [verb, ...args] = command.slice("resona ".length).split(/\s+/u);
+    if (!new Set(["compositions", "validate", "render", "studio"]).has(verb ?? "")) {
+      throw new Error(`${sourcePath}: unsupported resona command ${command}.`);
+    }
+    if (!args.includes("--json")) {
+      throw new Error(`${sourcePath}: resona command must request --json: ${command}.`);
+    }
+    if (verb === "validate" && !args.includes("--composition")) {
+      throw new Error(`${sourcePath}: validate command must name --composition: ${command}.`);
+    }
+    if (verb === "render" && args.length < 3) {
+      throw new Error(`${sourcePath}: render command must include entry, composition, and output.`);
+    }
+    return;
+  }
+  if (!supportedRepositoryCommands.some((supported) => command === supported)) {
+    throw new Error(`${sourcePath}: unsupported repository command ${command}.`);
+  }
+};
+
 const isExternalReference = (reference: string): boolean =>
   /^(?:https?:|mailto:|#)/.test(reference);
 
@@ -80,6 +111,14 @@ const validateLocalReferences = async (
         ? resolve(dirname(sourcePath), reference.split("#", 1)[0] ?? reference)
         : resolve(repositoryRoot, repositoryPath);
     if (isExternalReference(reference) && repositoryPath === undefined) continue;
+    const repositoryRelative = relative(repositoryRoot, target);
+    if (
+      isAbsolute(repositoryRelative) ||
+      repositoryRelative === ".." ||
+      repositoryRelative.startsWith(`..${sep}`)
+    ) {
+      throw new Error(`${sourcePath}: reference ${reference} escapes the repository root.`);
+    }
     try {
       await stat(target);
     } catch {
@@ -118,6 +157,7 @@ const validateDocument = async (
   }
   const commands = commandExamples(body);
   if (commands.length === 0) throw new Error(`${sourcePath}: workflow has no executable command.`);
+  commands.forEach((command) => validateCommandExample(command, sourcePath));
   const references = await validateLocalReferences(body, sourcePath, repositoryRoot);
   if (references.length === 0) throw new Error(`${sourcePath}: references section has no links.`);
   return Object.freeze({
