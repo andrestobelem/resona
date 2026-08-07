@@ -108,6 +108,9 @@
               <option value="docs/adr">docs/adr</option>
               <option value="docs/agents">docs/agents</option>
               <option value="docs/research">docs/research</option>
+              <option value="examples/cantata-de-las-estaciones">
+                examples/cantata-de-las-estaciones
+              </option>
               <option value="packages/cli">packages/cli</option>
               <option value="packages/docs/test/fixtures/basic">
                 packages/docs/test/fixtures/basic
@@ -2234,10 +2237,52 @@
                       </a>
                     </li>
                     <li>
+                      <a class="nav-document" href="docs/getting-started.html">
+                        <span class="nav-title">Getting started</span>
+                        <span class="nav-path">docs/getting-started.md</span>
+                      </a>
+                    </li>
+                    <li>
                       <a class="nav-document" href="docs/product.html">
                         <span class="nav-title">Visión de producto</span>
                         <span class="nav-path">docs/product.md</span>
                       </a>
+                    </li>
+                  </ul>
+                </details>
+              </li>
+              <li>
+                <details>
+                  <summary>examples</summary>
+                  <ul class="nav-tree nav-tree-nested">
+                    <li>
+                      <details>
+                        <summary>cantata-de-las-estaciones</summary>
+                        <ul class="nav-tree nav-tree-nested">
+                          <li>
+                            <a
+                              class="nav-document"
+                              href="examples/cantata-de-las-estaciones/README.html"
+                            >
+                              <span class="nav-title">Cantata de las Estaciones</span>
+                              <span class="nav-path"
+                                >examples/cantata-de-las-estaciones/README.md</span
+                              >
+                            </a>
+                          </li>
+                          <li>
+                            <a
+                              class="nav-document"
+                              href="examples/cantata-de-las-estaciones/libretto.html"
+                            >
+                              <span class="nav-title">Cantata de las Estaciones — libreto</span>
+                              <span class="nav-path"
+                                >examples/cantata-de-las-estaciones/libretto.md</span
+                              >
+                            </a>
+                          </li>
+                        </ul>
+                      </details>
                     </li>
                   </ul>
                 </details>
@@ -2546,6 +2591,11 @@
                 o más composiciones.
               </p>
               <p>
+                <strong>Proyecto de ejemplo</strong>: Proyecto versionado y autocontenido que
+                demuestra el contrato público de Resona y sirve como punto de partida reproducible
+                para una persona nueva. <em>Evitar</em>: Demo, fixture
+              </p>
+              <p>
                 <strong>Configuración del proyecto</strong>: Objeto plano, síncrono y validado
                 exportado opcionalmente por <code>resona.config.ts</code>. Define el entry point, el
                 directorio estático y defaults de render sin contener lógica ejecutable en el valor
@@ -2612,6 +2662,12 @@
               <p>
                 <strong>Clip</strong>: Colocación temporal acotada de contenido dentro de una pista.
                 <em>Evitar</em>: Bloque
+              </p>
+              <p>
+                <strong>Evento de nota</strong>: Intervalo musical tipado con inicio, duración,
+                pitch y velocity que alimenta un instrumento; su representación pública no separa
+                ataques y liberaciones. <em>Evitar</em>: Par note-on/note-off, evento MIDI cuando no
+                se habla del formato de borde
               </p>
               <h2 id="tiempo">Tiempo</h2>
               <p>
