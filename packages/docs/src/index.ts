@@ -982,11 +982,13 @@ const script = `/* global URL, document, IntersectionObserver, window */
 
 export type BuildDocumentationSiteOptions = Readonly<{
   projectRoot: string;
+  publish?: boolean;
 }>;
 
 export type BuildDocumentationSiteResult = Readonly<{
   generatedFiles: readonly string[];
   orphanedFiles: readonly string[];
+  outOfDateFiles: readonly string[];
   sourceCount: number;
 }>;
 
@@ -1100,11 +1102,16 @@ export const buildDocumentationSite = async (
   );
   const filesToPublish = new Map(generatedContents);
   filesToPublish.set(documentationManifestRelativePath, manifestContent);
-  await publishGeneratedFiles(projectRoot, filesToPublish);
+  const outOfDateFiles =
+    options.publish === false
+      ? await findOutOfDateFiles(projectRoot, filesToPublish, orphanedOutputs)
+      : [];
+  if (options.publish !== false) await publishGeneratedFiles(projectRoot, filesToPublish);
 
   return {
     generatedFiles: [...filesToPublish.keys()].sort(compareDeterministically),
     orphanedFiles: orphanedOutputs.map((entry) => entry.path),
+    outOfDateFiles,
     sourceCount: documents.length,
   };
 };
@@ -1158,6 +1165,18 @@ const findOrphanedOutputs = async (
     orphaned.push(entry);
   }
   return orphaned.sort((left, right) => compareDeterministically(left.path, right.path));
+};
+
+const findOutOfDateFiles = async (
+  projectRoot: string,
+  generatedContents: ReadonlyMap<string, string>,
+  orphanedOutputs: readonly DocumentationManifestEntry[],
+): Promise<string[]> => {
+  const outOfDate = new Set(orphanedOutputs.map((entry) => entry.path));
+  for (const [path, content] of generatedContents) {
+    if ((await existingFileHash(projectRoot, path)) !== hashContent(content)) outOfDate.add(path);
+  }
+  return [...outOfDate].sort(compareDeterministically);
 };
 
 const publishGeneratedFiles = async (
