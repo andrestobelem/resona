@@ -265,6 +265,34 @@ describe("resona skills installation workflow", () => {
     await expect(readFile(recordPath, "utf8")).resolves.toBe(before);
   });
 
+  it("rejects a non-official stale lock source even with force", async () => {
+    const { projectRoot, environment, recordPath } = await fixture();
+    await invoke(["skills", "add"], projectRoot, environment);
+    const lockPath = join(projectRoot, "skills-lock.json");
+    const lock = JSON.parse(await readFile(lockPath, "utf8"));
+    lock.skills["resona-studio"].source = "untrusted/example";
+    await writeFile(lockPath, JSON.stringify(lock, null, 2) + "\n");
+    const skillPath = join(projectRoot, ".agents", "skills", "resona-studio", "SKILL.md");
+    await writeFile(
+      skillPath,
+      (await readFile(skillPath, "utf8")).replace("resona-release: 0.0.0", "resona-release: 0.0.1"),
+    );
+    const before = await readFile(recordPath, "utf8");
+
+    const result = await invoke(
+      ["skills", "update", "resona-studio", "--force", "--json"],
+      projectRoot,
+      environment,
+    );
+    expect(result.exitCode).toBe(1);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      format: "resona/cli-error",
+      exitCode: 1,
+      message: expect.stringContaining("untrusted source"),
+    });
+    await expect(readFile(recordPath, "utf8")).resolves.toBe(before);
+  });
+
   it("rejects modified skills without spawning update and allows explicit force", async () => {
     const { projectRoot, environment, recordPath } = await fixture();
     await invoke(["skills", "add"], projectRoot, environment);
