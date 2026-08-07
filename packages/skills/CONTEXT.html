@@ -2606,9 +2606,14 @@
               <p>
                 The package is intentionally separate from the existing
                 <code>.agents/skills</code> directory, which is an installed third-party Matt Pocock
-                corpus tracked by <code>skills-lock.json</code>. T20/#21 owns install/update/status
-                commands and synchronization to an external skills repository; this package must not
-                overwrite that installation or edit generated artifacts.
+                corpus tracked by <code>skills-lock.json</code>. The CLI&#39;s
+                <code>resona skills add</code>, <code>resona skills status</code>, and
+                <code>resona skills update</code> wrappers delegate to
+                <code>skills@1.5.20</code> and install the official corpus in the standard
+                <code>.agents/skills</code> location without replacing unrelated lock entries.
+                Status is read-only; updates reject modified official skills unless
+                <code>--force</code> is explicit. This package remains the canonical source and must
+                not edit generated artifacts.
               </p>
             </div>
 

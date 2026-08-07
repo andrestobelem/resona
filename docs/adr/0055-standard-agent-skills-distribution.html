@@ -2555,9 +2555,12 @@ date: 2026-08-04
               </p>
               <p>
                 La vía interoperable es
-                <code>npx skills add &lt;repositorio-oficial-de-resona&gt;</code>. El CLI ofrece
-                <code>resona skills add</code> y <code>resona skills update</code> como wrappers de
-                conveniencia que delegan en una versión fijada del instalador estándar y escriben la
+                <code
+                  >npx skills add
+                  https://github.com/andrestobelem/resona/tree/main/packages/skills/skills</code
+                >. El CLI ofrece <code>resona skills add</code>, <code>resona skills status</code> y
+                <code>resona skills update</code> como wrappers de conveniencia que delegan en la
+                versión fijada <code>skills@1.5.20</code> del instalador estándar y escriben la
                 representación canónica en <code>.agents/skills</code>.
               </p>
               <h2 id="opciones-consideradas">Opciones consideradas</h2>
@@ -2624,8 +2627,9 @@ date: 2026-08-04
                   bloquean el primer corte vertical del motor.
                 </li>
                 <li>
-                  La coordenada concreta del repositorio oficial se elegirá cuando exista la
-                  organización de publicación.
+                  La coordenada publicada para el release actual es
+                  <code>andrestobelem/resona/tree/main/packages/skills/skills</code>. La fuente
+                  canónica sigue siendo <code>packages/skills/skills</code> dentro del monorepo.
                 </li>
                 <li>
                   La validación previa a sincronizar el artefacto se define en el

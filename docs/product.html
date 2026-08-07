@@ -3459,14 +3459,22 @@
                 ciclo de versiones independiente.
               </p>
               <p>
-                La sincronización al repositorio oficial compatible con el estándar Agent Skills y
-                la instalación (<code>npx skills add</code>, <code>resona skills add</code>,
-                <code>resona skills update</code> y <code>resona skills status</code>) son el
-                alcance de T20/#21 y todavía no están disponibles en el release actual. La ausencia
-                de skills no afecta autoría, reproducción ni render. El lockfile, la detección de
-                modificaciones locales y la actualización con <code>--force</code> se implementarán
-                junto con esa story; no deben confundirse con el <code>skills-lock.json</code> de
-                terceros que ya existe en el checkout.
+                La instalación interoperable usa
+                <code
+                  >npx skills add
+                  https://github.com/andrestobelem/resona/tree/main/packages/skills/skills</code
+                >. Los wrappers <code>resona skills add</code>, <code>resona skills status</code> y
+                <code>resona skills update</code> delegan en la versión fijada
+                <code>skills@1.5.20</code>, conservan el formato estándar de
+                <code>skills-lock.json</code> y escriben en <code>.agents/skills</code>.
+                <code>status</code>
+                es de solo lectura y distingue skills ausentes, vigentes, desactualizadas y
+                modificadas a partir de su identidad, release y hash. Ninguna actualización ocurre
+                automáticamente:
+                <code>update</code> rechaza una skill modificada localmente y solo
+                <code>--force</code> autoriza sobrescribirla. La ausencia de skills no afecta
+                autoría, reproducción ni render. El lockfile estándar puede contener además skills
+                de terceros; esas entradas no se modifican.
               </p>
               <p>
                 Una skill oficial solo se publica si sus metadatos, referencias, comandos, ejemplos
