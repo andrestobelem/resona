@@ -42,8 +42,9 @@ export const runResona = async ({
     return 1;
   }
 
+  const forwardedArgv = argv[0] === "--" ? argv.slice(1) : argv;
   return await new Promise((resolveExit) => {
-    const child = spawn(process.execPath, [entrypoint, ...argv], {
+    const child = spawn(process.execPath, [entrypoint, ...forwardedArgv], {
       cwd,
       env,
       stdio: "inherit",
