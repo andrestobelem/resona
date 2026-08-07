@@ -627,7 +627,7 @@
     },
     {
       "path": "docs/research/dave-farley-trunk-based-development.md",
-      "sha256": "5d431fa9bb457e78b0a49cd582f0adb507cd89dcec86117781e378224ae2fb2f"
+      "sha256": "2cb60019f670aa308fb224dd1d847a83c82d47d5186448577fbd393c70e36d82"
     },
     {
       "path": "docs/research/remotion-agent-skills.md",
@@ -961,7 +961,7 @@
     },
     {
       "path": ".resona-docs/search-index.js",
-      "sha256": "36368b56bafc5a6c379ee495402eac03c0540eb2178a3eb7890d6771989059d5"
+      "sha256": "afe1da54de7ec6dbf63525f756dbef784374fcced0f5f9cec02764d55bbd5d58"
     },
     {
       "path": ".resona-docs/styles.css",
@@ -1337,7 +1337,7 @@
     },
     {
       "path": "docs/research/dave-farley-trunk-based-development.html",
-      "sha256": "3f403be08cc3c5e89877e7d13274683484037956e7fe48f8840110b525dd2c26"
+      "sha256": "cc40027024ec6a1fc3357a4e5d7dcd3afffeefed4f8e48bb8ef817458eebbd8f"
     },
     {
       "path": "docs/research/remotion-agent-skills.html",
