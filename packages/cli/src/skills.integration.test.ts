@@ -44,6 +44,12 @@ try { lock = JSON.parse(await readFile(lockPath, "utf8")); } catch {}
 const selected = command === "add" ? names : names.filter((name) => args.includes(name));
 for (const name of selected) {
   await cp(join(sourceRoot, name), join(projectSkills, name), { recursive: true });
+  if (process.env.RESONA_SKILLS_TEST_INVALID === "1" && name === "resona-studio") {
+    await writeFile(
+      join(projectSkills, name, "SKILL.md"),
+      "---\\nname: resona-studio\\ndescription: Valid metadata but invalid workflow fixture\\nresona-release: 0.0.0\\n---\\n",
+    );
+  }
   const files = [];
   const collect = async (root, current) => {
     for (const entry of await (await import("node:fs/promises")).readdir(current, { withFileTypes: true })) {
@@ -52,7 +58,7 @@ for (const name of selected) {
       else if (entry.isFile()) files.push({ path: relative(root, full).split("\\\\").join("/"), contents: await readFile(full) });
     }
   };
-  await collect(join(sourceRoot, name), join(sourceRoot, name));
+  await collect(join(projectSkills, name), join(projectSkills, name));
   files.sort((a, b) => a.path.localeCompare(b.path));
   const hash = createHash("sha256");
   for (const file of files) { hash.update(file.path); hash.update(file.contents); }
@@ -157,6 +163,26 @@ describe("resona skills installation workflow", () => {
     });
   });
 
+  it("does not overwrite a modified skill when add is repeated without force", async () => {
+    const { projectRoot, environment, recordPath } = await fixture();
+    await invoke(["skills", "add"], projectRoot, environment);
+    const modifiedPath = join(projectRoot, ".agents", "skills", "resona-compositions", "SKILL.md");
+    await writeFile(
+      modifiedPath,
+      (await readFile(modifiedPath, "utf8")) + "\nlocal customization\n",
+    );
+    const before = await readFile(recordPath, "utf8");
+
+    const rejected = await invoke(["skills", "add", "--json"], projectRoot, environment);
+    expect(rejected.exitCode).toBe(1);
+    expect(JSON.parse(rejected.stdout)).toMatchObject({
+      format: "resona/cli-error",
+      exitCode: 1,
+    });
+    await expect(readFile(recordPath, "utf8")).resolves.toBe(before);
+    await expect(readFile(modifiedPath, "utf8")).resolves.toContain("local customization");
+  });
+
   it("updates a clean installation through the standard installer", async () => {
     const { projectRoot, environment, recordPath } = await fixture();
     await invoke(["skills", "add"], projectRoot, environment);
@@ -172,6 +198,71 @@ describe("resona skills installation workflow", () => {
     expect(JSON.parse(await readFile(recordPath, "utf8"))).toMatchObject({
       args: expect.arrayContaining(["skills@1.5.20", "update", "--project", "--yes"]),
     });
+  });
+
+  it("revalidates installed metadata and workflow sections after installation", async () => {
+    const { projectRoot, environment } = await fixture();
+    environment.RESONA_SKILLS_TEST_INVALID = "1";
+
+    const result = await invoke(["skills", "add", "--json"], projectRoot, environment);
+    expect(result.exitCode).toBe(1);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      format: "resona/cli-error",
+      exitCode: 1,
+      message: expect.stringContaining("missing ## Workflow"),
+    });
+    await expect(
+      readFile(join(projectRoot, ".agents", "skills", "resona-studio", "SKILL.md"), "utf8"),
+    ).rejects.toThrow();
+    await expect(readFile(join(projectRoot, "skills-lock.json"), "utf8")).rejects.toThrow();
+  });
+
+  it("revalidates clean updates and restores the previous installation on failure", async () => {
+    const { projectRoot, environment } = await fixture();
+    await invoke(["skills", "add"], projectRoot, environment);
+    const original = await readFile(
+      join(projectRoot, ".agents", "skills", "resona-studio", "SKILL.md"),
+      "utf8",
+    );
+    environment.RESONA_SKILLS_TEST_INVALID = "1";
+
+    const result = await invoke(
+      ["skills", "update", "--force", "--json"],
+      projectRoot,
+      environment,
+    );
+    expect(result.exitCode).toBe(1);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      format: "resona/cli-error",
+      exitCode: 1,
+      message: expect.stringContaining("missing ## Workflow"),
+    });
+    await expect(
+      readFile(join(projectRoot, ".agents", "skills", "resona-studio", "SKILL.md"), "utf8"),
+    ).resolves.toBe(original);
+  });
+
+  it("rejects a non-official lock source even with force", async () => {
+    const { projectRoot, environment, recordPath } = await fixture();
+    await invoke(["skills", "add"], projectRoot, environment);
+    const lockPath = join(projectRoot, "skills-lock.json");
+    const lock = JSON.parse(await readFile(lockPath, "utf8"));
+    lock.skills["resona-studio"].source = "untrusted/example";
+    await writeFile(lockPath, JSON.stringify(lock, null, 2) + "\n");
+    const before = await readFile(recordPath, "utf8");
+
+    const result = await invoke(
+      ["skills", "update", "resona-studio", "--force", "--json"],
+      projectRoot,
+      environment,
+    );
+    expect(result.exitCode).toBe(1);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      format: "resona/cli-error",
+      exitCode: 1,
+      message: expect.stringContaining("untrusted source"),
+    });
+    await expect(readFile(recordPath, "utf8")).resolves.toBe(before);
   });
 
   it("rejects modified skills without spawning update and allows explicit force", async () => {
@@ -213,5 +304,19 @@ describe("resona skills installation workflow", () => {
       summary: { current: 0, missing: 5, outdated: 0, modified: 0 },
     });
     await expect(readFile(join(projectRoot, "skills-lock.json"), "utf8")).rejects.toThrow();
+  });
+
+  it("rejects render-only options on the skills command", async () => {
+    const { projectRoot, environment } = await fixture();
+    const result = await invoke(
+      ["skills", "status", "--output", "ignored.wav", "--json"],
+      projectRoot,
+      environment,
+    );
+    expect(result.exitCode).toBe(2);
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      format: "resona/cli-error",
+      exitCode: 2,
+    });
   });
 });
