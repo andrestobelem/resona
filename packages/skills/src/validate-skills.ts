@@ -1,4 +1,4 @@
-import { readdir, readFile, stat } from "node:fs/promises";
+import { readdir, readFile, realpath, stat } from "node:fs/promises";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -28,6 +28,8 @@ type Frontmatter = Readonly<{
   description?: string;
   "resona-release"?: string;
 }>;
+
+class RepositoryReferenceEscapeError extends Error {}
 
 const frontmatter = (
   source: string,
@@ -103,6 +105,19 @@ const validateLocalReferences = async (
   sourcePath: string,
   repositoryRoot: string,
 ): Promise<readonly string[]> => {
+  const canonicalRepositoryRoot = await realpath(repositoryRoot);
+  const assertContained = (root: string, target: string, reference: string): void => {
+    const repositoryRelative = relative(root, target);
+    if (
+      isAbsolute(repositoryRelative) ||
+      repositoryRelative === ".." ||
+      repositoryRelative.startsWith(`..${sep}`)
+    ) {
+      throw new RepositoryReferenceEscapeError(
+        `${sourcePath}: reference ${reference} escapes the repository root.`,
+      );
+    }
+  };
   const references = markdownLinks(body);
   for (const reference of references) {
     const repositoryPath = repositoryReference(reference);
@@ -111,19 +126,16 @@ const validateLocalReferences = async (
         ? resolve(dirname(sourcePath), reference.split("#", 1)[0] ?? reference)
         : resolve(repositoryRoot, repositoryPath);
     if (isExternalReference(reference) && repositoryPath === undefined) continue;
-    const repositoryRelative = relative(repositoryRoot, target);
-    if (
-      isAbsolute(repositoryRelative) ||
-      repositoryRelative === ".." ||
-      repositoryRelative.startsWith(`..${sep}`)
-    ) {
-      throw new Error(`${sourcePath}: reference ${reference} escapes the repository root.`);
-    }
+    assertContained(resolve(repositoryRoot), target, reference);
     try {
-      await stat(target);
-    } catch {
+      const canonicalTarget = await realpath(target);
+      assertContained(canonicalRepositoryRoot, canonicalTarget, reference);
+      await stat(canonicalTarget);
+    } catch (error: unknown) {
+      if (error instanceof RepositoryReferenceEscapeError) throw error;
       throw new Error(
         `${sourcePath}: reference ${reference} does not resolve from ${relative(repositoryRoot, sourcePath)}.`,
+        { cause: error },
       );
     }
   }
