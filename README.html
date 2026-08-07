@@ -108,6 +108,9 @@
               <option value="docs/adr">docs/adr</option>
               <option value="docs/agents">docs/agents</option>
               <option value="docs/research">docs/research</option>
+              <option value="examples/cantata-de-las-estaciones">
+                examples/cantata-de-las-estaciones
+              </option>
               <option value="packages/cli">packages/cli</option>
               <option value="packages/docs/test/fixtures/basic">
                 packages/docs/test/fixtures/basic
@@ -2229,8 +2232,14 @@
                     </li>
                     <li>
                       <a class="nav-document" href="docs/architecture.html">
-                        <span class="nav-title">Arquitectura propuesta</span>
+                        <span class="nav-title">Arquitectura y contratos</span>
                         <span class="nav-path">docs/architecture.md</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a class="nav-document" href="docs/getting-started.html">
+                        <span class="nav-title">Getting started</span>
+                        <span class="nav-path">docs/getting-started.md</span>
                       </a>
                     </li>
                     <li>
@@ -2238,6 +2247,42 @@
                         <span class="nav-title">Visión de producto</span>
                         <span class="nav-path">docs/product.md</span>
                       </a>
+                    </li>
+                  </ul>
+                </details>
+              </li>
+              <li>
+                <details>
+                  <summary>examples</summary>
+                  <ul class="nav-tree nav-tree-nested">
+                    <li>
+                      <details>
+                        <summary>cantata-de-las-estaciones</summary>
+                        <ul class="nav-tree nav-tree-nested">
+                          <li>
+                            <a
+                              class="nav-document"
+                              href="examples/cantata-de-las-estaciones/README.html"
+                            >
+                              <span class="nav-title">Cantata de las Estaciones</span>
+                              <span class="nav-path"
+                                >examples/cantata-de-las-estaciones/README.md</span
+                              >
+                            </a>
+                          </li>
+                          <li>
+                            <a
+                              class="nav-document"
+                              href="examples/cantata-de-las-estaciones/libretto.html"
+                            >
+                              <span class="nav-title">Cantata de las Estaciones — libreto</span>
+                              <span class="nav-path"
+                                >examples/cantata-de-las-estaciones/libretto.md</span
+                              >
+                            </a>
+                          </li>
+                        </ul>
+                      </details>
                     </li>
                   </ul>
                 </details>
@@ -2521,20 +2566,68 @@
               <h1 id="resona">Resona</h1>
               <blockquote>
                 <p>
-                  Estado: exploración inicial. El repositorio todavía no contiene una
-                  implementación.
+                  Estado: prototipo ejecutable. El repositorio incluye motor, Studio, renderer, CLI
+                  y un proyecto de ejemplo reproducible.
                 </p>
               </blockquote>
               <p>
                 Resona busca ser <strong>el Remotion de la música</strong>: un framework code-first
                 para definir, previsualizar y renderizar composiciones musicales programables con
-                audio, MIDI y efectos.
+                audio, eventos de nota tipados y efectos.
               </p>
               <p>
                 La fuente del proyecto es una combinación versionable de código y datos
-                declarativos, no primariamente un archivo opaco controlado por una interfaz visual.
-                Una misma definición debería alimentar tanto la experiencia de desarrollo como el
-                render final.
+                declarativos. La misma composición alimenta la inspección en Studio y el render
+                offline; no es necesario mantener una sesión de DAW separada para reproducirla.
+              </p>
+              <h2 id="inicio-rápido">Inicio rápido</h2>
+              <p>
+                Desde la raíz del repositorio, sigue
+                <a href="docs/getting-started.html">la guía de inicio</a>. El camino canónico es:
+              </p>
+              <div class="code-block">
+                <button type="button" class="copy-code-button" data-copy-code="true">
+                  Copy code
+                </button>
+                <pre><code class="hljs language-sh">pnpm install
+          pnpm check:environment
+          pnpm build
+          pnpm resona -- compositions --config examples/cantata-de-las-estaciones/resona.config.ts
+          pnpm resona -- validate --config examples/cantata-de-las-estaciones/resona.config.ts \
+            --composition CantataDeLasEstaciones
+          pnpm resona -- studio --config examples/cantata-de-las-estaciones/resona.config.ts
+          pnpm resona -- render --config examples/cantata-de-las-estaciones/resona.config.ts \
+            CantataDeLasEstaciones examples/cantata-de-las-estaciones/dist/cantata-de-las-estaciones.wav \
+            --overwrite</code></pre>
+              </div>
+              <p>
+                El comando de Studio mantiene el proceso abierto y muestra una URL loopback. Ábrela
+                en el navegador y detén el proceso con <code>Ctrl-C</code> antes de continuar con el
+                render.
+              </p>
+              <p>
+                El wrapper <code>pnpm resona -- ...</code> no instala binarios globales ni compila
+                silenciosamente. Usa el CLI construido por <code>pnpm build</code> y rechaza un Node
+                o pnpm incompatibles antes de ejecutar.
+              </p>
+              <h2 id="proyecto-de-ejemplo">Proyecto de ejemplo</h2>
+              <p>
+                <a href="examples/cantata-de-las-estaciones/README.html"
+                  ><code>CantataDeLasEstaciones</code></a
+                >
+                es una obra en seis movimientos con una sola composición pública. Demuestra:
+              </p>
+              <ul>
+                <li>secuencias anidadas y pistas declarativas;</li>
+                <li>eventos de nota tipados con inicio, duración, pitch y velocity;</li>
+                <li>líneas sintetizadas con <code>PolySynth</code>;</li>
+                <li>una cadena explícita <code>Gain → Delay</code>;</li>
+                <li>descubrimiento, validación, Studio y render WAV desde la misma fuente.</li>
+              </ul>
+              <p>
+                El ejemplo no importa archivos MIDI, no sintetiza voces cantadas y no requiere un
+                WAV externo. MIDI queda como formato de borde del modelo musical; las notas del
+                ejemplo son datos tipados.
               </p>
               <h2 id="qué-queremos-construir">Qué queremos construir</h2>
               <ul>
@@ -2554,32 +2647,11 @@
                   desarrollo normales.
                 </li>
               </ul>
-              <h2 id="ejemplo-conceptual">Ejemplo conceptual</h2>
-              <p>
-                La API todavía no está definida. Este ejemplo solo muestra la experiencia que
-                buscamos:
-              </p>
-              <div class="code-block">
-                <button type="button" class="copy-code-button" data-copy-code="true">
-                  Copy code
-                </button>
-                <pre><code class="hljs language-tsx">&lt;<span class="hljs-title class_">Composition</span> id=<span class="hljs-string">&quot;Demo&quot;</span> component={<span class="hljs-title class_">Demo</span>} bpm={<span class="hljs-number">120</span>} durationInBars={<span class="hljs-number">32</span>} /&gt;
-
-          <span class="hljs-keyword">const</span> <span class="hljs-title function_">Demo</span> = (<span class="hljs-params"></span>) =&gt; (
-            <span class="language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">MidiTrack</span> <span class="hljs-attr">instrument</span>=<span class="hljs-string">{</span>&lt;<span class="hljs-attr">Synth</span> <span class="hljs-attr">preset</span>=<span class="hljs-string">&quot;AnalogBass&quot;</span> /&gt;</span>}&gt;
-              <span class="hljs-tag">&lt;<span class="hljs-name">MidiClip</span> <span class="hljs-attr">from</span>=<span class="hljs-string">&quot;1:1:0&quot;</span> <span class="hljs-attr">notes</span>=<span class="hljs-string">{bassline}</span> /&gt;</span>
-              <span class="hljs-tag">&lt;<span class="hljs-name">Delay</span> <span class="hljs-attr">mix</span>=<span class="hljs-string">{0.2}</span> /&gt;</span>
-            <span class="hljs-tag">&lt;/<span class="hljs-name">MidiTrack</span>&gt;</span></span>
-          );</code></pre>
-              </div>
-              <p>
-                La versión completa y sus supuestos están en la
-                <a href="docs/product.html#interfaz-conceptual">visión de producto</a>.
-              </p>
               <h2 id="documentación">Documentación</h2>
               <ul>
+                <li><a href="docs/getting-started.html">Guía de inicio</a></li>
                 <li><a href="docs/product.html">Visión de producto</a></li>
-                <li><a href="docs/architecture.html">Arquitectura propuesta</a></li>
+                <li><a href="docs/architecture.html">Arquitectura y contratos</a></li>
                 <li>
                   <a href="docs/research/remotion-study.html"
                     >Estudio de Remotion aplicado a Resona</a
@@ -2618,10 +2690,11 @@
             <p class="toc-title">On this page</p>
             <nav>
               <ol>
+                <li class="toc-depth-2"><a href="#inicio-rápido">Inicio rápido</a></li>
+                <li class="toc-depth-2"><a href="#proyecto-de-ejemplo">Proyecto de ejemplo</a></li>
                 <li class="toc-depth-2">
                   <a href="#qué-queremos-construir">Qué queremos construir</a>
                 </li>
-                <li class="toc-depth-2"><a href="#ejemplo-conceptual">Ejemplo conceptual</a></li>
                 <li class="toc-depth-2"><a href="#documentación">Documentación</a></li>
                 <li class="toc-depth-2"><a href="#licencia">Licencia</a></li>
               </ol>

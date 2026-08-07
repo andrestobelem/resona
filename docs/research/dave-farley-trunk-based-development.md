@@ -241,8 +241,8 @@ Una adopción responsable conserva estas condiciones:
 
 ## 9. Aplicación propuesta a Resona
 
-Esta sección es **síntesis para Resona**. El repositorio declara que todavía no contiene una
-implementación y que será un framework TypeScript code-first con Studio, renderer, CLI y API
+Esta sección es **síntesis para Resona**. El repositorio contiene un prototipo ejecutable de
+un framework TypeScript code-first con Studio, renderer, CLI y API
 ([README de Resona](../../README.md)). Además, el mapa de contexto anticipa workspaces pero
 todavía conserva un único glosario compartido
 ([mapa de contexto](../../CONTEXT-MAP.md)). Es el momento barato para fijar el flujo antes de

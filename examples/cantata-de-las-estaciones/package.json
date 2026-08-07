@@ -1,0 +1,20 @@
+{
+  "name": "@resona/example-cantata-de-las-estaciones",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "pnpm --workspace-root check:environment && pnpm --filter @resona/engine build && tsc --project tsconfig.json --noEmit",
+    "compositions": "pnpm --workspace-root resona -- compositions --config examples/cantata-de-las-estaciones/resona.config.ts",
+    "studio": "pnpm --workspace-root resona -- studio --config examples/cantata-de-las-estaciones/resona.config.ts",
+    "render": "pnpm --workspace-root resona -- render --config examples/cantata-de-las-estaciones/resona.config.ts CantataDeLasEstaciones examples/cantata-de-las-estaciones/dist/cantata-de-las-estaciones.wav --overwrite"
+  },
+  "dependencies": {
+    "@resona/engine": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "24.13.3",
+    "@types/react": "19.2.18",
+    "typescript": "6.0.3"
+  }
+}

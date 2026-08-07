@@ -108,6 +108,9 @@
               <option value="docs/adr">docs/adr</option>
               <option value="docs/agents">docs/agents</option>
               <option value="docs/research">docs/research</option>
+              <option value="examples/cantata-de-las-estaciones">
+                examples/cantata-de-las-estaciones
+              </option>
               <option value="packages/cli">packages/cli</option>
               <option value="packages/docs/test/fixtures/basic">
                 packages/docs/test/fixtures/basic
@@ -2272,8 +2275,14 @@
                     </li>
                     <li>
                       <a class="nav-document" href="../architecture.html">
-                        <span class="nav-title">Arquitectura propuesta</span>
+                        <span class="nav-title">Arquitectura y contratos</span>
                         <span class="nav-path">docs/architecture.md</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a class="nav-document" href="../getting-started.html">
+                        <span class="nav-title">Getting started</span>
+                        <span class="nav-path">docs/getting-started.md</span>
                       </a>
                     </li>
                     <li>
@@ -2281,6 +2290,42 @@
                         <span class="nav-title">Visión de producto</span>
                         <span class="nav-path">docs/product.md</span>
                       </a>
+                    </li>
+                  </ul>
+                </details>
+              </li>
+              <li>
+                <details>
+                  <summary>examples</summary>
+                  <ul class="nav-tree nav-tree-nested">
+                    <li>
+                      <details>
+                        <summary>cantata-de-las-estaciones</summary>
+                        <ul class="nav-tree nav-tree-nested">
+                          <li>
+                            <a
+                              class="nav-document"
+                              href="../../examples/cantata-de-las-estaciones/README.html"
+                            >
+                              <span class="nav-title">Cantata de las Estaciones</span>
+                              <span class="nav-path"
+                                >examples/cantata-de-las-estaciones/README.md</span
+                              >
+                            </a>
+                          </li>
+                          <li>
+                            <a
+                              class="nav-document"
+                              href="../../examples/cantata-de-las-estaciones/libretto.html"
+                            >
+                              <span class="nav-title">Cantata de las Estaciones — libreto</span>
+                              <span class="nav-path"
+                                >examples/cantata-de-las-estaciones/libretto.md</span
+                              >
+                            </a>
+                          </li>
+                        </ul>
+                      </details>
                     </li>
                   </ul>
                 </details>
@@ -2568,27 +2613,45 @@
               <h2 id="readiness">Readiness</h2>
               <ul>
                 <li>Status: <code>partial</code>.</li>
-                <li>Evidence captured: 2026-08-04T22:58:50-03:00.</li>
+                <li>Evidence captured: 2026-08-07T08:13:34-03:00.</li>
                 <li>Integration line: <code>main</code>.</li>
-                <li>Baseline commit: <code>327e1b4c184efdf7b6fdfd0e8b0e6234d00d2fcf</code>.</li>
+                <li>Baseline commit: <code>c5cb393</code>.</li>
                 <li>
-                  Worktree condition: dirty with T01 on <code>feat/engine-compile-note-plan</code>.
+                  Worktree condition: clean on <code>feat/onboarding-cli-example</code> after the
+                  onboarding implementation for issue #57.
                 </li>
                 <li>
-                  Local runtime: Node.js <code>24.15.0</code> and pnpm <code>11.20.0</code>; pnpm
-                  reports the Node version is below the declared
-                  <code>&gt;=24.18.0 &lt;25</code> range.
+                  Canonical runtime: Node.js <code>24.18.0</code> from
+                  <code>.node-version</code> and pnpm <code>11.20.0</code>; the package declares the
+                  compatible range <code>&gt;=24.18.0 &lt;25</code>.
                 </li>
                 <li>
-                  Reason: local fast and full gates pass with a non-vacuous integration test. GitHub
-                  Actions also passed both gates for PR #22. Remote enforcement has not been
-                  inspected.
+                  Node.js 26 is a future compatibility target, not the baseline, until it reaches
+                  LTS and passes an explicit compatibility run.
+                </li>
+                <li>
+                  The current local shell is Node.js <code>26.7.0</code>, outside the declared
+                  range; local gates run under an unsupported runtime until the developer selects
+                  <code>.node-version</code>.
+                </li>
+                <li>
+                  Reason: local fast and full gates pass under the baseline runtime with non-vacuous
+                  example and CLI integration tests. Remote enforcement has not been inspected for
+                  this batch.
                 </li>
               </ul>
               <p>
-                The current gates verify the repository scaffold, documentation, exact rational
-                nearest-even rounding, and the first source-project-to-plan vertical slice. They do
-                not yet verify DSP output, browser playback, or release artifacts.
+                The current gates verify the workspace typechecks, the canonical example, the root
+                CLI wrapper, documentation artifacts, exact rational nearest-even rounding, and
+                source-project-to-plan integration. They do not yet verify browser playback or
+                release artifacts.
+              </p>
+              <p>
+                Every project command that can build, test, or run Resona must pass
+                <code>pnpm check:environment</code> first. That preflight rejects Node.js outside
+                <code>&gt;=24.18.0 &lt;25</code> or pnpm other than <code>11.20.0</code> and points
+                the developer to <code>.node-version</code>; it is also the first step of the fast
+                and full gates and the <code>pnpm resona</code> wrapper.
               </p>
               <h2 id="integration-and-review-model">Integration and review model</h2>
               <ul>
@@ -2648,24 +2711,31 @@
                 <button type="button" class="copy-code-button" data-copy-code="true">
                   Copy code
                 </button>
-                <pre><code class="hljs language-bash">pnpm format:check
+                <pre><code class="hljs language-bash">pnpm check:environment
+          pnpm format:check
           pnpm lint
           pnpm typecheck
-          pnpm <span class="hljs-built_in">test</span>:unit</code></pre>
+          pnpm <span class="hljs-built_in">test</span>:unit
+          pnpm docs:check</code></pre>
               </div>
               <p>Recorded result:</p>
               <ul>
-                <li>Run date: 2026-08-04.</li>
+                <li>Run date: 2026-08-07.</li>
                 <li>Exit code: <code>0</code>.</li>
-                <li>Observed wall duration: 5.29 seconds.</li>
-                <li>Baseline commit: <code>327e1b4c184efdf7b6fdfd0e8b0e6234d00d2fcf</code>.</li>
-                <li>Worktree: dirty with T01 on <code>feat/engine-compile-note-plan</code>.</li>
-                <li>Formatting, ESLint, and Markdown validation passed.</li>
+                <li>Baseline commit: <code>c5cb393</code>.</li>
                 <li>
-                  Typecheck compiled the <code>@resona/engine</code> workspace without emitting
-                  files.
+                  Worktree: clean on <code>feat/onboarding-cli-example</code> after the onboarding
+                  implementation for issue #57.
                 </li>
-                <li>Vitest ran one unit suite containing seven passing tests.</li>
+                <li>
+                  Formatting, ESLint, Markdown validation, typecheck, unit tests, and generated
+                  documentation checks passed under Node.js <code>24.18.0</code>.
+                </li>
+                <li>Vitest ran 17 unit files containing 73 passing tests.</li>
+                <li>
+                  Documentation check found 174 Markdown sources and 179 current generated
+                  artifacts.
+                </li>
               </ul>
               <p>
                 The fast gate runs after every integration batch. Its duration target is p95 at or
@@ -2690,23 +2760,31 @@
               </div>
               <p>Recorded result:</p>
               <ul>
-                <li>Run date: 2026-08-04.</li>
+                <li>Run date: 2026-08-07.</li>
                 <li>Exit code: <code>0</code>.</li>
-                <li>Observed wall duration: 7.41 seconds.</li>
-                <li>Baseline commit: <code>327e1b4c184efdf7b6fdfd0e8b0e6234d00d2fcf</code>.</li>
-                <li>Worktree: dirty with T01 on <code>feat/engine-compile-note-plan</code>.</li>
-                <li>The embedded fast gate passed.</li>
+                <li>Baseline commit: <code>c5cb393</code>.</li>
                 <li>
-                  Build emitted the private <code>@resona/engine</code> workspace successfully.
+                  Worktree: clean on <code>feat/onboarding-cli-example</code> after the onboarding
+                  implementation for issue #57.
                 </li>
-                <li>Vitest ran the source-project integration suite with six passing tests.</li>
+                <li>The embedded fast gate passed.</li>
+                <li>Build emitted all seven buildable production workspaces successfully.</li>
+                <li>
+                  Vitest ran 12 integration files containing 86 passing tests, including the cantata
+                  discovery, validation, Studio lifecycle, and short WAV render smoke.
+                </li>
               </ul>
               <p>
                 The full gate runs before handoff or release. There is currently no executable
                 release workflow.
               </p>
               <h3 id="available-gates">Available gates</h3>
-              <p>None. Every currently executable project gate has a recorded local result.</p>
+              <p>
+                The executable local gates are <code>pnpm check:fast</code> and
+                <code>pnpm check:full</code>. Both have a passing Node.js
+                <code>24.18.0</code> result recorded above; GitHub Actions remains the remote
+                verification path.
+              </p>
               <h3 id="setup-validations">Setup validations</h3>
               <p>The following setup validations passed:</p>
               <div class="code-block">
@@ -2718,7 +2796,7 @@
           pnpm <span class="hljs-built_in">exec</span> markdownlint-cli2
           git diff --check</code></pre>
               </div>
-              <p>Markdownlint checked 92 files and reported zero issues.</p>
+              <p>Markdownlint checked 96 files and reported zero issues.</p>
               <p>
                 The first Prettier run detected only missing trailing commas in
                 <code>.markdownlint-cli2.jsonc</code>. The setup-owned configuration was corrected
@@ -2745,11 +2823,12 @@
               <h3 id="recorded-failures">Recorded failures</h3>
               <p>No current gate failure remains.</p>
               <p>
-                The first fast-gate run for the engine batch stopped on formatting in the two new
-                TypeScript files. Prettier corrected only those files, the focused unit test passed
-                again, and the fast and full gates then passed. The later T01 full gate passed with
-                six integration tests. Missing historical results remain unavailable evidence, not
-                passing evidence.
+                The first fast-gate run for issue #57 stopped on formatting in five example files,
+                then on an unused gain constant and two glossary line lengths. Those focused
+                corrections restored the gate. A later run stopped at stale generated documentation;
+                <code>pnpm docs:build</code> regenerated it, and the fast and full gates then
+                passed. Missing historical results remain unavailable evidence, not passing
+                evidence.
               </p>
               <h2 id="bootstrap-limitations">Bootstrap limitations</h2>
               <p>
@@ -2929,7 +3008,7 @@
                 <small>Previous</small>Triage Labels
               </a>
               <a class="next" href="../architecture.html">
-                <small>Next</small>Arquitectura propuesta
+                <small>Next</small>Arquitectura y contratos
               </a>
             </nav>
             <a class="back-to-top" href="#top">Back to top</a>

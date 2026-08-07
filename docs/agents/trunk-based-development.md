@@ -3,18 +3,28 @@
 ## Readiness
 
 - Status: `partial`.
-- Evidence captured: 2026-08-04T22:58:50-03:00.
+- Evidence captured: 2026-08-07T08:13:34-03:00.
 - Integration line: `main`.
-- Baseline commit: `327e1b4c184efdf7b6fdfd0e8b0e6234d00d2fcf`.
-- Worktree condition: dirty with T01 on `feat/engine-compile-note-plan`.
-- Local runtime: Node.js `24.15.0` and pnpm `11.20.0`; pnpm reports the Node version is below
-  the declared `>=24.18.0 <25` range.
-- Reason: local fast and full gates pass with a non-vacuous integration test. GitHub Actions
-  also passed both gates for PR #22. Remote enforcement has not been inspected.
+- Baseline commit: `c5cb393`.
+- Worktree condition: clean on `feat/onboarding-cli-example` after the onboarding
+  implementation for issue #57.
+- Canonical runtime: Node.js `24.18.0` from `.node-version` and pnpm `11.20.0`; the package
+  declares the compatible range `>=24.18.0 <25`.
+- Node.js 26 is a future compatibility target, not the baseline, until it reaches LTS and
+  passes an explicit compatibility run.
+- The current local shell is Node.js `26.7.0`, outside the declared range; local gates run
+  under an unsupported runtime until the developer selects `.node-version`.
+- Reason: local fast and full gates pass under the baseline runtime with non-vacuous example
+  and CLI integration tests. Remote enforcement has not been inspected for this batch.
 
-The current gates verify the repository scaffold, documentation, exact rational
-nearest-even rounding, and the first source-project-to-plan vertical slice. They do not yet
-verify DSP output, browser playback, or release artifacts.
+The current gates verify the workspace typechecks, the canonical example, the root CLI wrapper,
+documentation artifacts, exact rational nearest-even rounding, and source-project-to-plan
+integration. They do not yet verify browser playback or release artifacts.
+
+Every project command that can build, test, or run Resona must pass
+`pnpm check:environment` first. That preflight rejects Node.js outside
+`>=24.18.0 <25` or pnpm other than `11.20.0` and points the developer to `.node-version`; it
+is also the first step of the fast and full gates and the `pnpm resona` wrapper.
 
 ## Integration and review model
 
@@ -57,22 +67,25 @@ pnpm check:fast
 Expansion:
 
 ```bash
+pnpm check:environment
 pnpm format:check
 pnpm lint
 pnpm typecheck
 pnpm test:unit
+pnpm docs:check
 ```
 
 Recorded result:
 
-- Run date: 2026-08-04.
+- Run date: 2026-08-07.
 - Exit code: `0`.
-- Observed wall duration: 5.29 seconds.
-- Baseline commit: `327e1b4c184efdf7b6fdfd0e8b0e6234d00d2fcf`.
-- Worktree: dirty with T01 on `feat/engine-compile-note-plan`.
-- Formatting, ESLint, and Markdown validation passed.
-- Typecheck compiled the `@resona/engine` workspace without emitting files.
-- Vitest ran one unit suite containing seven passing tests.
+- Baseline commit: `c5cb393`.
+- Worktree: clean on `feat/onboarding-cli-example` after the onboarding implementation for
+  issue #57.
+- Formatting, ESLint, Markdown validation, typecheck, unit tests, and generated documentation
+  checks passed under Node.js `24.18.0`.
+- Vitest ran 17 unit files containing 73 passing tests.
+- Documentation check found 174 Markdown sources and 179 current generated artifacts.
 
 The fast gate runs after every integration batch. Its duration target is p95 at or below
 five minutes.
@@ -95,21 +108,23 @@ pnpm test:integration
 
 Recorded result:
 
-- Run date: 2026-08-04.
+- Run date: 2026-08-07.
 - Exit code: `0`.
-- Observed wall duration: 7.41 seconds.
-- Baseline commit: `327e1b4c184efdf7b6fdfd0e8b0e6234d00d2fcf`.
-- Worktree: dirty with T01 on `feat/engine-compile-note-plan`.
+- Baseline commit: `c5cb393`.
+- Worktree: clean on `feat/onboarding-cli-example` after the onboarding implementation for
+  issue #57.
 - The embedded fast gate passed.
-- Build emitted the private `@resona/engine` workspace successfully.
-- Vitest ran the source-project integration suite with six passing tests.
+- Build emitted all seven buildable production workspaces successfully.
+- Vitest ran 12 integration files containing 86 passing tests, including the cantata discovery,
+  validation, Studio lifecycle, and short WAV render smoke.
 
 The full gate runs before handoff or release. There is currently no executable release
 workflow.
 
 ### Available gates
 
-None. Every currently executable project gate has a recorded local result.
+The executable local gates are `pnpm check:fast` and `pnpm check:full`. Both have a passing
+Node.js `24.18.0` result recorded above; GitHub Actions remains the remote verification path.
 
 ### Setup validations
 
@@ -122,7 +137,7 @@ pnpm exec markdownlint-cli2
 git diff --check
 ```
 
-Markdownlint checked 92 files and reported zero issues.
+Markdownlint checked 96 files and reported zero issues.
 
 The first Prettier run detected only missing trailing commas in
 `.markdownlint-cli2.jsonc`. The setup-owned configuration was corrected and the complete
@@ -146,10 +161,11 @@ The following checks remain proposed until the relevant implementation exists:
 
 No current gate failure remains.
 
-The first fast-gate run for the engine batch stopped on formatting in the two new TypeScript
-files. Prettier corrected only those files, the focused unit test passed again, and the fast
-and full gates then passed. The later T01 full gate passed with six integration tests.
-Missing historical results remain unavailable evidence, not passing evidence.
+The first fast-gate run for issue #57 stopped on formatting in five example files, then on an
+unused gain constant and two glossary line lengths. Those focused corrections restored the
+gate. A later run stopped at stale generated documentation; `pnpm docs:build` regenerated it,
+and the fast and full gates then passed. Missing historical results remain unavailable
+evidence, not passing evidence.
 
 ## Bootstrap limitations
 
