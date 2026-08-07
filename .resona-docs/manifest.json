@@ -491,7 +491,7 @@
     },
     {
       "path": "docs/adr/0055-standard-agent-skills-distribution.md",
-      "sha256": "9b7292c095bfb58091a640ec0cce5fb20947d2d193f1c7b30f371d50433881e3"
+      "sha256": "dd0d54df0b47d24501136b44e623218f01b0fa3d4201fd172a70537f9d029082"
     },
     {
       "path": "docs/adr/0056-deterministic-quality-gate-for-agent-skills.md",
@@ -615,11 +615,11 @@
     },
     {
       "path": "docs/architecture.md",
-      "sha256": "236df979c66995e71d518375f23be2bd5b58c310041b45406da3eab00e6cb2c4"
+      "sha256": "f29726e3aa1ccb812363cab9b4238abbe92af1164960d6147348dbdfe4c7824c"
     },
     {
       "path": "docs/product.md",
-      "sha256": "c1355fa369b841985df0ea452a9f55376d4db662115ec919ba69f3e3ecddc771"
+      "sha256": "4a8ecb51e0b40618c2baddf2c3f87b4941dfaea225ecdb7a137d9fea0bec736b"
     },
     {
       "path": "docs/research/dave-farley-trunk-based-development.md",
@@ -639,7 +639,7 @@
     },
     {
       "path": "packages/cli/CONTEXT.md",
-      "sha256": "2bfdd9322ff86fd203575acad4b11121be66e5f9382bf5e36615a621b7ac76dc"
+      "sha256": "2081b779db637434ec7b46fee63797744a5fa042441d317ddd07d90df947a626"
     },
     {
       "path": "packages/docs/test/fixtures/basic/.agents/notes.md",
@@ -659,7 +659,7 @@
     },
     {
       "path": "packages/skills/CONTEXT.md",
-      "sha256": "e41f0b031c3e92f2d391252883df12e59c7a5ae7c0ad71d2dd8217906c385874"
+      "sha256": "6ae742cd141e7c46f886a596482494a5686d51a455aa0fde40b0370a8421a5d1"
     },
     {
       "path": "packages/skills/skills/resona-audio-midi/SKILL.md",
@@ -949,7 +949,7 @@
     },
     {
       "path": ".resona-docs/search-index.js",
-      "sha256": "8d4c6745a4b981dbf7124157bf1f7391e0d5f93fd193e515fbdc5b5c219794d8"
+      "sha256": "7269d52171affb6db6a016214337ed3916463dd9c48d1e73f3513e7fc35b7617"
     },
     {
       "path": ".resona-docs/styles.css",
@@ -1189,7 +1189,7 @@
     },
     {
       "path": "docs/adr/0055-standard-agent-skills-distribution.html",
-      "sha256": "dc3c96dc9bef9c153f5d1f1f58009e73e82e8ab3c4f75dd44e5fc82cba506fb2"
+      "sha256": "43656587623db922c3eb4457975d589b196b702f8bf8812c241138ea078ed770"
     },
     {
       "path": "docs/adr/0056-deterministic-quality-gate-for-agent-skills.html",
@@ -1313,11 +1313,11 @@
     },
     {
       "path": "docs/architecture.html",
-      "sha256": "a7d79567f919a460e127437f83e036d8b360556ad0f0645b06e9f5495f41beab"
+      "sha256": "81dba488453b231d6713292ee37f2e555a0ab7d29717ddff7f94c3124defc504"
     },
     {
       "path": "docs/product.html",
-      "sha256": "f968e54066d668558a4c8ae0d58892281dfc2f459c4a67b46de2b43e00e7b051"
+      "sha256": "83c5438290960c04a30f4748577f0865689c55fe5397154eeaa1fdf4aa5cd40e"
     },
     {
       "path": "docs/research/dave-farley-trunk-based-development.html",
@@ -1341,7 +1341,7 @@
     },
     {
       "path": "packages/cli/CONTEXT.html",
-      "sha256": "f277470aea2217e3f9676329ee533a655ac1cf299c99116e0c568ffb208fff54"
+      "sha256": "42dad1802ff03d2f69cf657fe2876eae50a3e9e37f22e5581e93e2d7aae150bf"
     },
     {
       "path": "packages/docs/test/fixtures/basic/.agents/notes.html",
@@ -1361,7 +1361,7 @@
     },
     {
       "path": "packages/skills/CONTEXT.html",
-      "sha256": "c15bc057ccffa10dca2c8ebec60c7d90e1418d917b69dde15d47bf8b8d149566"
+      "sha256": "9278d4d8541dee57982e0402cd062704f1e144ac0e5bb9d8225369aa7f488d57"
     },
     {
       "path": "packages/skills/skills/resona-audio-midi/SKILL.html",

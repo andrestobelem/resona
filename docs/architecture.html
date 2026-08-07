@@ -4082,7 +4082,9 @@
                 <code>resona skills update</code> delegan en <code>skills@1.5.20</code>, instalan
                 solo en el directorio estándar <code>.agents/skills</code> y conservan el formato
                 estándar de <code>skills-lock.json</code>. No existe un formato paralelo ni una
-                copia canónica dentro del proyecto consumidor.
+                copia canónica dentro del proyecto consumidor. <code>add</code> y
+                <code>update</code> rechazan una instalación modificada o no confiable;
+                <code>--force</code> autoriza explícitamente el reemplazo.
               </p>
               <p>
                 <code>resona skills status</code> es una operación de solo lectura: distingue
@@ -4090,7 +4092,10 @@
                 <code>modified</code> usando el release declarado, la identidad oficial y los hashes
                 de árbol registrados por el instalador estándar. La ausencia no bloquea ni genera
                 una actualización implícita. <code>update</code> solo ocurre por una invocación
-                explícita y rechaza cambios locales; <code>--force</code> autoriza el reemplazo.
+                explícita y rechaza cambios locales o estados cuyo hash/identidad no puede
+                verificarse; <code>--force</code> autoriza el reemplazo. Después de instalar, la CLI
+                vuelve a ejecutar el gate determinista de metadata y workflows publicado por
+                <code>@resona/skills</code>.
               </p>
               <p>
                 El <code>skills-lock.json</code> que ya existe en el checkout registra una

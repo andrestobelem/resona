@@ -3471,10 +3471,11 @@
                 es de solo lectura y distingue skills ausentes, vigentes, desactualizadas y
                 modificadas a partir de su identidad, release y hash. Ninguna actualización ocurre
                 automáticamente:
-                <code>update</code> rechaza una skill modificada localmente y solo
-                <code>--force</code> autoriza sobrescribirla. La ausencia de skills no afecta
-                autoría, reproducción ni render. El lockfile estándar puede contener además skills
-                de terceros; esas entradas no se modifican.
+                <code>add</code> y <code>update</code> rechazan una skill modificada o no confiable,
+                y solo <code>--force</code> autoriza sobrescribirla. Después de instalar, la CLI
+                vuelve a ejecutar el gate determinista de metadata y workflows. La ausencia de
+                skills no afecta autoría, reproducción ni render. El lockfile estándar puede
+                contener además skills de terceros; esas entradas no se modifican.
               </p>
               <p>
                 Una skill oficial solo se publica si sus metadatos, referencias, comandos, ejemplos

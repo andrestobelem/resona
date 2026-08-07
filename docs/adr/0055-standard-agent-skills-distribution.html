@@ -2611,6 +2611,11 @@ date: 2026-08-04
                   <code>resona skills update</code> explícito.
                 </li>
                 <li>
+                  <code>add</code> y <code>update</code> rechazan una instalación local modificada o
+                  cuya identidad y hash no puedan verificarse; <code>--force</code> es la
+                  autorización explícita para reemplazarla.
+                </li>
+                <li>
                   El hash calculado del lockfile permite distinguir una skill desactualizada de una
                   skill modificada localmente sin crear un formato de estado paralelo.
                 </li>
