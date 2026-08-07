@@ -9,6 +9,22 @@ export const runDocumentationBuild = async (
   projectRoot: string,
 ): Promise<BuildDocumentationSiteResult> => buildDocumentationSite({ projectRoot });
 
+export class DocumentationCheckError extends Error {}
+
+export const runDocumentationCheck = async (
+  projectRoot: string,
+): Promise<BuildDocumentationSiteResult> => {
+  const result = await buildDocumentationSite({ projectRoot, publish: false });
+  if (result.outOfDateFiles.length > 0) {
+    throw new DocumentationCheckError(
+      "Generated documentation is out of date: " +
+        result.outOfDateFiles.join(", ") +
+        ". Run pnpm docs:build.",
+    );
+  }
+  return result;
+};
+
 export const runDocumentationClean = async (
   projectRoot: string,
   dryRun = false,
@@ -20,14 +36,21 @@ const isMainModule =
 if (isMainModule) {
   const args = process.argv.slice(2);
   const clean = args[0] === "clean";
+  const check = args[0] === "check";
   const dryRun = args.includes("--dry-run");
-  const projectRoot = args.find((arg) => arg !== "clean" && arg !== "--dry-run") ?? process.cwd();
+  const projectRoot =
+    args.find((arg) => !["check", "clean", "--dry-run"].includes(arg)) ?? process.cwd();
   if (clean) {
     const result = await runDocumentationClean(projectRoot, dryRun);
     const action = result.dryRun ? "Would remove" : "Removed";
     for (const path of result.removedFiles) process.stdout.write(`${action} ${path}\n`);
     process.stdout.write(
       `${result.dryRun ? "Would clean" : "Cleaned"} ${result.removedFiles.length} files.\n`,
+    );
+  } else if (check) {
+    const result = await runDocumentationCheck(projectRoot);
+    process.stdout.write(
+      `Documentation artifacts are current (${result.sourceCount} Markdown sources, ${result.generatedFiles.length} generated files).\n`,
     );
   } else {
     const result = await runDocumentationBuild(projectRoot);

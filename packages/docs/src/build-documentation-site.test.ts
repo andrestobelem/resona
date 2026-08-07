@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import { runInNewContext } from "node:vm";
 
 import { afterEach, describe, expect, it } from "vitest";
-import { runDocumentationBuild, runDocumentationClean } from "./cli.js";
+import { runDocumentationBuild, runDocumentationCheck, runDocumentationClean } from "./cli.js";
 
 const temporaryRoots: string[] = [];
 
@@ -78,6 +78,23 @@ describe("buildDocumentationSite", () => {
     await expect(runDocumentationBuild(projectRoot)).rejects.toThrow(
       "The root index.md is reserved",
     );
+  });
+
+  it("checks versioned artifacts without publishing and detects stale output", async () => {
+    const projectRoot = await mkdtemp(join(tmpdir(), "resona-docs-check-test-"));
+    temporaryRoots.push(projectRoot);
+    await writeFile(join(projectRoot, "README.md"), "# Before\n");
+
+    await runDocumentationBuild(projectRoot);
+    await expect(runDocumentationCheck(projectRoot)).resolves.toMatchObject({
+      outOfDateFiles: [],
+    });
+    const previousHtml = await readFile(join(projectRoot, "README.html"), "utf8");
+
+    await writeFile(join(projectRoot, "README.md"), "# After\n");
+
+    await expect(runDocumentationCheck(projectRoot)).rejects.toThrow("out of date");
+    await expect(readFile(join(projectRoot, "README.html"), "utf8")).resolves.toBe(previousHtml);
   });
 
   it("does not publish partial output when a rebuild fails validation", async () => {
