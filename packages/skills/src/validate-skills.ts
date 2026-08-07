@@ -146,6 +146,7 @@ const validateDocument = async (
   repositoryRoot: string,
   skillName: OfficialSkillName,
   sourcePath: string,
+  checkLocalReferences = true,
 ): Promise<SkillDocument> => {
   const source = await readFile(sourcePath, "utf8");
   const { metadata, body } = frontmatter(source, sourcePath);
@@ -170,7 +171,9 @@ const validateDocument = async (
   const commands = commandExamples(body);
   if (commands.length === 0) throw new Error(`${sourcePath}: workflow has no executable command.`);
   commands.forEach((command) => validateCommandExample(command, sourcePath));
-  const references = await validateLocalReferences(body, sourcePath, repositoryRoot);
+  const references = checkLocalReferences
+    ? await validateLocalReferences(body, sourcePath, repositoryRoot)
+    : markdownLinks(body);
   if (references.length === 0) throw new Error(`${sourcePath}: references section has no links.`);
   return Object.freeze({
     name: skillName,
@@ -181,6 +184,13 @@ const validateDocument = async (
     commands,
     references,
   });
+};
+
+export const validateInstalledSkill = async (
+  sourcePath: string,
+  skillName: OfficialSkillName,
+): Promise<void> => {
+  await validateDocument("", skillName, sourcePath, false);
 };
 
 export const validateSkillCorpus = async (

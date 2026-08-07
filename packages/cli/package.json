@@ -8,11 +8,12 @@
   },
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
-    "typecheck": "pnpm --filter @resona/engine build && pnpm --filter @resona/renderer build && tsc --project tsconfig.json --noEmit"
+    "typecheck": "pnpm --filter @resona/skills build && pnpm --filter @resona/engine build && pnpm --filter @resona/renderer build && tsc --project tsconfig.json --noEmit"
   },
   "dependencies": {
     "@resona/engine": "workspace:*",
-    "@resona/renderer": "workspace:*"
+    "@resona/renderer": "workspace:*",
+    "@resona/skills": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "24.13.3",

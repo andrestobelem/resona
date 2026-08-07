@@ -13,6 +13,22 @@ final result. Incidental diagnostics stay in stderr.
 Exit codes are stable: `0` success, `1` domain failure, `2` usage or configuration failure, and
 `130` cancellation.
 
+`skills add` delegates to the pinned `skills@1.5.20` installer and installs Resona's five
+official skills from the canonical repository into the standard project
+`.agents/skills` directory. It preserves the standard `skills-lock.json` format and does not
+touch unrelated lock entries. Reinstalling a modified skill requires `--force`. `skills status` is
+read-only and reports `missing`,
+`current`, `outdated`, or `modified` by checking the release metadata, official source
+identity, and the lockfile's standard tree hash. Missing skills are informational; no command installs or updates
+them implicitly.
+
+`skills update` delegates to the same standard installer for the official skills already
+present in the project. It refuses to overwrite a locally modified or untrusted installation
+unless the caller passes `--force`; the flag is the only authorization for that replacement. Successful
+installation and updates re-check the release metadata and hashes before returning. With
+`--json`, status and result documents use `resona/skills-status` and `resona/skills-result`,
+respectively, both at schema version 1.
+
 The CLI resolves a project root from an explicit `--config`, the nearest `resona.config.ts`,
 or the initial working directory. The engine API continues to require an absolute root.
 

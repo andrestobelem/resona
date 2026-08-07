@@ -3,6 +3,14 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "main": "dist/validate-skills.js",
+  "types": "dist/validate-skills.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/validate-skills.d.ts",
+      "import": "./dist/validate-skills.js"
+    }
+  },
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
     "typecheck": "tsc --project tsconfig.json --noEmit",

@@ -1,6 +1,9 @@
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { createRenderJob, type CreateRenderJobResult } from "../../engine/src/index.js";
 import { renderAudio } from "./index.js";
@@ -8,9 +11,50 @@ import { renderAudio } from "./index.js";
 const exactProjectRoot = fileURLToPath(
   new URL("../../engine/src/fixtures/exact-project/", import.meta.url),
 );
-const configuredProjectRoot = fileURLToPath(
+const configuredProjectSourceRoot = fileURLToPath(
   new URL("../../engine/src/fixtures/configured-project/", import.meta.url),
 );
+const engineModulePath = fileURLToPath(new URL("../../engine/src/index.js", import.meta.url));
+let configuredProjectRoot: string;
+
+const wavBytes = (): Buffer => {
+  const bytes = Buffer.alloc(48);
+  bytes.write("RIFF", 0);
+  bytes.writeUInt32LE(40, 4);
+  bytes.write("WAVEfmt ", 8);
+  bytes.writeUInt32LE(16, 16);
+  bytes.writeUInt16LE(3, 20);
+  bytes.writeUInt16LE(1, 22);
+  bytes.writeUInt32LE(48_000, 24);
+  bytes.writeUInt32LE(192_000, 28);
+  bytes.writeUInt16LE(4, 32);
+  bytes.writeUInt16LE(32, 34);
+  bytes.write("data", 36);
+  bytes.writeUInt32LE(4, 40);
+  bytes.writeFloatLE(0.25, 44);
+  return bytes;
+};
+
+beforeAll(async () => {
+  configuredProjectRoot = await mkdtemp(join(tmpdir(), "resona-render-audio-configured-"));
+  const source = (await readFile(join(configuredProjectSourceRoot, "music.tsx"), "utf8")).replace(
+    'from "../../index.js"',
+    `from ${JSON.stringify(engineModulePath)}`,
+  );
+  await writeFile(join(configuredProjectRoot, "music.tsx"), source);
+  await writeFile(
+    join(configuredProjectRoot, "resona.config.ts"),
+    `import { defineConfig } from ${JSON.stringify(engineModulePath)};
+export default defineConfig({ entry: "music.tsx", staticDir: "assets", seed: "configured-seed" });
+`,
+  );
+  await mkdir(join(configuredProjectRoot, "assets"), { recursive: true });
+  await writeFile(join(configuredProjectRoot, "assets", "tone.wav"), wavBytes());
+});
+
+afterAll(async () => {
+  await rm(configuredProjectRoot, { recursive: true, force: true });
+});
 
 const withSynthPlan = (
   job: CreateRenderJobResult,

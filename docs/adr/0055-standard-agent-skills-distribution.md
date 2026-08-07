@@ -9,10 +9,11 @@ Las Agent Skills de Resona tienen una única fuente canónica dentro del monorep
 de release las sincroniza a un repositorio oficial consumible por instaladores compatibles
 con el estándar Agent Skills.
 
-La vía interoperable es `npx skills add <repositorio-oficial-de-resona>`. El CLI ofrece
-`resona skills add` y `resona skills update` como wrappers de conveniencia que delegan en
-una versión fijada del instalador estándar y escriben la representación canónica en
-`.agents/skills`.
+La vía interoperable es `npx skills add https://github.com/andrestobelem/resona/tree/main/packages/skills/skills`.
+El CLI ofrece `resona skills add`, `resona skills status` y
+`resona skills update` como wrappers de conveniencia que delegan en la versión
+fijada `skills@1.5.20` del instalador estándar y escriben la representación canónica
+en `.agents/skills`.
 
 ## Opciones consideradas
 
@@ -40,6 +41,8 @@ el CLI de Resona.
   advertencia no bloqueante con el comando de actualización.
 - La detección nunca modifica el proyecto y las actualizaciones solo ocurren ante un
   `resona skills update` explícito.
+- `add` y `update` rechazan una instalación local modificada o cuya identidad
+  y hash no puedan verificarse; `--force` es la autorización explícita para reemplazarla.
 - El hash calculado del lockfile permite distinguir una skill desactualizada de una skill
   modificada localmente sin crear un formato de estado paralelo.
 - `update` rechaza sobrescribir modificaciones locales; `update --force` permite hacerlo de
@@ -48,7 +51,8 @@ el CLI de Resona.
   oficial administrada.
 - Los comandos de mantenimiento se entregan con la primera versión utilizable y no bloquean
   el primer corte vertical del motor.
-- La coordenada concreta del repositorio oficial se elegirá cuando exista la organización de
-  publicación.
+- La coordenada publicada para el release actual es
+  `andrestobelem/resona/tree/main/packages/skills/skills`. La fuente canónica sigue
+  siendo `packages/skills/skills` dentro del monorepo.
 - La validación previa a sincronizar el artefacto se define en el
   [ADR 0056](0056-deterministic-quality-gate-for-agent-skills.md).

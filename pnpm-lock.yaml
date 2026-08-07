@@ -41,6 +41,9 @@ importers:
       '@resona/renderer':
         specifier: workspace:*
         version: link:../renderer
+      '@resona/skills':
+        specifier: workspace:*
+        version: link:../skills
     devDependencies:
       '@types/node':
         specifier: 24.13.3

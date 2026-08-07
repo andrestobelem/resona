@@ -4073,24 +4073,35 @@
               </ul>
               <p>
                 La fuente canónica de las skills vive dentro del monorepo, bajo
-                <code>packages/skills/skills</code>. La sincronización al repositorio oficial y la
-                instalación estándar (<code>npx skills add</code>) son el trabajo pendiente de
-                T20/#21; todavía no son comandos disponibles de Resona. Esa story también definirá
-                los adaptadores para <code>.agents/skills</code>, sin crear otro formato ni mantener
-                una copia divergente.
+                <code>packages/skills/skills</code>. La instalación interoperable usa la fuente
+                publicada
+                <code
+                  >https://github.com/andrestobelem/resona/tree/main/packages/skills/skills</code
+                >
+                mediante <code>npx skills add</code>. Los wrappers <code>resona skills add</code> y
+                <code>resona skills update</code> delegan en <code>skills@1.5.20</code>, instalan
+                solo en el directorio estándar <code>.agents/skills</code> y conservan el formato
+                estándar de <code>skills-lock.json</code>. No existe un formato paralelo ni una
+                copia canónica dentro del proyecto consumidor. <code>add</code> y
+                <code>update</code> rechazan una instalación modificada o no confiable;
+                <code>--force</code> autoriza explícitamente el reemplazo.
               </p>
               <p>
-                La ausencia de una instalación de skills no afecta el runtime actual: T19/#20 solo
-                publica el corpus y su gate. <code>resona skills status</code>, las advertencias de
-                versión y la actualización explícita quedan documentados como el contrato de
-                T20/#21; no deben afirmarse como funcionalidad disponible hasta que esa story se
-                integre.
+                <code>resona skills status</code> es una operación de solo lectura: distingue
+                <code>missing</code>, <code>current</code>, <code>outdated</code> y
+                <code>modified</code> usando el release declarado, la identidad oficial y los hashes
+                de árbol registrados por el instalador estándar. La ausencia no bloquea ni genera
+                una actualización implícita. <code>update</code> solo ocurre por una invocación
+                explícita y rechaza cambios locales o estados cuyo hash/identidad no puede
+                verificarse; <code>--force</code> autoriza el reemplazo. Después de instalar, la CLI
+                vuelve a ejecutar el gate determinista de metadata y workflows publicado por
+                <code>@resona/skills</code>.
               </p>
               <p>
-                El lockfile de instalaciones, los hashes y las reglas de actualización segura
-                también pertenecen a T20/#21. El <code>skills-lock.json</code> que ya existe en el
-                checkout registra una instalación de terceros y no es la fuente de las skills
-                oficiales de Resona.
+                El <code>skills-lock.json</code> que ya existe en el checkout registra una
+                instalación de terceros y no es la fuente de las skills oficiales de Resona. Las
+                instalaciones oficiales agregan sus entradas al mismo lockfile estándar sin tocar
+                entradas no relacionadas.
               </p>
               <p>
                 El gate local <code>pnpm --filter @resona/skills validate</code> valida el

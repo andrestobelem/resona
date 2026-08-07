@@ -2595,6 +2595,27 @@
                 <code>130</code> cancellation.
               </p>
               <p>
+                <code>skills add</code> delegates to the pinned <code>skills@1.5.20</code> installer
+                and installs Resona&#39;s five official skills from the canonical repository into
+                the standard project <code>.agents/skills</code> directory. It preserves the
+                standard <code>skills-lock.json</code> format and does not touch unrelated lock
+                entries. Reinstalling a modified skill requires <code>--force</code>.
+                <code>skills status</code> is read-only and reports <code>missing</code>,
+                <code>current</code>, <code>outdated</code>, or <code>modified</code> by checking
+                the release metadata, official source identity, and the lockfile&#39;s standard tree
+                hash. Missing skills are informational; no command installs or updates them
+                implicitly.
+              </p>
+              <p>
+                <code>skills update</code> delegates to the same standard installer for the official
+                skills already present in the project. It refuses to overwrite a locally modified or
+                untrusted installation unless the caller passes <code>--force</code>; the flag is
+                the only authorization for that replacement. Successful installation and updates
+                re-check the release metadata and hashes before returning. With <code>--json</code>,
+                status and result documents use <code>resona/skills-status</code> and
+                <code>resona/skills-result</code>, respectively, both at schema version 1.
+              </p>
+              <p>
                 The CLI resolves a project root from an explicit <code>--config</code>, the nearest
                 <code>resona.config.ts</code>, or the initial working directory. The engine API
                 continues to require an absolute root.
